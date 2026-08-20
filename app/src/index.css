@@ -1,0 +1,38 @@
+:root {
+  --paper: #f6f8f1;
+  --egg: #fefefe;
+  --ink: #2b2b2b;
+  --muted: #8a8a8e;
+  --muted-2: #b0b0b4;
+  --gold: #c77d11;
+  --gold-soft: rgba(199, 125, 17, 0.08);
+  --gold-glow: rgba(199, 125, 17, 0.1);
+  --card-border: #e4e0d4;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
