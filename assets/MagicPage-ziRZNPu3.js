@@ -1,0 +1,1 @@
+import{r as e,t}from"./index-f4s5mfN2.js";import{t as n}from"./ProductPage-B5CpWVR6.js";var r=t();function i(){return(0,r.jsx)(n,{product:e(`magic`)})}export{i as default};

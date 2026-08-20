@@ -46,12 +46,12 @@ export const products = [
     dimensions: { width: 72, length: 72, height: 6 },
     constructionDetail: '',
     textures: {
-      top: '/textures/_placeholder/top.png',
-      topBump: null,
-      side: '/textures/_placeholder/side.png',
-      bottom: '/textures/_placeholder/bottom.png',
+      top: '/textures/magic/top.png',
+      topBump: '/textures/magic/top-bump.png',
+      side: '/textures/magic/side.png',
+      bottom: '/textures/magic/bottom.png',
     },
-    placeholder: true,
+    placeholder: false,
   },
   {
     slug: 'signature',
