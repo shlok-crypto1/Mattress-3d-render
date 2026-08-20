@@ -1,0 +1,1 @@
+import{r as e,t}from"./index-Di0WDhrO.js";import{t as n}from"./ProductPage-Bdl1Thzm.js";var r=t();function i(){return(0,r.jsx)(n,{product:e(`signature`)})}export{i as default};

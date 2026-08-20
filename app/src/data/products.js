@@ -29,11 +29,11 @@ export const products = [
     constructionDetail: '',
     textures: {
       top: '/textures/maxa/top.png',
-      topBump: null,
+      topBump: '/textures/maxa/top-bump.png',
       side: '/textures/maxa/side.png',
       bottom: '/textures/maxa/bottom.png',
     },
-    placeholder: true,
+    placeholder: false,
   },
   {
     slug: 'magic',
@@ -64,12 +64,12 @@ export const products = [
     dimensions: { width: 72, length: 72, height: 8 },
     constructionDetail: '',
     textures: {
-      top: '/textures/_placeholder/top.png',
-      topBump: null,
-      side: '/textures/_placeholder/side.png',
-      bottom: '/textures/_placeholder/bottom.png',
+      top: '/textures/signature/top.png',
+      topBump: '/textures/signature/top-bump.png',
+      side: '/textures/signature/side.png',
+      bottom: '/textures/signature/bottom.png',
     },
-    placeholder: true,
+    placeholder: false,
   },
 ];
 
