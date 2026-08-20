@@ -7,7 +7,7 @@ export const products = [
       thickness: '5″ High-Density Foam',
       warranty: '10-Year Warranty',
     },
-    dimensions: { width: 36, length: 72, height: 5 },
+    dimensions: { width: 72, length: 72, height: 5 },
     constructionDetail: '',
     textures: {
       top: '/textures/duro/top.png',
