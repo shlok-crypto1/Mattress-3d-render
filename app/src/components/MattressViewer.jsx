@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { publicUrl } from '../lib/publicUrl';
 
 // Builds a mattress box with rounded top corners/edges (footprint corner radius Rc,
 // top-edge bevel radius Rt) instead of a hard-edged box, so it reads as a real
@@ -156,14 +157,14 @@ export default function MattressViewer({ product, autoRotate = true }) {
     };
 
     const { textures, dimensions } = product;
-    const top = load(textures.top);
-    const bottom = load(textures.bottom);
-    const sideTex = load(textures.side);
+    const top = load(publicUrl(textures.top));
+    const bottom = load(publicUrl(textures.bottom));
+    const sideTex = load(publicUrl(textures.side));
     sideTex.wrapS = THREE.RepeatWrapping;
 
     const topMatOpts = { map: top, roughness: 0.95, metalness: 0, side: THREE.DoubleSide };
     if (textures.topBump) {
-      const topBump = load(textures.topBump);
+      const topBump = load(publicUrl(textures.topBump));
       topBump.colorSpace = THREE.NoColorSpace;
       topMatOpts.bumpMap = topBump;
       topMatOpts.bumpScale = 0.35;
@@ -352,7 +353,7 @@ export default function MattressViewer({ product, autoRotate = true }) {
           textAlign: 'center',
         }}
       >
-        <img src="/brand/vedasleep-logo.png" alt="Veda Sleep" style={{ height: 32, width: 'auto' }} />
+        <img src={publicUrl('/brand/vedasleep-logo.png')} alt="Veda Sleep" style={{ height: 32, width: 'auto' }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div
             style={{

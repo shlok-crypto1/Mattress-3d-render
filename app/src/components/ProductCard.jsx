@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { publicUrl } from '../lib/publicUrl';
 
 export default function ProductCard({ product }) {
   return (
@@ -20,7 +21,7 @@ export default function ProductCard({ product }) {
       <div
         style={{
           aspectRatio: '4 / 3',
-          backgroundImage: `url(${product.textures.top})`,
+          backgroundImage: `url(${publicUrl(product.textures.top)})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           position: 'relative',

@@ -1,5 +1,6 @@
 import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
+import { publicUrl } from '../lib/publicUrl';
 
 export default function CatalogPage() {
   return (
@@ -13,7 +14,7 @@ export default function CatalogPage() {
     >
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center', marginBottom: 48 }}>
-          <img src="/brand/vedasleep-logo.png" alt="Veda Sleep" style={{ height: 40, width: 'auto' }} />
+          <img src={publicUrl('/brand/vedasleep-logo.png')} alt="Veda Sleep" style={{ height: 40, width: 'auto' }} />
           <div
             style={{
               fontFamily: "'Montserrat', sans-serif",

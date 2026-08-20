@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 import CatalogPage from './pages/CatalogPage';
 
 // Each product route is its own lazy chunk, so visiting /magic doesn't pull in
@@ -32,7 +32,12 @@ function RouteFallback() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    // HashRouter (not BrowserRouter): this is a static "deploy from branch"
+    // GitHub Pages site with no server-side rewrite, so a direct link to
+    // /catalog/maxa would 404 under BrowserRouter. Hash-based routes
+    // (/catalog/#/maxa) always resolve to /catalog/index.html first, so
+    // direct links work without any extra server config.
+    <HashRouter>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<CatalogPage />} />
@@ -42,6 +47,6 @@ export default function App() {
           <Route path="/signature" element={<SignaturePage />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
