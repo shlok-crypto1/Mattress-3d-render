@@ -1,0 +1,1 @@
+import{r as e,t}from"./index-BW3-tRhM.js";import{t as n}from"./ProductPage-Cesv6NTk.js";var r=t();function i(){return(0,r.jsx)(n,{product:e(`maxa`)})}export{i as default};
