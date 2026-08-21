@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
 import { makeSpeckleTexture, makeConvolutedBump, makeShadowTexture } from '../lib/foamSurfaces';
+import { useProductEntranceTarget, enterStyle } from '../transition/ProductTransition';
 
 // Builds a mattress box with rounded top corners/edges (footprint corner radius Rc,
 // top-edge bevel radius Rt) instead of a hard-edged box, so it reads as a real
@@ -166,7 +167,7 @@ const VIEW_DEFS = [
   ['bottom', 'Bottom', 0, -1.35],
 ];
 
-export default function MattressViewer({ product, autoRotate = true, brand = 'vedasleep' }) {
+export default function MattressViewer({ product, autoRotate = true, brand = 'vedasleep', transitionId = null }) {
   const mountRef = useRef(null);
   const labelsRef = useRef(null);
   const [view, setView] = useState('corner');
@@ -176,6 +177,11 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
   const hasLayers = Array.isArray(layerDefs) && layerDefs.length > 0;
   const [exploded, setExploded] = useState(false);
   const [selectedLayer, setSelectedLayer] = useState(null);
+  // Shared-element handoff: no-op unless a card transition landed here (see
+  // ProductTransition.jsx). `revealed` starts true whenever entering any
+  // other way (direct link, refresh, back-nav) - zero behaviour change then.
+  const { revealed, markCanvasReady } = useProductEntranceTarget(transitionId, mountRef);
+  const animated = !!transitionId;
   // Mutable animation/scene state that must NOT trigger re-renders, mirroring the
   // original `this.*` instance fields from the imperative viewer.
   const s = useRef({}).current;
@@ -203,9 +209,10 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
 
     const loader = new THREE.TextureLoader();
     const disposables = [];
-    const load = (url) => {
+    const load = (url, onLoaded) => {
       const t = loader.load(url, () => {
         s.dirty = true;
+        onLoaded?.();
       });
       t.anisotropy = renderer.capabilities.getMaxAnisotropy();
       t.colorSpace = THREE.SRGBColorSpace;
@@ -213,8 +220,16 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
       return t;
     };
 
+    // First real frame with the visible top texture in place - what the
+    // shared-element transition (if any) waits for before crossfading from
+    // the static grid-card image to this live canvas.
+    let topReady = false;
+    s.reportedReady = false;
+
     const { textures, dimensions } = product;
-    const top = load(publicUrl(textures.top));
+    const top = load(publicUrl(textures.top), () => {
+      topReady = true;
+    });
     const bottom = load(publicUrl(textures.bottom));
     const sideTex = load(publicUrl(textures.side));
     sideTex.wrapS = THREE.RepeatWrapping;
@@ -569,6 +584,10 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
         s.shadow.material.opacity = Math.max(0, Math.min(1, sp + 0.15)) * (s.shadowFade ?? 1);
         renderer.render(scene, camera);
         s.dirty = false;
+        if (topReady && !s.reportedReady) {
+          s.reportedReady = true;
+          s.markCanvasReady?.();
+        }
       }
     };
     tick();
@@ -608,6 +627,10 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
   useEffect(() => {
     s.autoRotate = autoRotate;
   }, [autoRotate, s]);
+
+  useEffect(() => {
+    s.markCanvasReady = markCanvasReady;
+  }, [markCanvasReady, s]);
 
   const goTo = (name, theta, phi) => {
     if (s.exploded) s.setExplodeState?.(false);
@@ -679,12 +702,22 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
               letterSpacing: '0.22em',
               lineHeight: 1,
               textTransform: 'uppercase',
+              ...(animated ? enterStyle(revealed, 0) : null),
             }}
           >
             {name}
           </div>
           {specLine ? (
-            <div style={{ fontSize: 12.5, fontWeight: 400, color: '#8a8a8e', letterSpacing: '0.04em', marginTop: 8 }}>
+            <div
+              style={{
+                fontSize: 12.5,
+                fontWeight: 400,
+                color: '#8a8a8e',
+                letterSpacing: '0.04em',
+                marginTop: 8,
+                ...(animated ? enterStyle(revealed, 60) : null),
+              }}
+            >
               {specLine.variant}
               {' · '}
               {specLine.thickness}
@@ -704,6 +737,7 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
                 border: `1px dashed ${t.pendingBorder}`,
                 borderRadius: 100,
                 padding: '5px 12px',
+                ...(animated ? enterStyle(revealed, 60) : null),
               }}
             >
               Spec details to follow
@@ -807,6 +841,7 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
           alignItems: 'center',
           gap: 14,
           padding: '0 20px 26px',
+          ...(animated ? enterStyle(revealed, 130) : null),
         }}
       >
         <div style={{ display: 'flex', gap: 8 }}>

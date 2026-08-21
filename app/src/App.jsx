@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import BrandSelectPage from './pages/BrandSelectPage';
+import { TransitionProvider } from './transition/ProductTransition';
 
 // Only the brand selector ships in the entry chunk. Both grids are lazy so that
 // landing on "/" pulls neither brand's product data - and therefore none of
@@ -50,32 +51,34 @@ export default function App() {
     // (/#/foamico/resto) always resolve to index.html first, so direct links
     // work without any extra server config.
     <HashRouter>
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          <Route path="/" element={<BrandSelectPage />} />
+      <TransitionProvider>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<BrandSelectPage />} />
 
-          <Route path="/vedasleep" element={<CatalogPage />} />
-          <Route path="/vedasleep/duro" element={<DuroPage />} />
-          <Route path="/vedasleep/maxa" element={<MaxaPage />} />
-          <Route path="/vedasleep/magic" element={<MagicPage />} />
-          <Route path="/vedasleep/signature" element={<SignaturePage />} />
+            <Route path="/vedasleep" element={<CatalogPage />} />
+            <Route path="/vedasleep/duro" element={<DuroPage />} />
+            <Route path="/vedasleep/maxa" element={<MaxaPage />} />
+            <Route path="/vedasleep/magic" element={<MagicPage />} />
+            <Route path="/vedasleep/signature" element={<SignaturePage />} />
 
-          <Route path="/foamico" element={<FoamicoCatalogPage />} />
-          <Route path="/foamico/resto" element={<RestoPage />} />
-          <Route path="/foamico/sova" element={<SovaPage />} />
-          <Route path="/foamico/luma" element={<LumaPage />} />
-          <Route path="/foamico/ultima" element={<UltimaPage />} />
-          <Route path="/foamico/riva" element={<RivaPage />} />
+            <Route path="/foamico" element={<FoamicoCatalogPage />} />
+            <Route path="/foamico/resto" element={<RestoPage />} />
+            <Route path="/foamico/sova" element={<SovaPage />} />
+            <Route path="/foamico/luma" element={<LumaPage />} />
+            <Route path="/foamico/ultima" element={<UltimaPage />} />
+            <Route path="/foamico/riva" element={<RivaPage />} />
 
-          {/* Links shared before the brand split pointed at /#/duro etc. */}
-          <Route path="/duro" element={<Navigate to="/vedasleep/duro" replace />} />
-          <Route path="/maxa" element={<Navigate to="/vedasleep/maxa" replace />} />
-          <Route path="/magic" element={<Navigate to="/vedasleep/magic" replace />} />
-          <Route path="/signature" element={<Navigate to="/vedasleep/signature" replace />} />
+            {/* Links shared before the brand split pointed at /#/duro etc. */}
+            <Route path="/duro" element={<Navigate to="/vedasleep/duro" replace />} />
+            <Route path="/maxa" element={<Navigate to="/vedasleep/maxa" replace />} />
+            <Route path="/magic" element={<Navigate to="/vedasleep/magic" replace />} />
+            <Route path="/signature" element={<Navigate to="/vedasleep/signature" replace />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </TransitionProvider>
     </HashRouter>
   );
 }

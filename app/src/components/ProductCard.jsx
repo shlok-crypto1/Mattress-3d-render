@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { publicUrl } from '../lib/publicUrl';
+import { useCardTransition } from '../transition/ProductTransition';
+import { preloadRoute } from '../routePreload';
 
 // Defaults reproduce the VedaSleep card exactly; FOAMICO passes its own theme.
 export const LIGHT_CARD = {
@@ -12,9 +14,16 @@ export const LIGHT_CARD = {
 };
 
 export default function ProductCard({ product, basePath = '', theme = LIGHT_CARD }) {
+  const toPath = `${basePath}/${product.slug}`;
+  const transitionId = `${basePath.replace(/^\//, '')}-${product.slug}`;
+  const { imgRef, onClick, isReceding } = useCardTransition(transitionId, toPath);
+
   return (
     <Link
-      to={`${basePath}/${product.slug}`}
+      to={toPath}
+      onClick={onClick}
+      onPointerEnter={() => preloadRoute(basePath, product.slug)}
+      onFocus={() => preloadRoute(basePath, product.slug)}
       className="product-card"
       style={{
         display: 'flex',
@@ -25,10 +34,13 @@ export default function ProductCard({ product, basePath = '', theme = LIGHT_CARD
         overflow: 'hidden',
         border: `1px solid ${theme.border}`,
         background: theme.background,
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        opacity: isReceding ? 0.55 : 1,
+        transform: isReceding ? 'translateY(4px) scale(0.98)' : 'none',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease, opacity 0.26s ease',
       }}
     >
       <div
+        ref={imgRef}
         style={{
           aspectRatio: '4 / 3',
           backgroundImage: `url(${publicUrl(product.textures.top)})`,

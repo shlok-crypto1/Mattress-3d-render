@@ -1,9 +1,17 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { publicUrl } from '../lib/publicUrl';
+import { useSectionRecede } from '../transition/ProductTransition';
+import { preloadAllIn } from '../routePreload';
 
 export default function CatalogPage() {
+  const receding = useSectionRecede();
+  useEffect(() => {
+    preloadAllIn('/vedasleep');
+  }, []);
+
   return (
     <div
       style={{
@@ -34,7 +42,19 @@ export default function CatalogPage() {
         &larr; Brands
       </Link>
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center', marginBottom: 48 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 10,
+            textAlign: 'center',
+            marginBottom: 48,
+            opacity: receding ? 0.5 : 1,
+            transform: receding ? 'translateY(-4px)' : 'none',
+            transition: 'opacity 0.26s ease, transform 0.26s ease',
+          }}
+        >
           <img src={publicUrl('/brand/vedasleep-logo.png')} alt="Veda Sleep" style={{ height: 40, width: 'auto' }} />
           <div
             style={{

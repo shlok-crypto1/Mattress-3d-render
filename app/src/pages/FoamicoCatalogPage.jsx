@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { foamicoProducts } from '../data/foamicoProducts';
 import ProductCard from '../components/ProductCard';
 import { FOAMICO } from '../data/brands';
 import { publicUrl } from '../lib/publicUrl';
+import { useSectionRecede } from '../transition/ProductTransition';
+import { preloadAllIn } from '../routePreload';
 
 // Same structure as the VedaSleep grid (header + wordmark + tagline + card row),
 // re-themed to Key Black / Kiwi Green. No Veda Gold anywhere on this screen.
@@ -40,6 +43,10 @@ const SURFACES = {
 
 export default function FoamicoCatalogPage() {
   const surface = SURFACES[SURFACE];
+  const receding = useSectionRecede();
+  useEffect(() => {
+    preloadAllIn('/foamico');
+  }, []);
 
   const dark = SURFACE === 'dark';
 
@@ -73,6 +80,9 @@ export default function FoamicoCatalogPage() {
             gap: 10,
             textAlign: 'center',
             marginBottom: 48,
+            opacity: receding ? 0.5 : 1,
+            transform: receding ? 'translateY(-4px)' : 'none',
+            transition: 'opacity 0.26s ease, transform 0.26s ease',
           }}
         >
           <img

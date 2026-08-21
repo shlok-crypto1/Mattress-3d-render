@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import MattressViewer from '../components/MattressViewer';
+import { useEntranceRevealed, enterStyle } from '../transition/ProductTransition';
 
-export default function ProductPage({ product, backTo = '/', brand = 'vedasleep' }) {
+export default function ProductPage({ product, backTo = '/', brand = 'vedasleep', transitionId = null }) {
   const dark = brand === 'foamico';
+  const revealed = useEntranceRevealed(transitionId);
+  const animated = !!transitionId;
   return (
     <div style={{ position: 'relative' }}>
       <Link
@@ -20,11 +23,12 @@ export default function ProductPage({ product, backTo = '/', brand = 'vedasleep'
           background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.7)',
           padding: '6px 12px',
           borderRadius: 100,
+          ...(animated ? enterStyle(revealed, 190) : null),
         }}
       >
         &larr; Catalog
       </Link>
-      <MattressViewer product={product} brand={brand} />
+      <MattressViewer product={product} brand={brand} transitionId={transitionId} />
     </div>
   );
 }
