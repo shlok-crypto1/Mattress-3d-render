@@ -6,10 +6,7 @@ import { buildMattressGeometry } from '../lib/mattressGeometry';
 import { makeStudioEnvironment } from '../lib/foamSurfaces';
 import { buildLayerStack } from '../lib/layerStack';
 import {
-  getProductHeroRect,
   useProductEntranceTarget,
-  useSharedBackSource,
-  useSourceRecede,
   enterStyle,
 } from '../transition/ProductTransition';
 
@@ -128,15 +125,6 @@ export default function MattressViewer({
   // other way (direct link, refresh, back-nav) - zero behaviour change then.
   const { revealed, markCanvasReady } = useProductEntranceTarget(transitionId, mountRef);
   const animated = !!transitionId;
-  const recede = useSourceRecede();
-  const back = useSharedBackSource({
-    id: transitionId,
-    toPath: backTo,
-    variant: 'card',
-    elRef: mountRef,
-    getRect: () => (mountRef.current ? getProductHeroRect(mountRef.current.getBoundingClientRect()) : null),
-    imageUrl: `url("${publicUrl(product.textures.top)}")`,
-  });
   // Mutable animation/scene state that must NOT trigger re-renders, mirroring the
   // original `this.*` instance fields from the imperative viewer.
   const s = useRef({}).current;
@@ -773,12 +761,10 @@ export default function MattressViewer({
         userSelect: 'none',
         WebkitUserSelect: 'none',
         overflow: 'hidden',
-        ...recede,
       }}
     >
       <Link
         to={backTo}
-        onClick={back.onClick}
         style={{
           position: 'absolute',
           top: 18,
