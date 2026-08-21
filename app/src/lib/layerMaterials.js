@@ -64,10 +64,18 @@ function patternNormal(surface) {
  * the underlying `source`, so three uploads the pixels once however many faces
  * ask for it - only the UV transform differs.
  */
-function tiled(tex, repeatX, repeatY) {
+function tiled(tex, repeatX, repeatY, maxAnisotropy = 1) {
   const t = tex.clone();
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(Math.max(0.5, repeatX), Math.max(0.5, repeatY));
+  // Sampler state is per-texture even though clones share the pixels, so each
+  // face has to ask for anisotropy itself. Without this the exploded stack's
+  // foam grain, quilting and weave sampled at 1x and broke up into shimmer at
+  // exactly the grazing angles the layer view is usually seen from.
+  t.anisotropy = maxAnisotropy;
+  t.generateMipmaps = true;
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.magFilter = THREE.LinearFilter;
   t.needsUpdate = true;
   return t;
 }
@@ -82,7 +90,7 @@ function tiled(tex, repeatX, repeatY) {
  *   productSideMap    the real photographed gusset, wrapped around the base band
  */
 export function createLayerMaterials(def, ctx) {
-  const { W, L, h, wallTile, env, quality = 1 } = ctx;
+  const { W, L, h, wallTile, env, quality = 1, maxAnisotropy = 1 } = ctx;
   const type = def.type ?? 'foam';
   const base = TYPE_BASE[type] ?? TYPE_BASE.foam;
   const surface = surfaceOf(def);
@@ -119,12 +127,12 @@ export function createLayerMaterials(def, ctx) {
   const fabricish = type === 'fabric-cover' || type === 'fabric-base' || type === 'coil';
 
   const mk = ({ colorMap = null, colorRepeat = null, normal, repeat, roughness, extra = {} }) => {
-    const nrm = tiled(normal, repeat[0], repeat[1]);
+    const nrm = tiled(normal, repeat[0], repeat[1], maxAnisotropy);
     disposables.push(nrm);
     let map = null;
     if (colorMap) {
       const cr = colorRepeat ?? repeat;
-      map = tiled(colorMap, cr[0], cr[1]);
+      map = tiled(colorMap, cr[0], cr[1], maxAnisotropy);
       disposables.push(map);
     }
     const opts = {

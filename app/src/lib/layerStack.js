@@ -35,6 +35,7 @@ export async function buildLayerStack({
   productTop,
   productBottomMap,
   productSideMap,
+  maxAnisotropy = 1,
 }) {
   const disposables = [];
   const built = [];
@@ -60,6 +61,7 @@ export async function buildLayerStack({
       wallTile,
       env,
       quality,
+      maxAnisotropy,
       productTop: i === 0 ? productTop : null,
       productBottomMap: i === layerDefs.length - 1 ? productBottomMap : null,
       productSideMap: i === layerDefs.length - 1 ? productSideMap : null,

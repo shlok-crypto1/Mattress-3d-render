@@ -145,7 +145,11 @@ export default function MattressViewer({
     const quality = deviceQuality();
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: typeof window !== 'undefined' && window.location.search.includes('explode') });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality < 1 ? 1.75 : 2));
+    // Cap at 2x: enough for retina/high-DPI to render sharp rather than soft,
+    // without paying for the 3x backing store a modern phone would otherwise
+    // ask for. Sharpness wins over the old 1.75 low-power budget - the geometry
+    // quality dial still trims coil count and tessellation on weak devices.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
     s.renderer = renderer;
@@ -163,12 +167,20 @@ export default function MattressViewer({
 
     const loader = new THREE.TextureLoader();
     const disposables = [];
+    // Every product map goes through here, so the sampling setup is stated in
+    // one place: full anisotropy (the single biggest win on a mattress top seen
+    // at a grazing angle), trilinear mipmapping so the surface doesn't alias
+    // into shimmer at distance, and linear magnification for close-ups.
+    const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
     const load = (url, onLoaded) => {
       const t = loader.load(url, () => {
         s.dirty = true;
         onLoaded?.();
       });
-      t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      t.anisotropy = maxAnisotropy;
+      t.generateMipmaps = true;
+      t.minFilter = THREE.LinearMipmapLinearFilter;
+      t.magFilter = THREE.LinearFilter;
       t.colorSpace = THREE.SRGBColorSpace;
       disposables.push(t);
       return t;
@@ -255,6 +267,7 @@ export default function MattressViewer({
         productTop: topMatOpts,
         productBottomMap: bottom,
         productSideMap: sideTex,
+        maxAnisotropy,
       })
         .then((built) => {
           if (disposed) {
