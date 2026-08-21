@@ -1,1 +1,0 @@
-import{r as e,t}from"./index-E9ywy2sq.js";import{t as n}from"./ProductPage-BStMtnsE.js";var r=t();function i(){return(0,r.jsx)(n,{product:e(`duro`)})}export{i as default};

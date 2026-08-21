@@ -7,6 +7,43 @@ import { publicUrl } from '../lib/publicUrl';
 // mattress silhouette instead of a cardboard box. Three material groups:
 // 0 = top face + bevel (quilted fabric), 1 = wall (gusset/side fabric, wraps the
 // whole rounded perimeter as one continuous texture), 2 = bottom face.
+// Per-brand chrome for the shared viewer. 'vedasleep' reproduces the original
+// values exactly, so VedaSleep product pages are unchanged.
+const BRAND_THEMES = {
+  vedasleep: {
+    logo: '/brand/vedasleep-logo.png',
+    logoAlt: 'Veda Sleep',
+    logoHeight: 32,
+    surface:
+      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 62%), #F6F8F1',
+    text: '#2b2b2b',
+    muted: '#8a8a8e',
+    faint: '#b0b0b4',
+    btnBg: '#f4f4f5',
+    btnColor: '#6e6e73',
+    btnActiveBg: '#1d1d1f',
+    btnActiveColor: '#fff',
+    pendingBorder: 'rgba(199,125,17,0.45)',
+    pendingColor: '#c77d11',
+  },
+  foamico: {
+    logo: '/brand/foamico-logo-light.png',
+    logoAlt: 'Foamico',
+    logoHeight: 54,
+    surface:
+      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(149,193,43,0.10) 0%, rgba(149,193,43,0) 62%), #1A1A1A',
+    text: '#FEFEFE',
+    muted: '#8f8f8f',
+    faint: '#6e6e6e',
+    btnBg: '#242424',
+    btnColor: '#b5b5b5',
+    btnActiveBg: '#95C12B',
+    btnActiveColor: '#1A1A1A',
+    pendingBorder: 'rgba(149,193,43,0.45)',
+    pendingColor: '#95C12B',
+  },
+};
+
 function buildMattressGeometry(W, H, L, Rc, Rt, cornerSegs, tileWidth) {
   const hx = W / 2, hz = L / 2;
   const segs = [
@@ -116,7 +153,7 @@ const VIEW_DEFS = [
   ['bottom', 'Bottom', 0, -1.35],
 ];
 
-export default function MattressViewer({ product, autoRotate = true }) {
+export default function MattressViewer({ product, autoRotate = true, brand = 'vedasleep' }) {
   const mountRef = useRef(null);
   const [view, setView] = useState('corner');
   // Mutable animation/scene state that must NOT trigger re-renders, mirroring the
@@ -326,7 +363,8 @@ export default function MattressViewer({ product, autoRotate = true }) {
     setView(name);
   };
 
-  const { name, specLine } = product;
+  const { name, specLine, specsPending } = product;
+  const t = BRAND_THEMES[brand] ?? BRAND_THEMES.vedasleep;
 
   return (
     <div
@@ -335,9 +373,12 @@ export default function MattressViewer({ product, autoRotate = true }) {
         flexDirection: 'column',
         height: '100dvh',
         fontFamily: "'Poppins', -apple-system, sans-serif",
-        background:
-          'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 62%), #F6F8F1',
-        color: '#2b2b2b',
+        background: t.surface,
+        color: t.text,
+        '--mv-btn-bg': t.btnBg,
+        '--mv-btn-color': t.btnColor,
+        '--mv-btn-active-bg': t.btnActiveBg,
+        '--mv-btn-active-color': t.btnActiveColor,
         userSelect: 'none',
         WebkitUserSelect: 'none',
         overflow: 'hidden',
@@ -353,7 +394,7 @@ export default function MattressViewer({ product, autoRotate = true }) {
           textAlign: 'center',
         }}
       >
-        <img src={publicUrl('/brand/vedasleep-logo.png')} alt="Veda Sleep" style={{ height: 32, width: 'auto' }} />
+        <img src={publicUrl(t.logo)} alt={t.logoAlt} style={{ height: t.logoHeight, width: 'auto' }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div
             style={{
@@ -374,6 +415,23 @@ export default function MattressViewer({ product, autoRotate = true }) {
               {specLine.thickness}
               {' · '}
               {specLine.warranty}
+            </div>
+          ) : specsPending ? (
+            // Mock-up slot: real variant / thickness / warranty copy drops in here.
+            <div
+              style={{
+                marginTop: 10,
+                alignSelf: 'center',
+                fontSize: 10.5,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: t.pendingColor,
+                border: `1px dashed ${t.pendingBorder}`,
+                borderRadius: 100,
+                padding: '5px 12px',
+              }}
+            >
+              Spec details to follow
             </div>
           ) : null}
         </div>
@@ -402,7 +460,7 @@ export default function MattressViewer({ product, autoRotate = true }) {
             </button>
           ))}
         </div>
-        <div style={{ fontSize: 11.5, color: '#b0b0b4', fontWeight: 300, letterSpacing: '0.03em' }}>Drag to rotate</div>
+        <div style={{ fontSize: 11.5, color: t.faint, fontWeight: 300, letterSpacing: '0.03em' }}>Drag to rotate</div>
       </div>
 
       <style>{`
@@ -416,12 +474,12 @@ export default function MattressViewer({ product, autoRotate = true }) {
           border: 1px solid transparent;
           cursor: pointer;
           transition: all 0.25s ease;
-          background: #f4f4f5;
-          color: #6e6e73;
+          background: var(--mv-btn-bg);
+          color: var(--mv-btn-color);
         }
         .mv-view-btn[data-active="true"] {
-          background: #1d1d1f;
-          color: #fff;
+          background: var(--mv-btn-active-bg);
+          color: var(--mv-btn-active-color);
         }
       `}</style>
     </div>

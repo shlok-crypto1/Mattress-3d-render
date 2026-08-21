@@ -39,7 +39,7 @@ export default function CatalogPage() {
           }}
         >
           {products.map((product) => (
-            <ProductCard key={product.slug} product={product} />
+            <ProductCard key={product.slug} product={product} basePath="/vedasleep" />
           ))}
         </div>
       </div>

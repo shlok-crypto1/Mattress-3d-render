@@ -1,10 +1,20 @@
 import { Link } from 'react-router-dom';
 import { publicUrl } from '../lib/publicUrl';
 
-export default function ProductCard({ product }) {
+// Defaults reproduce the VedaSleep card exactly; FOAMICO passes its own theme.
+export const LIGHT_CARD = {
+  background: '#fff',
+  border: '#e4e0d4',
+  name: 'inherit',
+  spec: '#8a8a8e',
+  badge: '#c77d11',
+  badgeBg: 'rgba(199,125,17,0.12)',
+};
+
+export default function ProductCard({ product, basePath = '', theme = LIGHT_CARD }) {
   return (
     <Link
-      to={`/${product.slug}`}
+      to={`${basePath}/${product.slug}`}
       className="product-card"
       style={{
         display: 'flex',
@@ -13,8 +23,8 @@ export default function ProductCard({ product }) {
         color: 'inherit',
         borderRadius: 16,
         overflow: 'hidden',
-        border: '1px solid #e4e0d4',
-        background: '#fff',
+        border: `1px solid ${theme.border}`,
+        background: theme.background,
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
       }}
     >
@@ -37,8 +47,8 @@ export default function ProductCard({ product }) {
               fontWeight: 600,
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
-              color: '#c77d11',
-              background: 'rgba(199,125,17,0.12)',
+              color: theme.badge,
+              background: theme.badgeBg,
               padding: '4px 8px',
               borderRadius: 100,
             }}
@@ -55,12 +65,13 @@ export default function ProductCard({ product }) {
             fontSize: 18,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
+            color: theme.name,
           }}
         >
           {product.name}
         </div>
         {product.specLine && (
-          <div style={{ fontSize: 11.5, color: '#8a8a8e', marginTop: 6, letterSpacing: '0.02em' }}>
+          <div style={{ fontSize: 11.5, color: theme.spec, marginTop: 6, letterSpacing: '0.02em' }}>
             {product.specLine.variant} &middot; {product.specLine.thickness}
           </div>
         )}
