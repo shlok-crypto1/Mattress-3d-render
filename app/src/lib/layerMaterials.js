@@ -36,6 +36,10 @@ const SURFACE_PITCH = {
   quilted: 20,
 };
 
+// Multiplier on the photographed cover map in the exploded stack. 0.85 puts a
+// 250/255 quilt highlight at ~0.99 of clipping under this scene's lighting.
+const COVER_TONE = 0.85;
+
 const surfaceOf = (def) => def.surface ?? TYPE_BASE[def.type]?.surface ?? 'plain';
 
 function patternNormal(surface) {
@@ -155,12 +159,19 @@ export function createLayerMaterials(def, ctx) {
   if (type === 'fabric-cover' && ctx.productTop) {
     // Reuse the real photographed quilt for the visible sleeping surface; the
     // cut edges of the cover get plain cloth.
-    topMat = new THREE.MeshPhysicalMaterial({
+    // Built exactly like the solid box's top material - no environment map and
+    // no sheen - plus a deliberate tone-down.
+    //
+    // The scene lights flat: ambient 3.0 contributes ~0.96x albedo and the key
+    // another ~0.28x on an up-facing normal, so a near-white quilt (Maxa,
+    // Magic, Ultima) already lands around 1.0. There is no tone mapping to roll
+    // that off, so the env map and sheen this used to add pushed it clear past
+    // 1.0: the cover clipped to a flat white slab that lost both its quilt
+    // detail and its silhouette against the light page background. COVER_TONE
+    // keeps the brightest quilts just under clipping so the pattern survives.
+    topMat = new THREE.MeshStandardMaterial({
       ...ctx.productTop,
-      envMap: env ?? null,
-      envMapIntensity: base.envMapIntensity,
-      sheen: 0.35,
-      sheenRoughness: 0.8,
+      color: new THREE.Color(COVER_TONE, COVER_TONE, COVER_TONE),
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0,

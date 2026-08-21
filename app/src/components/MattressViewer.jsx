@@ -34,6 +34,11 @@ const BRAND_THEMES = {
     accentBorder: 'rgba(199,125,17,0.35)',
     labelBg: 'rgba(254,254,254,0.92)',
     labelColor: '#2b2b2b',
+    // Soft pool behind the exploded stack. On this near-white stage a white
+    // cover has no silhouette to read against; a touch of shade under the
+    // model gives it an edge without darkening the page.
+    stageTint:
+      'radial-gradient(ellipse 68% 60% at 50% 54%, rgba(31,33,28,0.13) 0%, rgba(31,33,28,0) 72%)',
     cardBg: '#FEFEFE',
     cardBorder: '#e4e0d4',
     cardTitle: '#1A1A1A',
@@ -63,6 +68,8 @@ const BRAND_THEMES = {
     accentBorder: 'rgba(149,193,43,0.38)',
     labelBg: 'rgba(26,26,26,0.88)',
     labelColor: '#FEFEFE',
+    // Key Black already separates a pale layer cleanly - nothing to add.
+    stageTint: null,
     cardBg: '#212121',
     cardBorder: '#343434',
     cardTitle: '#FEFEFE',
@@ -72,13 +79,12 @@ const BRAND_THEMES = {
   },
 };
 
-// Explode tuning. EXPLODE_IN/OUT bracket the zoom that toggles the stack; the
-// gap between them is hysteresis so a stationary wheel can't flap the state.
+// Explode tuning. The stack is toggled by the Layers button alone - zoom used
+// to cross a threshold and explode the mattress on its own, which fired when
+// someone was only trying to look closer at the solid product.
 const EXPLODE_MS = 720;
 const LAYER_STAGGER = 0.07;
-const EXPLODE_IN = 104;
-const EXPLODE_OUT = 132;
-const EXPLODE_DIST = 94;
+const EXPLODE_DIST = 94; // where the button parks the camera to frame the stack
 const EXPLODE_SCALE = 0.55; // shrink the group so the taller stack stays framed
 const HOVER_LIFT = 1.15;
 const HOVER_SCALE = 0.02;
@@ -359,7 +365,6 @@ export default function MattressViewer({
         const d = Math.hypot(pts[0][0] - pts[1][0], pts[0][1] - pts[1][1]);
         if (lastPinch) {
           s.tDist = Math.min(260, Math.max(80, (s.tDist * lastPinch) / d));
-          syncExplodeToZoom();
         }
         lastPinch = d;
       }
@@ -399,11 +404,9 @@ export default function MattressViewer({
       e.preventDefault();
       s.tDist = Math.min(260, Math.max(80, s.tDist + e.deltaY * 0.15));
       s.idle = performance.now();
-      syncExplodeToZoom();
     };
 
-    // Zoom and the Layers button write the same flag, so the two can never
-    // disagree; the dead band between the thresholds stops it oscillating.
+    // The single entry point for entering/leaving the exploded view.
     const setExplodeState = (next) => {
       if (!hasLayers || s.exploded === next) return;
       s.exploded = next;
@@ -419,12 +422,6 @@ export default function MattressViewer({
       }
     };
     s.setExplodeState = setExplodeState;
-
-    const syncExplodeToZoom = () => {
-      if (!hasLayers) return;
-      if (s.tDist <= EXPLODE_IN) setExplodeState(true);
-      else if (s.tDist >= EXPLODE_OUT) setExplodeState(false);
-    };
 
     el.addEventListener('pointerdown', onPointerDown);
     el.addEventListener('pointermove', onPointerMove);
@@ -556,18 +553,35 @@ export default function MattressViewer({
             el2.style.opacity = '0';
             el2.style.visibility = 'hidden';
           } else {
-            let bestX = -Infinity, bestY = 0;
+            let bestX = -Infinity, bestY = 0, leftX = Infinity, leftY = 0;
             const hw = W / 2, hl = L / 2;
             const g2 = s.groupScale ?? 1;
             for (const [cx, cz] of [[hw, hl], [hw, -hl], [-hw, hl], [-hw, -hl]]) {
               projected.set(cx * g2, l.object.position.y * g2, cz * g2).project(camera);
               if (projected.x > bestX) { bestX = projected.x; bestY = projected.y; }
+              if (projected.x < leftX) { leftX = projected.x; leftY = projected.y; }
             }
             const r = el.getBoundingClientRect();
             el2.style.visibility = 'visible';
             el2.style.opacity = String(fade);
-            el2.style.transform =
-              `translate(${((bestX + 1) / 2) * r.width + 14}px, ${((1 - bestY) / 2) * r.height}px) translateY(-50%)`;
+            // Labels ride the right corner by default, but a narrow viewport
+            // ran them off the edge and clipped the layer names. Hang them off
+            // the left corner instead when the right has no room, and clamp so
+            // one never leaves the canvas.
+            const lw = el2.offsetWidth;
+            const GAP = 14, EDGE = 8;
+            let lx = ((bestX + 1) / 2) * r.width + GAP;
+            let ly = ((1 - bestY) / 2) * r.height;
+            if (lx + lw > r.width - EDGE) {
+              const flipped = ((leftX + 1) / 2) * r.width - GAP - lw;
+              if (flipped >= EDGE) {
+                lx = flipped;
+                ly = ((1 - leftY) / 2) * r.height;
+              } else {
+                lx = Math.max(EDGE, r.width - EDGE - lw);
+              }
+            }
+            el2.style.transform = `translate(${lx}px, ${ly}px) translateY(-50%)`;
           }
         }
       });
@@ -747,6 +761,7 @@ export default function MattressViewer({
 
   return (
     <div
+      className="mv-root"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -765,34 +780,20 @@ export default function MattressViewer({
     >
       <Link
         to={backTo}
+        className="mv-back"
         style={{
-          position: 'absolute',
-          top: 18,
-          left: 18,
           zIndex: 10,
-          fontSize: 12,
           fontWeight: 500,
           letterSpacing: '0.03em',
           color: t.muted,
           textDecoration: 'none',
           background: brand === 'foamico' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.7)',
-          padding: '6px 12px',
-          borderRadius: 100,
           ...(animated ? enterStyle(revealed, 235) : null),
         }}
       >
         &larr; {backTo === '/' ? 'Brands' : 'Catalog'}
       </Link>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 10,
-          padding: '28px 20px 0',
-          textAlign: 'center',
-        }}
-      >
+      <div className="mv-head">
         <img
           src={publicUrl(t.logo)}
           alt={t.logoAlt}
@@ -804,11 +805,10 @@ export default function MattressViewer({
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div
+            className="mv-title"
             style={{
               fontFamily: "'Montserrat', sans-serif",
               fontWeight: 800,
-              fontSize: 34,
-              letterSpacing: '0.22em',
               lineHeight: 1,
               textTransform: 'uppercase',
               ...(animated ? enterStyle(revealed, 0) : null),
@@ -818,8 +818,8 @@ export default function MattressViewer({
           </div>
           {specLine ? (
             <div
+              className="mv-spec"
               style={{
-                fontSize: 12.5,
                 fontWeight: 400,
                 color: '#8a8a8e',
                 letterSpacing: '0.04em',
@@ -856,6 +856,9 @@ export default function MattressViewer({
       </div>
 
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+        {hasLayers && t.stageTint ? (
+          <div aria-hidden className="mv-stage-tint" style={{ background: t.stageTint, opacity: exploded ? 1 : 0 }} />
+        ) : null}
         <div
           ref={mountRef}
           style={{
@@ -877,6 +880,7 @@ export default function MattressViewer({
             {layerDefs.map((l, i) => (
               <div
                 key={l.id}
+                className="mv-label"
                 style={{
                   position: 'absolute',
                   top: 0,
@@ -884,7 +888,6 @@ export default function MattressViewer({
                   visibility: 'hidden',
                   opacity: 0,
                   whiteSpace: 'nowrap',
-                  fontSize: 10.5,
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   color: hoveredLayer === i ? t.accent : t.labelColor,
@@ -905,17 +908,11 @@ export default function MattressViewer({
         {active && (
           <div
             onClick={() => setSelectedLayer(null)}
+            className="mv-card"
             style={{
-              position: 'absolute',
-              left: 18,
-              bottom: 18,
-              maxWidth: 320,
               background: t.cardBg,
               border: `1px solid ${t.cardBorder}`,
-              borderRadius: 16,
-              padding: '16px 18px 18px',
               boxShadow: t.cardShadow,
-              cursor: 'pointer',
             }}
           >
             <div
@@ -963,16 +960,10 @@ export default function MattressViewer({
       </div>
 
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 14,
-          padding: '0 20px 26px',
-          ...(animated ? enterStyle(revealed, 130) : null),
-        }}
+        className="mv-controls"
+        style={{ ...(animated ? enterStyle(revealed, 130) : null) }}
       >
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="mv-btnrow">
           {VIEW_DEFS.map(([name_, label, th, ph]) => (
             <button
               key={name_}
@@ -989,16 +980,71 @@ export default function MattressViewer({
             </button>
           )}
         </div>
-        <div style={{ fontSize: 11.5, color: t.faint, fontWeight: 300, letterSpacing: '0.03em' }}>
+        <div className="mv-hint" style={{ color: t.faint }}>
           {hasLayers && exploded
-            ? 'Tap a layer for details · zoom out to collapse'
+            ? 'Tap a layer for details · Solid to collapse'
             : hasLayers
-              ? 'Drag to rotate · zoom in to explode layers'
+              ? 'Drag to rotate · Layers to open the stack'
               : 'Drag to rotate'}
         </div>
       </div>
 
       <style>{`
+        /* Sizing lives here rather than inline so the phone breakpoints can
+           actually win - an inline style would outrank every media query. */
+        .mv-root {
+          -webkit-tap-highlight-color: transparent;
+          overscroll-behavior: none;
+        }
+        .mv-back {
+          position: absolute;
+          top: calc(18px + env(safe-area-inset-top));
+          left: calc(18px + env(safe-area-inset-left));
+          font-size: 12px;
+          padding: 6px 12px;
+          border-radius: 100px;
+        }
+        .mv-head {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+          padding: calc(28px + env(safe-area-inset-top)) 20px 0;
+          text-align: center;
+        }
+        .mv-title {
+          font-size: 34px;
+          letter-spacing: 0.22em;
+          /* The wordmark is set very wide; on a narrow phone that is what
+             overflows first, so the tracking gives way before the size does. */
+          text-indent: 0.22em;
+        }
+        .mv-spec { font-size: 12.5px; }
+        .mv-stage-tint {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          transition: opacity 420ms ease;
+        }
+        .mv-label { font-size: 10.5px; }
+        .mv-card {
+          position: absolute;
+          left: 18px;
+          bottom: 18px;
+          max-width: 320px;
+          border-radius: 16px;
+          padding: 16px 18px 18px;
+          cursor: pointer;
+        }
+        .mv-controls {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 14px;
+          padding: 0 20px calc(26px + env(safe-area-inset-bottom));
+        }
+        .mv-btnrow { display: flex; gap: 8px; }
+        .mv-hint { font-size: 11.5px; font-weight: 300; letter-spacing: 0.03em; }
         .mv-view-btn {
           font-family: inherit;
           font-size: 12px;
@@ -1011,10 +1057,64 @@ export default function MattressViewer({
           transition: all 0.25s ease;
           background: var(--mv-btn-bg);
           color: var(--mv-btn-color);
+          white-space: nowrap;
         }
         .mv-view-btn[data-active="true"] {
           background: var(--mv-btn-active-bg);
           color: var(--mv-btn-active-color);
+        }
+
+        /* Phones. Six view buttons never fit one line at 390px, so the row
+           scrolls sideways instead of wrapping into a ragged block or pushing
+           the canvas off-screen. */
+        @media (max-width: 620px) {
+          .mv-head { gap: 7px; padding-top: calc(16px + env(safe-area-inset-top)); }
+          .mv-title { font-size: clamp(20px, 6.4vw, 30px); letter-spacing: 0.13em; text-indent: 0.13em; }
+          .mv-spec { font-size: 11.5px; margin-top: 6px !important; }
+          .mv-hint { font-size: 10.5px; }
+          .mv-controls { gap: 10px; padding: 0 0 calc(14px + env(safe-area-inset-bottom)); }
+          .mv-btnrow {
+            width: 100%;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x proximity;
+            padding: 2px calc(16px + env(safe-area-inset-left)) 2px calc(16px + env(safe-area-inset-right));
+            justify-content: flex-start;
+          }
+          .mv-btnrow::-webkit-scrollbar { display: none; }
+          .mv-view-btn {
+            scroll-snap-align: center;
+            /* Comfortable thumb target - 8px/15px lands well under 44px. */
+            min-height: 44px;
+            padding: 8px 17px;
+            font-size: 12.5px;
+          }
+          .mv-label { font-size: 9.5px; letter-spacing: 0.07em; padding: 3px 9px !important; }
+          /* The floating card covers the model on a narrow screen; as a bottom
+             sheet it sits under it instead. */
+          .mv-card {
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            max-width: none;
+            border-radius: 18px;
+            padding: 14px 16px 16px;
+          }
+        }
+
+        /* Landscape phones: almost no vertical room, so the header collapses to
+           the wordmark and the stage keeps the rest. */
+        @media (max-height: 480px) and (orientation: landscape) {
+          .mv-head { padding-top: calc(10px + env(safe-area-inset-top)); gap: 4px; }
+          .mv-head img { height: 22px; }
+          .mv-title { font-size: 20px; letter-spacing: 0.1em; text-indent: 0.1em; }
+          .mv-spec, .mv-hint { display: none; }
+          .mv-controls { padding-bottom: calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .mv-stage-tint { transition: none; }
         }
       `}</style>
     </div>

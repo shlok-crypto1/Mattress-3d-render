@@ -1,0 +1,1 @@
+import{u as e}from"./index-Bkq9q_uh.js";import{t}from"./ProductPage-BtlHDJvQ.js";import{n}from"./foamicoProducts-Ba2PeL-r.js";var r=e();function i(){return(0,r.jsx)(t,{product:n(`ultima`),backTo:`/foamico`,brand:`foamico`,transitionId:`product-foamico-ultima`})}export{i as default};
