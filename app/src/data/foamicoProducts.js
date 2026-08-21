@@ -1,12 +1,7 @@
 // FOAMICO line. Renders are built from the reference photos in
 // "Foamico mattresses/<Name>/" through the same pipeline as the VedaSleep set.
-//
-// TO BE SUPPLIED (placeholders below are marked, not invented):
-//   - specLine: variant / thickness / warranty text for each product
-//   - dimensions.height: the values here are measured off the head-on photos
-//     (band height vs the 36" face) and rounded, so they are approximations
-//     until the real spec sheet lands.
-//   - constructionDetail: layer build-up copy, if you want it on the page.
+// The collection uses the official baseline variant for each range: Classic
+// for Resto, Sova, Luma and Ultima; Riva 1000 for Riva.
 
 const tex = (slug) => ({
   top: `/textures/foamico/${slug}/top.png`,
@@ -15,23 +10,26 @@ const tex = (slug) => ({
   bottom: `/textures/foamico/${slug}/bottom.png`,
 });
 
-const product = (slug, name, height) => ({
+const product = (slug, name, variant, height, feel, warranty) => ({
   slug,
   name,
-  specLine: null, // awaiting real spec text
+  specLine: {
+    variant,
+    thickness: `${height}\u2033 ${feel}`,
+    warranty,
+  },
   dimensions: { width: 72, length: 72, height },
   constructionDetail: '',
   textures: tex(slug),
   placeholder: false,
-  specsPending: true, // drives the "specs to follow" note on the product page
 });
 
 export const foamicoProducts = [
-  product('resto', 'Resto', 8),
-  product('sova', 'Sova', 8),
-  product('luma', 'Luma', 8),
-  product('ultima', 'Ultima', 7),
-  product('riva', 'Riva', 7),
+  product('resto', 'Resto', 'Classic', 6, 'Firm', '10-Year Warranty + 5-Year Full Replacement'),
+  product('sova', 'Sova', 'Classic', 6, 'Firm', '15-Year Warranty + 5-Year Full Replacement'),
+  product('luma', 'Luma', 'Classic', 6, 'Medium', '7-Year Warranty + 5-Year Full Replacement'),
+  product('ultima', 'Ultima', 'Classic', 6, 'Firm', '25-Year Warranty + 5-Year Full Replacement'),
+  product('riva', 'Riva', '1000', 8, 'Medium', '30-Year Warranty + 5-Year Full Replacement'),
 ];
 
 export const getFoamicoProductBySlug = (slug) =>
