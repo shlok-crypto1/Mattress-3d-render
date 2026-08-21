@@ -218,10 +218,15 @@ export function buildMattressGeometry(W, H, L, Rc, Rt, cornerSegs, tileWidth, op
 }
 
 /**
- * Euro-top (pillow-top) silhouette: a firm base box with a separate, slightly
- * smaller cushion sewn on top, divided by a piping band that runs the whole
- * perimeter. Standard mattress construction, so it is shared by every product
- * rather than switched on per slug.
+ * Euro-top silhouette: a firm base box with a separate cushion sewn on top,
+ * divided by a piping band that runs the whole perimeter. Standard mattress
+ * construction, so it is shared by every product rather than switched on per
+ * slug.
+ *
+ * The cushion carries the base's full footprint - flush sides, corner to corner
+ * - which is what separates a Euro-top from a pillow-top, where the cushion is
+ * inset and sits on a visible shelf. cushionInset can still step it in if a
+ * pillow-top is ever wanted.
  *
  * Stacked bottom to top:
  *
@@ -244,7 +249,7 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
   const {
     baseCornerRadius = 1.15,
     baseTopChamfer = 0.2,
-    cushionInset = 1.0,
+    cushionInset = 0,
     cushionBevel = 0.32,
     cushionRatio = 0.3,
     seamHeight = 0.4,
