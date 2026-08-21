@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { publicUrl } from '../lib/publicUrl';
-import { useCardTransition } from '../transition/ProductTransition';
+import { useSharedSource, prefersReducedMotion } from '../transition/ProductTransition';
 import { preloadRoute } from '../routePreload';
 
 // Defaults reproduce the VedaSleep card exactly; FOAMICO passes its own theme.
@@ -13,17 +14,50 @@ export const LIGHT_CARD = {
   badgeBg: 'rgba(199,125,17,0.12)',
 };
 
-export default function ProductCard({ product, basePath = '', theme = LIGHT_CARD }) {
+/**
+ * `hovered` / `onHover` are lifted to the parent grid because the dim-the-others
+ * effect is inherently cross-sibling - a card can't know it should dim from its
+ * own state alone. `accent` is the brand hover edge (Veda Gold / Kiwi Green).
+ */
+export default function ProductCard({
+  product,
+  basePath = '',
+  theme = LIGHT_CARD,
+  accent = '#c77d11',
+  hovered = null,
+  onHover = () => {},
+}) {
   const toPath = `${basePath}/${product.slug}`;
-  const transitionId = `${basePath.replace(/^\//, '')}-${product.slug}`;
-  const { imgRef, onClick, isReceding } = useCardTransition(transitionId, toPath);
+  const brand = basePath.replace(/^\//, '');
+  const transitionId = `product-${brand}-${product.slug}`;
+  const { ref, onClick } = useSharedSource({ id: transitionId, toPath, variant: 'card' });
+  const [pressed, setPressed] = useState(false);
+
+  const reduced = prefersReducedMotion();
+  const lifted = !reduced && (hovered === product.slug || pressed);
+  const dimmed = !reduced && hovered !== null && hovered !== product.slug;
 
   return (
     <Link
       to={toPath}
       onClick={onClick}
-      onPointerEnter={() => preloadRoute(basePath, product.slug)}
-      onFocus={() => preloadRoute(basePath, product.slug)}
+      onPointerEnter={(e) => {
+        preloadRoute(basePath, product.slug);
+        if (e.pointerType !== 'touch') onHover(product.slug);
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType !== 'touch') onHover(null);
+      }}
+      // Touch has no hover, so a tap gets the lifted state as direct feedback;
+      // the transition's own pre-navigate hold keeps it visible long enough to read.
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
+      onFocus={() => {
+        preloadRoute(basePath, product.slug);
+        onHover(product.slug);
+      }}
+      onBlur={() => onHover(null)}
       className="product-card"
       style={{
         display: 'flex',
@@ -32,15 +66,21 @@ export default function ProductCard({ product, basePath = '', theme = LIGHT_CARD
         color: 'inherit',
         borderRadius: 16,
         overflow: 'hidden',
-        border: `1px solid ${theme.border}`,
+        border: `1px solid ${lifted ? accent : theme.border}`,
         background: theme.background,
-        opacity: isReceding ? 0.55 : 1,
-        transform: isReceding ? 'translateY(4px) scale(0.98)' : 'none',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease, opacity 0.26s ease',
+        opacity: dimmed ? 0.88 : 1,
+        transform: lifted ? 'translateY(-4px) scale(1.035)' : 'none',
+        boxShadow: lifted
+          ? `0 18px 38px rgba(0,0,0,0.18), 0 0 0 1px ${accent}55`
+          : '0 0 0 0 rgba(0,0,0,0)',
+        transition: reduced
+          ? 'none'
+          : 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, opacity 200ms ease, border-color 200ms ease',
+        willChange: lifted ? 'transform' : 'auto',
       }}
     >
       <div
-        ref={imgRef}
+        ref={ref}
         style={{
           aspectRatio: '4 / 3',
           backgroundImage: `url(${publicUrl(product.textures.top)})`,

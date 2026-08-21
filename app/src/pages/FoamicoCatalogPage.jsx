@@ -1,10 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { foamicoProducts } from '../data/foamicoProducts';
 import ProductCard from '../components/ProductCard';
 import { FOAMICO } from '../data/brands';
 import { publicUrl } from '../lib/publicUrl';
-import { useSectionRecede } from '../transition/ProductTransition';
+import {
+  useSourceRecede,
+  useElementEntranceTarget,
+  enterStyle,
+  REVEAL,
+} from '../transition/ProductTransition';
 import { preloadAllIn } from '../routePreload';
 
 // Same structure as the VedaSleep grid (header + wordmark + tagline + card row),
@@ -43,15 +48,29 @@ const SURFACES = {
 
 export default function FoamicoCatalogPage() {
   const surface = SURFACES[SURFACE];
-  const receding = useSectionRecede();
+  const dark = SURFACE === 'dark';
+
+  // Source when a card is clicked; destination when arriving from the brand
+  // selector, where the FOAMICO mark is the shared element landing here.
+  const recede = useSourceRecede();
+  const logoRef = useRef(null);
+  const revealed = useElementEntranceTarget('logo-foamico', logoRef);
+  const [hovered, setHovered] = useState(null);
+
   useEffect(() => {
     preloadAllIn('/foamico');
   }, []);
 
-  const dark = SURFACE === 'dark';
-
   return (
-    <div style={{ position: 'relative', minHeight: '100dvh', background: surface.page, padding: '48px 24px 64px' }}>
+    <div
+      style={{
+        position: 'relative',
+        minHeight: '100dvh',
+        background: surface.page,
+        padding: '48px 24px 64px',
+        ...recede,
+      }}
+    >
       <Link
         to="/"
         style={{
@@ -67,6 +86,7 @@ export default function FoamicoCatalogPage() {
           background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.7)',
           padding: '6px 12px',
           borderRadius: 100,
+          ...enterStyle(revealed, REVEAL.back),
         }}
       >
         &larr; Brands
@@ -80,17 +100,22 @@ export default function FoamicoCatalogPage() {
             gap: 10,
             textAlign: 'center',
             marginBottom: 48,
-            opacity: receding ? 0.5 : 1,
-            transform: receding ? 'translateY(-4px)' : 'none',
-            transition: 'opacity 0.26s ease, transform 0.26s ease',
           }}
         >
           <img
-            src={publicUrl(SURFACE === 'dark' ? '/brand/foamico-logo-light.png' : '/brand/foamico-logo.png')}
+            ref={logoRef}
+            src={publicUrl(dark ? '/brand/foamico-logo-light.png' : '/brand/foamico-logo.png')}
             alt="Foamico - Luxury Mattress"
-            style={{ height: 72, width: 'auto' }}
+            style={{ height: 72, width: 'auto', ...enterStyle(revealed, REVEAL.mark) }}
           />
-          <div style={{ fontSize: 13, color: surface.tagline, letterSpacing: '0.03em' }}>
+          <div
+            style={{
+              fontSize: 13,
+              color: surface.tagline,
+              letterSpacing: '0.03em',
+              ...enterStyle(revealed, REVEAL.meta),
+            }}
+          >
             The FOAMICO mattress collection &middot; tap a product to explore it in 3D
           </div>
         </div>
@@ -102,8 +127,17 @@ export default function FoamicoCatalogPage() {
             gap: 20,
           }}
         >
-          {foamicoProducts.map((product) => (
-            <ProductCard key={product.slug} product={product} basePath="/foamico" theme={surface.card} />
+          {foamicoProducts.map((product, i) => (
+            <div key={product.slug} style={enterStyle(revealed, REVEAL.controls + i * 45)}>
+              <ProductCard
+                product={product}
+                basePath="/foamico"
+                theme={surface.card}
+                accent={FOAMICO.accent}
+                hovered={hovered}
+                onHover={setHovered}
+              />
+            </div>
           ))}
         </div>
       </div>

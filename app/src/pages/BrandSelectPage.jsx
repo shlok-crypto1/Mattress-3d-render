@@ -1,6 +1,14 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FOAMICO, VEDASLEEP } from '../data/brands';
 import { publicUrl } from '../lib/publicUrl';
+import {
+  useSharedSource,
+  useSourceRecede,
+  prefersReducedMotion,
+  canHover,
+  EASE_ENTER,
+} from '../transition/ProductTransition';
 
 // The front door. Two equal panels, each rendered entirely in its own brand's
 // palette so neither reads as the secondary choice. Deliberately imports no
@@ -38,7 +46,6 @@ const taglineStyle = (color) => ({
 });
 
 const markSlot = {
-  height: 52,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -53,8 +60,33 @@ const cueStyle = (color) => ({
 });
 
 export default function BrandSelectPage() {
+  const recede = useSourceRecede();
+  const [hovered, setHovered] = useState(null);
+  const [hoverCapable, setHoverCapable] = useState(false);
+  const reduced = prefersReducedMotion();
+
+  // Pointer capability is a client-only fact; resolving it after mount keeps
+  // the first paint identical everywhere and skips hover work on touch.
+  useEffect(() => {
+    setHoverCapable(canHover() && !prefersReducedMotion());
+  }, []);
+
+  const foamico = useSharedSource({ id: 'logo-foamico', toPath: '/foamico', variant: 'logo' });
+  const veda = useSharedSource({ id: 'logo-vedasleep', toPath: '/vedasleep', variant: 'logo' });
+
+  const enter = (key) => (hoverCapable ? () => setHovered(key) : undefined);
+  const leave = hoverCapable ? () => setHovered(null) : undefined;
+
+  // Hovering one panel lifts its mark and dims the other, so the choice reads
+  // as a focus shift rather than two unrelated buttons.
+  const panelDim = (key) => (hovered && hovered !== key ? 0.65 : 1);
+  const markScale = (key) => (hovered === key ? 1.045 : 1);
+  const glow = (key, base) => (hovered === key ? base * 1.9 : base);
+  const markMotion = reduced ? 'none' : `transform 320ms ${EASE_ENTER}`;
+  const panelMotion = reduced ? 'none' : `opacity 260ms ${EASE_ENTER}`;
+
   return (
-    <div className="brand-select">
+    <div className="brand-select" style={recede}>
       <style>{`
         .brand-select {
           min-height: 100dvh;
@@ -68,23 +100,40 @@ export default function BrandSelectPage() {
         .brand-panel:hover .brand-panel__cue,
         .brand-panel:focus-visible .brand-panel__cue { opacity: 1; transform: translateX(4px); }
         .brand-panel:focus-visible { outline: 2px solid currentColor; outline-offset: -6px; }
-        .brand-panel__rule { transition: width 0.3s ease; }
-        .brand-panel:hover .brand-panel__rule { width: 64px; }
+        @media (prefers-reduced-motion: reduce) {
+          .brand-panel__cue { transition: none; }
+        }
       `}</style>
 
       {/* FOAMICO - Key Black / Kiwi Green / Egg White */}
       <Link
         to="/foamico"
         className="brand-panel"
-        style={panelStyle(
-          `radial-gradient(ellipse 70% 60% at 50% 40%, rgba(149,193,43,0.10) 0%, rgba(149,193,43,0) 65%), ${FOAMICO.key}`,
-        )}
+        onClick={foamico.onClick}
+        onPointerEnter={enter('foamico')}
+        onPointerLeave={leave}
+        onFocus={enter('foamico')}
+        onBlur={leave}
+        style={{
+          ...panelStyle(
+            `radial-gradient(ellipse 70% 60% at 50% 40%, rgba(149,193,43,${glow('foamico', 0.1)}) 0%, rgba(149,193,43,0) 65%), ${FOAMICO.key}`
+          ),
+          opacity: panelDim('foamico'),
+          transition: panelMotion,
+        }}
       >
         <div style={{ ...markSlot, height: 176 }}>
           <img
+            ref={foamico.ref}
             src={publicUrl('/brand/foamico-logo-light.png')}
             alt="Foamico - Luxury Mattress"
-            style={{ height: 172, width: 'auto' }}
+            style={{
+              height: 172,
+              width: 'auto',
+              transform: `scale(${markScale('foamico')})`,
+              transition: markMotion,
+              willChange: hovered === 'foamico' ? 'transform' : 'auto',
+            }}
           />
         </div>
         <div style={taglineStyle(FOAMICO.onKey)}>{FOAMICO.tagline}</div>
@@ -97,12 +146,32 @@ export default function BrandSelectPage() {
       <Link
         to="/vedasleep"
         className="brand-panel"
-        style={panelStyle(
-          `radial-gradient(ellipse 70% 60% at 50% 40%, rgba(199,125,17,0.09) 0%, rgba(199,125,17,0) 65%), ${VEDASLEEP.key}`,
-        )}
+        onClick={veda.onClick}
+        onPointerEnter={enter('vedasleep')}
+        onPointerLeave={leave}
+        onFocus={enter('vedasleep')}
+        onBlur={leave}
+        style={{
+          ...panelStyle(
+            `radial-gradient(ellipse 70% 60% at 50% 40%, rgba(199,125,17,${glow('vedasleep', 0.09)}) 0%, rgba(199,125,17,0) 65%), ${VEDASLEEP.key}`
+          ),
+          opacity: panelDim('vedasleep'),
+          transition: panelMotion,
+        }}
       >
         <div style={{ ...markSlot, height: 56 }}>
-          <img src={publicUrl('/brand/vedasleep-logo.png')} alt="" style={{ height: 52, width: 'auto' }} />
+          <img
+            ref={veda.ref}
+            src={publicUrl('/brand/vedasleep-logo.png')}
+            alt=""
+            style={{
+              height: 52,
+              width: 'auto',
+              transform: `scale(${markScale('vedasleep')})`,
+              transition: markMotion,
+              willChange: hovered === 'vedasleep' ? 'transform' : 'auto',
+            }}
+          />
         </div>
         <div style={wordmarkStyle(VEDASLEEP.onKey, 'clamp(26px, 4vw, 40px)')}>VedaSleep</div>
         <div style={taglineStyle(VEDASLEEP.accent)}>{VEDASLEEP.tagline}</div>

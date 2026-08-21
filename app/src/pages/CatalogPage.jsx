@@ -1,13 +1,26 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { publicUrl } from '../lib/publicUrl';
-import { useSectionRecede } from '../transition/ProductTransition';
+import {
+  useSourceRecede,
+  useElementEntranceTarget,
+  enterStyle,
+  REVEAL,
+} from '../transition/ProductTransition';
 import { preloadAllIn } from '../routePreload';
 
+const ACCENT = '#c77d11'; // Veda Gold
+
 export default function CatalogPage() {
-  const receding = useSectionRecede();
+  // Source when a card is clicked; destination when arriving from the brand
+  // selector, where the lotus mark is the shared element landing in the header.
+  const recede = useSourceRecede();
+  const logoRef = useRef(null);
+  const revealed = useElementEntranceTarget('logo-vedasleep', logoRef);
+  const [hovered, setHovered] = useState(null);
+
   useEffect(() => {
     preloadAllIn('/vedasleep');
   }, []);
@@ -20,6 +33,7 @@ export default function CatalogPage() {
         background:
           'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(199,125,17,0.06) 0%, rgba(199,125,17,0) 60%), #F6F8F1',
         padding: '48px 24px 64px',
+        ...recede,
       }}
     >
       <Link
@@ -37,6 +51,7 @@ export default function CatalogPage() {
           background: 'rgba(255,255,255,0.7)',
           padding: '6px 12px',
           borderRadius: 100,
+          ...enterStyle(revealed, REVEAL.back),
         }}
       >
         &larr; Brands
@@ -50,12 +65,14 @@ export default function CatalogPage() {
             gap: 10,
             textAlign: 'center',
             marginBottom: 48,
-            opacity: receding ? 0.5 : 1,
-            transform: receding ? 'translateY(-4px)' : 'none',
-            transition: 'opacity 0.26s ease, transform 0.26s ease',
           }}
         >
-          <img src={publicUrl('/brand/vedasleep-logo.png')} alt="Veda Sleep" style={{ height: 40, width: 'auto' }} />
+          <img
+            ref={logoRef}
+            src={publicUrl('/brand/vedasleep-logo.png')}
+            alt="Veda Sleep"
+            style={{ height: 40, width: 'auto', ...enterStyle(revealed, REVEAL.mark) }}
+          />
           <div
             style={{
               fontFamily: "'Montserrat', sans-serif",
@@ -63,11 +80,19 @@ export default function CatalogPage() {
               fontSize: 30,
               letterSpacing: '0.24em',
               textTransform: 'uppercase',
+              ...enterStyle(revealed, REVEAL.title),
             }}
           >
             VedaSleep
           </div>
-          <div style={{ fontSize: 13, color: '#8a8a8e', letterSpacing: '0.03em' }}>
+          <div
+            style={{
+              fontSize: 13,
+              color: '#8a8a8e',
+              letterSpacing: '0.03em',
+              ...enterStyle(revealed, REVEAL.meta),
+            }}
+          >
             The VedaSleep mattress collection &middot; tap a product to explore it in 3D
           </div>
         </div>
@@ -79,8 +104,16 @@ export default function CatalogPage() {
             gap: 20,
           }}
         >
-          {products.map((product) => (
-            <ProductCard key={product.slug} product={product} basePath="/vedasleep" />
+          {products.map((product, i) => (
+            <div key={product.slug} style={enterStyle(revealed, REVEAL.controls + i * 45)}>
+              <ProductCard
+                product={product}
+                basePath="/vedasleep"
+                accent={ACCENT}
+                hovered={hovered}
+                onHover={setHovered}
+              />
+            </div>
           ))}
         </div>
       </div>
