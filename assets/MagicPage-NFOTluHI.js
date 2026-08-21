@@ -1,0 +1,1 @@
+import{u as e}from"./index-D9gKtHL2.js";import{t}from"./ProductPage-DhZ28Wz2.js";import{t as n}from"./products-D45lyLks.js";var r=e();function i(){return(0,r.jsx)(t,{product:n(`magic`),backTo:`/vedasleep`,transitionId:`product-vedasleep-magic`})}export{i as default};

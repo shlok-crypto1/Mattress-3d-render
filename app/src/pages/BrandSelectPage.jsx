@@ -83,9 +83,9 @@ export default function BrandSelectPage() {
   const enter = (key) => (hoverCapable ? () => setHovered(key) : undefined);
   const leave = hoverCapable ? () => setHovered(null) : undefined;
 
-  // Hovering one panel lifts its mark and dims the other, so the choice reads
-  // as a focus shift rather than two unrelated buttons.
-  const panelDim = (key) => (hovered && hovered !== key ? 0.65 : 1);
+  // Hovering one panel lifts its mark and warms its glow. The other panel is
+  // deliberately left at full strength - neither brand should ever read as the
+  // dimmed-out alternative to the one under the pointer.
   const markScale = (key) => (hovered === key ? 1.045 : 1);
   const glow = (key, base) => (hovered === key ? base * 1.9 : base);
   const markMotion = reduced ? 'none' : `transform 320ms ${EASE_ENTER}`;
@@ -125,7 +125,7 @@ export default function BrandSelectPage() {
           ...panelStyle(
             `radial-gradient(ellipse 70% 60% at 50% 40%, rgba(149,193,43,${glow('foamico', 0.1)}) 0%, rgba(149,193,43,0) 65%), ${FOAMICO.key}`
           ),
-          opacity: revealed ? panelDim('foamico') : 0,
+          opacity: revealed ? 1 : 0,
           transition: revealed
             ? `opacity 460ms ${EASE_ENTER} ${REVEAL.controls}ms, transform 460ms ${EASE_ENTER} ${REVEAL.controls}ms`
             : 'none',
@@ -164,7 +164,7 @@ export default function BrandSelectPage() {
           ...panelStyle(
             `radial-gradient(ellipse 70% 60% at 50% 40%, rgba(199,125,17,${glow('vedasleep', 0.09)}) 0%, rgba(199,125,17,0) 65%), ${VEDASLEEP.key}`
           ),
-          opacity: revealed ? panelDim('vedasleep') : 0,
+          opacity: revealed ? 1 : 0,
           transition: revealed
             ? `opacity 460ms ${EASE_ENTER} ${REVEAL.controls + 45}ms, transform 460ms ${EASE_ENTER} ${REVEAL.controls + 45}ms`
             : 'none',
