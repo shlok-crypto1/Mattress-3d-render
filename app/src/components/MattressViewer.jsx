@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
+import { makeSpeckleTexture, makeConvolutedBump, makeShadowTexture } from '../lib/foamSurfaces';
 
 // Builds a mattress box with rounded top corners/edges (footprint corner radius Rc,
 // top-edge bevel radius Rt) instead of a hard-edged box, so it reads as a real
@@ -145,6 +146,18 @@ function buildMattressGeometry(W, H, L, Rc, Rt, cornerSegs, tileWidth) {
   return geo;
 }
 
+// Explode tuning. EXPLODE_IN/OUT bracket the zoom that toggles the stack; the
+// gap between them is hysteresis so a stationary wheel can't flap the state.
+const EXPLODE_MS = 720;
+const LAYER_STAGGER = 0.07;
+const EXPLODE_GAP = 9.5;
+const EXPLODE_IN = 104;
+const EXPLODE_OUT = 132;
+const EXPLODE_DIST = 94;
+const EXPLODE_SCALE = 0.55; // shrink the group so the taller stack stays framed
+
+const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
+
 const VIEW_DEFS = [
   ['corner', 'Corner', 0.6, 0.62],
   ['front', 'Front', 0, 0.12],
@@ -155,7 +168,14 @@ const VIEW_DEFS = [
 
 export default function MattressViewer({ product, autoRotate = true, brand = 'vedasleep' }) {
   const mountRef = useRef(null);
+  const labelsRef = useRef(null);
   const [view, setView] = useState('corner');
+  // Layer explode is opt-in per product: without product.layers none of the
+  // code below runs and the viewer behaves exactly as it always has.
+  const layerDefs = product.layers ?? null;
+  const hasLayers = Array.isArray(layerDefs) && layerDefs.length > 0;
+  const [exploded, setExploded] = useState(false);
+  const [selectedLayer, setSelectedLayer] = useState(null);
   // Mutable animation/scene state that must NOT trigger re-renders, mirroring the
   // original `this.*` instance fields from the imperative viewer.
   const s = useRef({}).current;
@@ -216,6 +236,97 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
     const geometry = buildMattressGeometry(W, H, L, 2.5, Math.min(1.3, H * 0.26), 8, L / 3.3);
     const box = new THREE.Mesh(geometry, [topMat, wallMat, bottomMat]);
     group.add(box);
+    s.box = box;
+
+    // ---- layer explode stack (Duro only, via product.layers) --------------
+    // The solid box stays the collapsed representation so that view is
+    // guaranteed unchanged; the stack cross-fades in as the explode begins.
+    s.layers = null;
+    if (hasLayers) {
+      const total = layerDefs.reduce((a, l) => a + l.depth, 0) || H;
+      const scale = H / total; // normalise placeholder depths onto the real height
+      const shadowTex2 = makeShadowTexture();
+      disposables.push(shadowTex2);
+
+      const built = [];
+      let yCursor = H / 2; // walk down from the top face
+      layerDefs.forEach((def, i) => {
+        const h = def.depth * scale;
+        const yTop = yCursor;
+        const yCenter = yTop - h / 2;
+        yCursor -= h;
+
+        // Only the top layer carries the mattress's rounded top edge; the rest
+        // get a hairline bevel so cut foam doesn't read as razor-sharp.
+        const bevel = i === 0 ? Math.min(Math.min(1.3, H * 0.26), h * 0.9) : Math.min(0.12, h * 0.4);
+        const geo = buildMattressGeometry(W, h, L, 2.5, bevel, 8, L / 3.3);
+
+        const base = { roughness: 0.96, metalness: 0, side: THREE.DoubleSide };
+        let bumpMap = null;
+        if (def.surface === 'convoluted') {
+          bumpMap = makeConvolutedBump();
+          bumpMap.repeat.set(Math.max(2, W / 14), Math.max(2, L / 14));
+          disposables.push(bumpMap);
+        }
+        let faceMap = null;
+        if (def.surface === 'speckled') {
+          faceMap = makeSpeckleTexture(def.color);
+          faceMap.repeat.set(Math.max(2, W / 26), Math.max(2, L / 26));
+          disposables.push(faceMap);
+        }
+
+        const mk = (color, withBump, withMap) =>
+          new THREE.MeshStandardMaterial({
+            ...base,
+            color: new THREE.Color(withMap ? '#ffffff' : color),
+            map: withMap ? faceMap : null,
+            bumpMap: withBump ? bumpMap : null,
+            bumpScale: withBump ? 0.5 : 0,
+            transparent: true,
+            opacity: 0,
+          });
+
+        const topFace = def.useProductTop
+          ? new THREE.MeshStandardMaterial({ ...topMatOpts, transparent: true, opacity: 0 })
+          : mk(def.topColor ?? def.color, !!bumpMap, !!faceMap);
+        const wallFace = mk(def.color, false, !!faceMap);
+        const botFace = def.useProductBottom
+          ? new THREE.MeshStandardMaterial({ map: bottom, ...base, transparent: true, opacity: 0 })
+          : mk(def.color, false, !!faceMap);
+
+        const mesh = new THREE.Mesh(geo, [topFace, wallFace, botFace]);
+        mesh.position.y = yCenter;
+        mesh.visible = false;
+        mesh.userData.layerIndex = i;
+        group.add(mesh);
+
+        // Drop shadow cast onto whatever sits below this layer.
+        let drop = null;
+        if (i < layerDefs.length - 1) {
+          drop = new THREE.Mesh(
+            new THREE.PlaneGeometry(W * 1.16, L * 1.16),
+            new THREE.MeshBasicMaterial({ map: shadowTex2, transparent: true, opacity: 0, depthWrite: false })
+          );
+          drop.rotation.x = -Math.PI / 2;
+          drop.renderOrder = 1;
+          drop.visible = false;
+          group.add(drop);
+        }
+
+        built.push({ def, mesh, drop, h, restY: yCenter, mats: [topFace, wallFace, botFace] });
+      });
+
+      // Centre the exploded stack on the origin so it doesn't drift off-frame.
+      const n = built.length;
+      built.forEach((l, i) => {
+        l.explodeDy = ((n - 1) / 2 - i) * EXPLODE_GAP;
+      });
+
+      s.layers = built;
+      s.explodeT = 0;
+      s.explodeTarget = 0;
+      s.exploded = false;
+    }
 
     // soft ground shadow
     const sc = document.createElement('canvas');
@@ -251,10 +362,16 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
     const pointers = new Map();
     let lastPinch = 0;
 
+    const raycaster = new THREE.Raycaster();
+    let downAt = null;
+    let dragDist = 0;
+
     const onPointerDown = (e) => {
       el.setPointerCapture(e.pointerId);
       pointers.set(e.pointerId, [e.clientX, e.clientY]);
       s.idle = -1e9;
+      downAt = [e.clientX, e.clientY];
+      dragDist = 0;
       el.style.cursor = 'grabbing';
     };
     const onPointerMove = (e) => {
@@ -262,12 +379,16 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
       const prev = pointers.get(e.pointerId);
       pointers.set(e.pointerId, [e.clientX, e.clientY]);
       if (pointers.size === 1) {
+        if (downAt) dragDist += Math.hypot(e.clientX - prev[0], e.clientY - prev[1]);
         s.tTheta += (e.clientX - prev[0]) * 0.006;
         s.tPhi = Math.min(1.45, Math.max(-1.45, s.tPhi + (e.clientY - prev[1]) * 0.006));
       } else if (pointers.size === 2) {
         const pts = [...pointers.values()];
         const d = Math.hypot(pts[0][0] - pts[1][0], pts[0][1] - pts[1][1]);
-        if (lastPinch) s.tDist = Math.min(260, Math.max(80, (s.tDist * lastPinch) / d));
+        if (lastPinch) {
+          s.tDist = Math.min(260, Math.max(80, (s.tDist * lastPinch) / d));
+          syncExplodeToZoom();
+        }
         lastPinch = d;
       }
     };
@@ -276,11 +397,44 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
       lastPinch = 0;
       s.idle = performance.now();
       el.style.cursor = 'grab';
+      // A tap (not a drag) while exploded picks a layer, or dismisses the card.
+      if (hasLayers && s.exploded && downAt && dragDist < 6) {
+        const r = el.getBoundingClientRect();
+        const ndc = new THREE.Vector2(
+          ((e.clientX - r.left) / r.width) * 2 - 1,
+          -((e.clientY - r.top) / r.height) * 2 + 1
+        );
+        raycaster.setFromCamera(ndc, camera);
+        const hits = raycaster.intersectObjects(s.layers.map((l) => l.mesh), false);
+        const idx = hits.length ? hits[0].object.userData.layerIndex : null;
+        setSelectedLayer((cur) => (idx === null || cur === idx ? null : idx));
+        s.dirty = true;
+      }
+      downAt = null;
     };
     const onWheel = (e) => {
       e.preventDefault();
       s.tDist = Math.min(260, Math.max(80, s.tDist + e.deltaY * 0.15));
       s.idle = performance.now();
+      syncExplodeToZoom();
+    };
+
+    // Zoom and the Layers button write the same flag, so the two can never
+    // disagree; the dead band between the thresholds stops it oscillating.
+    const setExplodeState = (next) => {
+      if (!hasLayers || s.exploded === next) return;
+      s.exploded = next;
+      s.explodeTarget = next ? 1 : 0;
+      s.dirty = true;
+      setExploded(next);
+      if (!next) setSelectedLayer(null);
+    };
+    s.setExplodeState = setExplodeState;
+
+    const syncExplodeToZoom = () => {
+      if (!hasLayers) return;
+      if (s.tDist <= EXPLODE_IN) setExplodeState(true);
+      else if (s.tDist >= EXPLODE_OUT) setExplodeState(false);
     };
 
     el.addEventListener('pointerdown', onPointerDown);
@@ -295,7 +449,8 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
       renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      s.tDist = s.dist = w < 560 ? 195 : 150;
+      const baseDist = w < 560 ? 195 : 150;
+      if (!s.exploded) s.tDist = s.dist = baseDist;
       s.dirty = true;
     };
     const ro = new ResizeObserver(resize);
@@ -304,16 +459,105 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
     resize();
     s.idle = performance.now();
 
+    const projected = new THREE.Vector3();
+    const updateLayers = () => {
+      if (!hasLayers) return false;
+      // Time-based, not per-frame: the transition must last EXPLODE_MS whatever
+      // the refresh rate (and headless/throttled tabs run far below 60fps).
+      const now = performance.now();
+      const dt = Math.min(64, now - (s.explodeLast ?? now));
+      s.explodeLast = now;
+      const step = dt / EXPLODE_MS;
+      const before = s.explodeT;
+      s.explodeT = Math.max(0, Math.min(1, s.explodeT + (s.explodeTarget - s.explodeT > 0 ? step : -step)));
+      if (Math.abs(s.explodeTarget - s.explodeT) < step) s.explodeT = s.explodeTarget;
+      const T = s.explodeT;
+      const moving = T !== before;
+
+      const n = s.layers.length;
+      const span = 1 - (n - 1) * LAYER_STAGGER;
+      // Dollying in makes the stack overflow the frame, so the group shrinks as
+      // it separates - the mattress keeps its apparent size while gaining height.
+      const eT = easeOutCubic(T);
+      const gs = 1 - (1 - EXPLODE_SCALE) * eT;
+      group.scale.setScalar(gs);
+      s.groupScale = gs;
+      s.shadow.visible = T < 0.98;
+      s.shadowFade = 1 - eT;
+      // Cross-fade the solid box out over the first slice of the motion.
+      const reveal = Math.min(1, T / 0.28);
+      box.visible = reveal < 1;
+      if (box.visible) {
+        box.scale.setScalar(T > 0 ? 0.995 : 1);
+        [topMat, wallMat, bottomMat].forEach((m) => {
+          m.transparent = T > 0;
+          m.opacity = 1 - reveal;
+          m.depthWrite = reveal < 0.5;
+        });
+      }
+
+      const labelEls = labelsRef.current ? labelsRef.current.children : [];
+      s.layers.forEach((l, i) => {
+        const lt = Math.max(0, Math.min(1, (T - i * LAYER_STAGGER) / span));
+        const e = easeOutCubic(lt);
+        l.mesh.visible = T > 0;
+        l.mesh.position.y = l.restY + e * l.explodeDy;
+        l.mats.forEach((m) => {
+          m.opacity = reveal;
+          m.transparent = reveal < 1;
+          m.depthWrite = reveal > 0.5;
+        });
+
+        if (l.drop) {
+          const below = s.layers[i + 1];
+          const belowTop = below.restY + easeOutCubic(Math.max(0, Math.min(1, (T - (i + 1) * LAYER_STAGGER) / span))) * below.explodeDy + below.h / 2;
+          const sep = l.mesh.position.y - l.h / 2 - belowTop;
+          l.drop.visible = T > 0.02 && sep > 0.2;
+          l.drop.position.y = belowTop + 0.06;
+          const soft = Math.max(0.42, 1 - sep / (EXPLODE_GAP * 2.4));
+          l.drop.material.opacity = reveal * 1.0 * soft;
+          const spread = 1 + Math.min(0.22, sep * 0.02);
+          l.drop.scale.set(spread, spread, 1);
+        }
+
+        // Labels ride the layer's rightmost screen-space corner.
+        const el2 = labelEls[i];
+        if (el2) {
+          const fade = Math.max(0, Math.min(1, (lt - 0.55) / 0.45));
+          if (fade <= 0.001) {
+            el2.style.opacity = '0';
+            el2.style.visibility = 'hidden';
+          } else {
+            let bestX = -Infinity, bestY = 0;
+            const hw = W / 2, hl = L / 2;
+            const g2 = s.groupScale ?? 1;
+            for (const [cx, cz] of [[hw, hl], [hw, -hl], [-hw, hl], [-hw, -hl]]) {
+              projected.set(cx * g2, l.mesh.position.y * g2, cz * g2).project(camera);
+              if (projected.x > bestX) { bestX = projected.x; bestY = projected.y; }
+            }
+            const r = el.getBoundingClientRect();
+            el2.style.visibility = 'visible';
+            el2.style.opacity = String(fade);
+            el2.style.transform =
+              `translate(${((bestX + 1) / 2) * r.width + 14}px, ${((1 - bestY) / 2) * r.height}px) translateY(-50%)`;
+          }
+        }
+      });
+      return moving;
+    };
+
     const tick = () => {
       s.raf = requestAnimationFrame(tick);
-      if (s.autoRotate && pointers.size === 0 && s.idle > 0 && performance.now() - s.idle > 3000) {
+      if (s.autoRotate && pointers.size === 0 && s.idle > 0 && performance.now() - s.idle > 3000 && !s.exploded) {
         s.tTheta += 0.0018;
       }
       const k = 0.08;
+      const layersMoving = updateLayers();
       if (
         Math.abs(s.tTheta - s.theta) > 1e-4 ||
         Math.abs(s.tPhi - s.phi) > 1e-4 ||
         Math.abs(s.tDist - s.dist) > 1e-3 ||
+        layersMoving ||
         s.dirty
       ) {
         s.theta += (s.tTheta - s.theta) * k;
@@ -322,7 +566,7 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
         const cp = Math.cos(s.phi), sp = Math.sin(s.phi);
         camera.position.set(s.dist * cp * Math.sin(s.theta), s.dist * sp, s.dist * cp * Math.cos(s.theta));
         camera.lookAt(0, 0, 0);
-        s.shadow.material.opacity = Math.max(0, Math.min(1, sp + 0.15));
+        s.shadow.material.opacity = Math.max(0, Math.min(1, sp + 0.15)) * (s.shadowFade ?? 1);
         renderer.render(scene, camera);
         s.dirty = false;
       }
@@ -343,6 +587,17 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
       wallMat.dispose();
       bottomMat.dispose();
       shadowTex.dispose();
+      if (s.layers) {
+        s.layers.forEach((l) => {
+          l.mesh.geometry.dispose();
+          l.mats.forEach((m) => m.dispose());
+          if (l.drop) {
+            l.drop.geometry.dispose();
+            l.drop.material.dispose();
+          }
+        });
+        s.layers = null;
+      }
       disposables.forEach((t) => t.dispose());
       if (mount.contains(el)) mount.removeChild(el);
     };
@@ -355,12 +610,32 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
   }, [autoRotate, s]);
 
   const goTo = (name, theta, phi) => {
+    if (s.exploded) s.setExplodeState?.(false);
     const twoPi = Math.PI * 2;
     const t = theta + Math.round((s.tTheta - theta) / twoPi) * twoPi;
     s.tTheta = t;
     s.tPhi = phi;
     s.idle = performance.now();
     setView(name);
+  };
+
+  const toggleLayers = () => {
+    const next = !s.exploded;
+    if (next) {
+      const twoPi = Math.PI * 2;
+      s.tTheta = 0.6 + Math.round((s.tTheta - 0.6) / twoPi) * twoPi;
+      s.tPhi = 0.3;
+      s.tDist = EXPLODE_DIST;
+      setView('layers');
+    } else {
+      const twoPi = Math.PI * 2;
+      s.tTheta = 0.6 + Math.round((s.tTheta - 0.6) / twoPi) * twoPi;
+      s.tPhi = 0.62;
+      s.tDist = mountRef.current && mountRef.current.clientWidth < 560 ? 195 : 150;
+      setView('corner');
+    }
+    s.idle = performance.now();
+    s.setExplodeState?.(next);
   };
 
   const { name, specLine, specsPending } = product;
@@ -437,7 +712,93 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
         </div>
       </div>
 
-      <div ref={mountRef} style={{ flex: 1, minHeight: 0, touchAction: 'none', cursor: 'grab' }} />
+      <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+        <div ref={mountRef} style={{ position: 'absolute', inset: 0, touchAction: 'none', cursor: 'grab' }} />
+
+        {hasLayers && (
+          <div ref={labelsRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+            {layerDefs.map((l) => (
+              <div
+                key={l.id}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  visibility: 'hidden',
+                  opacity: 0,
+                  whiteSpace: 'nowrap',
+                  fontSize: 10.5,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: '#2b2b2b',
+                  background: 'rgba(254,254,254,0.92)',
+                  border: '1px solid rgba(199,125,17,0.35)',
+                  borderRadius: 100,
+                  padding: '4px 11px',
+                  transition: 'opacity 0.2s linear',
+                }}
+              >
+                <span style={{ color: '#c77d11', marginRight: 7 }}>&#9679;</span>
+                {l.name}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {hasLayers && selectedLayer !== null && (
+          <div
+            onClick={() => setSelectedLayer(null)}
+            style={{
+              position: 'absolute',
+              left: 18,
+              bottom: 18,
+              maxWidth: 320,
+              background: '#FEFEFE',
+              border: '1px solid #e4e0d4',
+              borderRadius: 16,
+              padding: '16px 18px 18px',
+              boxShadow: '0 10px 34px rgba(0,0,0,0.10)',
+              cursor: 'pointer',
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-block',
+                fontSize: 9.5,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: '#c77d11',
+                background: 'rgba(199,125,17,0.10)',
+                borderRadius: 100,
+                padding: '3px 9px',
+                marginBottom: 10,
+              }}
+            >
+              Layer {selectedLayer + 1} of {layerDefs.length}
+              {layerDefs[selectedLayer].nameTbd ? ' · name TBD' : ''}
+            </div>
+            <div
+              style={{
+                fontFamily: "'Montserrat', sans-serif",
+                fontWeight: 800,
+                fontSize: 15,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                color: '#1A1A1A',
+                lineHeight: 1.25,
+              }}
+            >
+              {layerDefs[selectedLayer].name}
+            </div>
+            <div style={{ fontSize: 12, color: '#6e6e73', marginTop: 8, lineHeight: 1.5 }}>
+              {layerDefs[selectedLayer].material}
+            </div>
+            <div style={{ fontSize: 12, color: '#2b2b2b', marginTop: 10, letterSpacing: '0.04em' }}>
+              Thickness <strong style={{ fontWeight: 600 }}>{layerDefs[selectedLayer].thickness}</strong>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div
         style={{
@@ -459,8 +820,19 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
               {label}
             </button>
           ))}
+          {hasLayers && (
+            <button onClick={toggleLayers} className="mv-view-btn" data-active={exploded}>
+              {exploded ? 'Solid' : 'Layers'}
+            </button>
+          )}
         </div>
-        <div style={{ fontSize: 11.5, color: t.faint, fontWeight: 300, letterSpacing: '0.03em' }}>Drag to rotate</div>
+        <div style={{ fontSize: 11.5, color: t.faint, fontWeight: 300, letterSpacing: '0.03em' }}>
+          {hasLayers && exploded
+            ? 'Tap a layer for details · zoom out to collapse'
+            : hasLayers
+              ? 'Drag to rotate · zoom in to explode layers'
+              : 'Drag to rotate'}
+        </div>
       </div>
 
       <style>{`

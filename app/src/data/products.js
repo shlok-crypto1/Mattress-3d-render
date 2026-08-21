@@ -4,11 +4,63 @@ export const products = [
     name: 'Duro',
     specLine: {
       variant: 'Classic',
-      thickness: '5″ High-Density Foam',
+      thickness: 'Multi-Layer Comfort System · 5″',
       warranty: '10-Year Warranty',
     },
     dimensions: { width: 72, length: 72, height: 5 },
     constructionDetail: '',
+    // Layer stack for the explode view, top to bottom. Only Duro defines this;
+    // every other product omits it and renders exactly as before.
+    //
+    // TO CONFIRM before shipping:
+    //   - every `thickness` below is a placeholder that sums to the 5" total
+    //   - layer 4's real name (currently "Support Base")
+    //   - final material copy for each layer
+    //
+    // NOTE: the reference photo shows a green foam slab between AeroFlex and
+    // Ortho Bond. That layer is not in the real product and is deliberately
+    // absent here - do not add it back.
+    layers: [
+      {
+        id: 'luxeknit',
+        name: 'Super Plush LuxeKnit Fabric',
+        material: 'Quilted knit cover over plush fibre fill',
+        thickness: '1.4″',
+        depth: 1.4,
+        color: '#F4F1E8',
+        useProductTop: true,
+      },
+      {
+        id: 'aeroflex',
+        name: 'AeroFlex Foam',
+        material: 'Convoluted airflow foam for ventilation and pressure relief',
+        thickness: '1.0″',
+        depth: 1.0,
+        color: '#E7DD8F',
+        surface: 'convoluted',
+      },
+      {
+        id: 'orthobond',
+        name: 'Ortho Bond Foam',
+        material: 'High-density rebonded foam for orthopaedic support',
+        thickness: '1.2″',
+        depth: 1.2,
+        color: '#DCD7CE',
+        surface: 'speckled',
+      },
+      {
+        id: 'base',
+        name: 'Support Base',
+        material: 'Transition foam over a fabric-wrapped support core',
+        thickness: '1.4″',
+        depth: 1.4,
+        color: '#DCD3BE',
+        topColor: '#E4883C',
+        surface: 'convoluted',
+        useProductBottom: true,
+        nameTbd: true,
+      },
+    ],
     textures: {
       top: '/textures/duro/top.png',
       topBump: '/textures/duro/top-bump.png',
