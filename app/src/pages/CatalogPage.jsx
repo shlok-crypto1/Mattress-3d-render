@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { publicUrl } from '../lib/publicUrl';
@@ -6,12 +7,32 @@ export default function CatalogPage() {
   return (
     <div
       style={{
+        position: 'relative',
         minHeight: '100dvh',
         background:
           'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(199,125,17,0.06) 0%, rgba(199,125,17,0) 60%), #F6F8F1',
         padding: '48px 24px 64px',
       }}
     >
+      <Link
+        to="/"
+        style={{
+          position: 'absolute',
+          top: 18,
+          left: 18,
+          zIndex: 10,
+          fontSize: 12,
+          fontWeight: 500,
+          letterSpacing: '0.03em',
+          color: '#8a8a8e',
+          textDecoration: 'none',
+          background: 'rgba(255,255,255,0.7)',
+          padding: '6px 12px',
+          borderRadius: 100,
+        }}
+      >
+        &larr; Brands
+      </Link>
       <div style={{ maxWidth: 980, margin: '0 auto' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center', marginBottom: 48 }}>
           <img src={publicUrl('/brand/vedasleep-logo.png')} alt="Veda Sleep" style={{ height: 40, width: 'auto' }} />
