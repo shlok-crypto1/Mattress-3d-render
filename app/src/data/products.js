@@ -1,3 +1,12 @@
+import { vedasleepLayersBySlug } from './layers/vedasleepLayers';
+
+// VedaSleep line.
+//
+// Every product now declares a `layers` array for the explode view. The shape
+// of each stack (count, type, order) is confirmed; the names, descriptions and
+// thickness ratios inside them are placeholders - see
+// src/data/layers/vedasleepLayers.js.
+
 export const products = [
   {
     slug: 'duro',
@@ -9,58 +18,7 @@ export const products = [
     },
     dimensions: { width: 72, length: 72, height: 5 },
     constructionDetail: '',
-    // Layer stack for the explode view, top to bottom. Only Duro defines this;
-    // every other product omits it and renders exactly as before.
-    //
-    // TO CONFIRM before shipping:
-    //   - every `thickness` below is a placeholder that sums to the 5" total
-    //   - layer 4's real name (currently "Support Base")
-    //   - final material copy for each layer
-    //
-    // NOTE: the reference photo shows a green foam slab between AeroFlex and
-    // Ortho Bond. That layer is not in the real product and is deliberately
-    // absent here - do not add it back.
-    layers: [
-      {
-        id: 'luxeknit',
-        name: 'Super Plush LuxeKnit Fabric',
-        material: 'Quilted knit cover over plush fibre fill',
-        thickness: '1.4″',
-        depth: 1.4,
-        color: '#F4F1E8',
-        useProductTop: true,
-      },
-      {
-        id: 'aeroflex',
-        name: 'AeroFlex Foam',
-        material: 'Convoluted airflow foam for ventilation and pressure relief',
-        thickness: '1.0″',
-        depth: 1.0,
-        color: '#E7DD8F',
-        surface: 'convoluted',
-      },
-      {
-        id: 'orthobond',
-        name: 'Ortho Bond Foam',
-        material: 'High-density rebonded foam for orthopaedic support',
-        thickness: '1.2″',
-        depth: 1.2,
-        color: '#DCD7CE',
-        surface: 'speckled',
-      },
-      {
-        id: 'base',
-        name: 'Support Base',
-        material: 'Transition foam over a fabric-wrapped support core',
-        thickness: '1.4″',
-        depth: 1.4,
-        color: '#DCD3BE',
-        topColor: '#E4883C',
-        surface: 'convoluted',
-        useProductBottom: true,
-        nameTbd: true,
-      },
-    ],
+    layers: vedasleepLayersBySlug.duro,
     textures: {
       top: '/textures/duro/top.png',
       topBump: '/textures/duro/top-bump.png',
@@ -79,6 +37,7 @@ export const products = [
     },
     dimensions: { width: 72, length: 72, height: 6 },
     constructionDetail: '',
+    layers: vedasleepLayersBySlug.maxa,
     textures: {
       top: '/textures/maxa/top.png',
       topBump: '/textures/maxa/top-bump.png',
@@ -97,6 +56,10 @@ export const products = [
     },
     dimensions: { width: 72, length: 72, height: 6 },
     constructionDetail: '',
+    // SPEC CHANGE: Magic used to be described as a single uniform Float Sense
+    // Foam core with no internal layer divisions. That is superseded - it is a
+    // multi-band construction now, same band shape as Maxa and Signature.
+    layers: vedasleepLayersBySlug.magic,
     textures: {
       top: '/textures/magic/top.png',
       topBump: '/textures/magic/top-bump.png',
@@ -115,6 +78,7 @@ export const products = [
     },
     dimensions: { width: 72, length: 72, height: 8 },
     constructionDetail: '',
+    layers: vedasleepLayersBySlug.signature,
     textures: {
       top: '/textures/signature/top.png',
       topBump: '/textures/signature/top-bump.png',

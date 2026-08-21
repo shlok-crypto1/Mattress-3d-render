@@ -5,6 +5,9 @@ import { publicUrl } from '../lib/publicUrl';
 import {
   useSharedSource,
   useSourceRecede,
+  useElementEntranceTarget,
+  useRouteEntranceRevealed,
+  REVEAL,
   prefersReducedMotion,
   canHover,
   EASE_ENTER,
@@ -73,6 +76,9 @@ export default function BrandSelectPage() {
 
   const foamico = useSharedSource({ id: 'logo-foamico', toPath: '/foamico', variant: 'logo' });
   const veda = useSharedSource({ id: 'logo-vedasleep', toPath: '/vedasleep', variant: 'logo' });
+  useElementEntranceTarget('logo-foamico', foamico.ref);
+  useElementEntranceTarget('logo-vedasleep', veda.ref);
+  const revealed = useRouteEntranceRevealed();
 
   const enter = (key) => (hoverCapable ? () => setHovered(key) : undefined);
   const leave = hoverCapable ? () => setHovered(null) : undefined;
@@ -83,7 +89,6 @@ export default function BrandSelectPage() {
   const markScale = (key) => (hovered === key ? 1.045 : 1);
   const glow = (key, base) => (hovered === key ? base * 1.9 : base);
   const markMotion = reduced ? 'none' : `transform 320ms ${EASE_ENTER}`;
-  const panelMotion = reduced ? 'none' : `opacity 260ms ${EASE_ENTER}`;
 
   return (
     <div className="brand-select" style={recede}>
@@ -120,8 +125,10 @@ export default function BrandSelectPage() {
           ...panelStyle(
             `radial-gradient(ellipse 70% 60% at 50% 40%, rgba(149,193,43,${glow('foamico', 0.1)}) 0%, rgba(149,193,43,0) 65%), ${FOAMICO.key}`
           ),
-          opacity: panelDim('foamico'),
-          transition: panelMotion,
+          opacity: revealed ? panelDim('foamico') : 0,
+          transition: revealed
+            ? `opacity 460ms ${EASE_ENTER} ${REVEAL.controls}ms, transform 460ms ${EASE_ENTER} ${REVEAL.controls}ms`
+            : 'none',
         }}
       >
         <div style={{ ...markSlot, height: 176 }}>
@@ -157,8 +164,10 @@ export default function BrandSelectPage() {
           ...panelStyle(
             `radial-gradient(ellipse 70% 60% at 50% 40%, rgba(199,125,17,${glow('vedasleep', 0.09)}) 0%, rgba(199,125,17,0) 65%), ${VEDASLEEP.key}`
           ),
-          opacity: panelDim('vedasleep'),
-          transition: panelMotion,
+          opacity: revealed ? panelDim('vedasleep') : 0,
+          transition: revealed
+            ? `opacity 460ms ${EASE_ENTER} ${REVEAL.controls + 45}ms, transform 460ms ${EASE_ENTER} ${REVEAL.controls + 45}ms`
+            : 'none',
         }}
       >
         <div style={{ ...markSlot, height: 56 }}>

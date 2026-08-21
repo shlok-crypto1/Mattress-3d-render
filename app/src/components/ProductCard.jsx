@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { publicUrl } from '../lib/publicUrl';
-import { useSharedSource, prefersReducedMotion } from '../transition/ProductTransition';
+import { useSharedSource, useElementEntranceTarget, prefersReducedMotion } from '../transition/ProductTransition';
 import { preloadRoute } from '../routePreload';
 
 // Defaults reproduce the VedaSleep card exactly; FOAMICO passes its own theme.
@@ -31,6 +31,9 @@ export default function ProductCard({
   const brand = basePath.replace(/^\//, '');
   const transitionId = `product-${brand}-${product.slug}`;
   const { ref, onClick } = useSharedSource({ id: transitionId, toPath, variant: 'card' });
+  // The very same texture node is the landing target when returning from the
+  // product page. It stays measurable while its grid wrapper is hidden.
+  useElementEntranceTarget(transitionId, ref);
   const [pressed, setPressed] = useState(false);
 
   const reduced = prefersReducedMotion();
@@ -62,6 +65,8 @@ export default function ProductCard({
       style={{
         display: 'flex',
         flexDirection: 'column',
+        height: '100%',
+        flex: 1,
         textDecoration: 'none',
         color: 'inherit',
         borderRadius: 16,
@@ -109,7 +114,7 @@ export default function ProductCard({
           </span>
         )}
       </div>
-      <div style={{ padding: '16px 18px 20px' }}>
+      <div style={{ padding: '16px 18px 20px', minHeight: 92, boxSizing: 'border-box' }}>
         <div
           style={{
             fontFamily: "'Montserrat', sans-serif",
@@ -123,7 +128,20 @@ export default function ProductCard({
           {product.name}
         </div>
         {product.specLine && (
-          <div style={{ fontSize: 11.5, color: theme.spec, marginTop: 6, letterSpacing: '0.02em' }}>
+          <div
+            style={{
+              fontSize: 11.5,
+              color: theme.spec,
+              marginTop: 6,
+              letterSpacing: '0.02em',
+              lineHeight: 1.4,
+              minHeight: '2.8em',
+              display: '-webkit-box',
+              WebkitBoxOrient: 'vertical',
+              WebkitLineClamp: 2,
+              overflow: 'hidden',
+            }}
+          >
             {product.specLine.variant} &middot; {product.specLine.thickness}
           </div>
         )}

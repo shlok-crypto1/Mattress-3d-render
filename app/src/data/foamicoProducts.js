@@ -3,6 +3,8 @@
 // The collection uses the official baseline variant for each range: Classic
 // for Resto, Sova, Luma and Ultima; Riva 1000 for Riva.
 
+import { foamicoLayersBySlug } from './layers/foamicoLayers';
+
 const tex = (slug) => ({
   top: `/textures/foamico/${slug}/top.png`,
   topBump: `/textures/foamico/${slug}/top-bump.png`,
@@ -20,6 +22,9 @@ const product = (slug, name, variant, height, feel, warranty) => ({
   },
   dimensions: { width: 72, length: 72, height },
   constructionDetail: '',
+  // Explode stack. Shape (count/type/order) is confirmed; names, copy and
+  // proportions are placeholders - see src/data/layers/foamicoLayers.js.
+  layers: foamicoLayersBySlug[slug] ?? null,
   textures: tex(slug),
   placeholder: false,
 });

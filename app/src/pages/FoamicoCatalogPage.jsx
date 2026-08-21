@@ -6,7 +6,9 @@ import { FOAMICO } from '../data/brands';
 import { publicUrl } from '../lib/publicUrl';
 import {
   useSourceRecede,
+  useSharedBackSource,
   useElementEntranceTarget,
+  useRouteEntranceRevealed,
   enterStyle,
   REVEAL,
 } from '../transition/ProductTransition';
@@ -54,7 +56,9 @@ export default function FoamicoCatalogPage() {
   // selector, where the FOAMICO mark is the shared element landing here.
   const recede = useSourceRecede();
   const logoRef = useRef(null);
-  const revealed = useElementEntranceTarget('logo-foamico', logoRef);
+  useElementEntranceTarget('logo-foamico', logoRef);
+  const revealed = useRouteEntranceRevealed();
+  const back = useSharedBackSource({ id: 'logo-foamico', toPath: '/', variant: 'logo', elRef: logoRef });
   const [hovered, setHovered] = useState(null);
 
   useEffect(() => {
@@ -73,6 +77,7 @@ export default function FoamicoCatalogPage() {
     >
       <Link
         to="/"
+        onClick={back.onClick}
         style={{
           position: 'absolute',
           top: 18,
@@ -125,10 +130,11 @@ export default function FoamicoCatalogPage() {
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(168px, 1fr))',
             gap: 20,
+            alignItems: 'stretch',
           }}
         >
           {foamicoProducts.map((product, i) => (
-            <div key={product.slug} style={enterStyle(revealed, REVEAL.controls + i * 45)}>
+            <div key={product.slug} style={{ display: 'flex', ...enterStyle(revealed, REVEAL.controls + i * 45) }}>
               <ProductCard
                 product={product}
                 basePath="/foamico"

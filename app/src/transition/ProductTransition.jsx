@@ -61,31 +61,32 @@ export function TransitionProvider({ children }) {
   // active: { id, imageUrl, variant, from, to, toPath, phase, canvasReady }
   // phase: 'pinned' -> 'flying' -> 'settled' -> 'revealing'
   const timers = useRef([]);
+  const activeRef = useRef(null);
+  const sources = useRef(new Map());
   const location = useLocation();
   const navigate = useNavigate();
 
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
-  };
+  }, []);
 
   const reset = useCallback(() => {
     clearTimers();
+    activeRef.current = null;
     setActive(null);
-  }, []);
+  }, [clearTimers]);
 
   // Back button, a hand-edited URL, or a back-link click mid-flight: the path
   // no longer matches what this transition is travelling toward, so drop it
   // rather than animate at a page that's gone. Keyed only on pathname so it
   // does NOT fire during the pinned hold, when the path is still the source.
   useEffect(() => {
-    setActive((cur) => {
-      if (!cur) return cur;
-      if (cur.phase === 'pinned') return cur; // hold: still legitimately on the source
-      return location.pathname === cur.toPath ? cur : null;
-    });
+    const cur = activeRef.current;
+    if (!cur || location.pathname === cur.toPath || (cur.phase === 'pinned' && location.pathname === cur.fromPath)) return;
+    reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
+  }, [location.pathname, reset]);
 
   // A viewport change mid-flight invalidates the frozen pixel geometry. Snapping
   // to done beats re-deriving a target for an in-progress CSS transition.
@@ -99,12 +100,19 @@ export function TransitionProvider({ children }) {
   const registerTarget = useCallback((id, to, { waitForCanvas = false } = {}) => {
     setActive((cur) => {
       if (!cur || cur.id !== id || cur.to) return cur;
-      return { ...cur, to, phase: 'flying', canvasReady: !waitForCanvas };
+      const next = { ...cur, to, phase: 'flying', canvasReady: !waitForCanvas };
+      activeRef.current = next;
+      return next;
     });
   }, []);
 
   const markCanvasReady = useCallback((id) => {
-    setActive((cur) => (cur && cur.id === id ? { ...cur, canvasReady: true } : cur));
+    setActive((cur) => {
+      if (!cur || cur.id !== id) return cur;
+      const next = { ...cur, canvasReady: true };
+      activeRef.current = next;
+      return next;
+    });
   }, []);
 
   // Flight -> settled, plus the slow-asset escape hatch.
@@ -112,10 +120,20 @@ export function TransitionProvider({ children }) {
     if (!active || active.phase !== 'flying') return undefined;
     const id = active.id;
     const settle = setTimeout(() => {
-      setActive((cur) => (cur && cur.id === id && cur.phase === 'flying' ? { ...cur, phase: 'settled' } : cur));
+      setActive((cur) => {
+        if (!cur || cur.id !== id || cur.phase !== 'flying') return cur;
+        const next = { ...cur, phase: 'settled' };
+        activeRef.current = next;
+        return next;
+      });
     }, FLIP_MS);
     const cap = setTimeout(() => {
-      setActive((cur) => (cur && cur.id === id ? { ...cur, canvasReady: true } : cur));
+      setActive((cur) => {
+        if (!cur || cur.id !== id) return cur;
+        const next = { ...cur, canvasReady: true };
+        activeRef.current = next;
+        return next;
+      });
     }, FLIP_MS + CANVAS_WAIT_CAP_MS);
     timers.current.push(settle, cap);
     return undefined;
@@ -127,7 +145,12 @@ export function TransitionProvider({ children }) {
   useEffect(() => {
     if (!active || active.phase !== 'settled' || !active.canvasReady) return undefined;
     const id = active.id;
-    setActive((cur) => (cur && cur.id === id ? { ...cur, phase: 'revealing' } : cur));
+    setActive((cur) => {
+      if (!cur || cur.id !== id) return cur;
+      const next = { ...cur, phase: 'revealing' };
+      activeRef.current = next;
+      return next;
+    });
     const done = setTimeout(reset, CROSSFADE_MS + 40);
     timers.current.push(done);
     return undefined;
@@ -135,33 +158,61 @@ export function TransitionProvider({ children }) {
   }, [active?.phase, active?.canvasReady]);
 
   const startTransition = useCallback(
-    ({ id, imageUrl, rect, radius, toPath, variant }) => {
+    ({ id, imageUrl, rect, radius, toPath, variant, fromPath = location.pathname, alreadyAtDestination = false }) => {
       if (prefersReducedMotion()) {
-        navigate(toPath);
+        if (!alreadyAtDestination) navigate(toPath);
         return;
       }
       clearTimers();
-      setActive({
+      const next = {
         id,
         imageUrl,
         variant,
         from: { ...rect, radius },
         to: null,
         toPath,
+        fromPath,
         phase: 'pinned',
         canvasReady: false,
-      });
+      };
+      activeRef.current = next;
+      setActive(next);
       // Hold briefly so the source's blur/fade is actually perceptible before
       // the route swap replaces it with the destination's bare background.
-      const t = setTimeout(() => navigate(toPath), SELECT_HOLD_MS);
-      timers.current.push(t);
+      if (!alreadyAtDestination) {
+        const t = setTimeout(() => navigate(toPath), SELECT_HOLD_MS);
+        timers.current.push(t);
+      }
     },
-    [navigate]
+    [clearTimers, location.pathname, navigate]
   );
 
+  const registerSource = useCallback((key, source) => {
+    sources.current.set(key, source);
+    return () => sources.current.delete(key);
+  }, []);
+
+  // HashRouter receives browser Back/Forward after the hash has changed but
+  // before React removes the old route. Registered reverse sources let us
+  // snapshot that still-mounted hero and run the very same FLIP into the new
+  // route. A direct URL has no source registration, so it remains an instant,
+  // normal page render as intended.
+  useEffect(() => {
+    const onHistoryNavigation = () => {
+      if (prefersReducedMotion() || activeRef.current?.toPath === window.location.hash.slice(1)) return;
+      const toPath = window.location.hash.slice(1) || '/';
+      const source = [...sources.current.values()].find((entry) => entry.toPath === toPath);
+      const snapshot = source?.snapshot?.();
+      if (!snapshot) return;
+      startTransition({ ...snapshot, toPath, fromPath: source.fromPath, alreadyAtDestination: true });
+    };
+    window.addEventListener('hashchange', onHistoryNavigation);
+    return () => window.removeEventListener('hashchange', onHistoryNavigation);
+  }, [startTransition]);
+
   const value = useMemo(
-    () => ({ active, startTransition, registerTarget, markCanvasReady }),
-    [active, startTransition, registerTarget, markCanvasReady]
+    () => ({ active, startTransition, registerTarget, markCanvasReady, registerSource }),
+    [active, startTransition, registerTarget, markCanvasReady, registerSource]
   );
 
   return (
@@ -217,6 +268,51 @@ export function useSharedSource({ id, toPath, variant = 'card' }) {
 }
 
 /**
+ * Registers the hero on a detail/grid page as a reverse-transition source.
+ * `snapshot` is also used by the hashchange listener, which is what makes the
+ * browser Back button indistinguishable from clicking the in-app back link.
+ */
+export function useSharedBackSource({ id, toPath, variant = 'card', elRef, getRect, imageUrl, radius = 0 }) {
+  const ctx = useTransition();
+  const location = useLocation();
+
+  const snapshot = useCallback(() => {
+    const el = elRef.current;
+    const rect = getRect?.() ?? (el ? el.getBoundingClientRect() : null);
+    if (!rect || rect.width < 1 || rect.height < 1) return null;
+    const cs = el ? getComputedStyle(el) : null;
+    const resolvedImage = imageUrl ?? (variant === 'logo' ? `url("${el?.currentSrc || el?.src}")` : cs?.backgroundImage);
+    if (!resolvedImage || resolvedImage === 'none') return null;
+    return {
+      id,
+      variant,
+      imageUrl: resolvedImage,
+      rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height },
+      radius: radius || parseFloat(cs?.borderTopLeftRadius) || 0,
+    };
+  }, [elRef, getRect, id, imageUrl, radius, variant]);
+
+  useEffect(() => {
+    if (!ctx) return undefined;
+    return ctx.registerSource(id, { toPath, fromPath: location.pathname, snapshot });
+  }, [ctx, id, location.pathname, snapshot, toPath]);
+
+  const onClick = useCallback(
+    (e) => {
+      if (!ctx || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (prefersReducedMotion()) return;
+      const next = snapshot();
+      if (!next) return;
+      e.preventDefault();
+      ctx.startTransition({ ...next, toPath, fromPath: location.pathname });
+    },
+    [ctx, location.pathname, snapshot, toPath]
+  );
+
+  return { onClick };
+}
+
+/**
  * Style for the root of a page that is being navigated AWAY from: blur + fade,
  * and pointer-events off so nothing underneath the flying element stays live.
  * Returns {} on the destination page and under reduced motion.
@@ -248,9 +344,19 @@ export function useSourceRecede() {
 /** True once the destination may show its content. Always true when not arriving via a transition. */
 export function useEntranceRevealed(transitionId) {
   const ctx = useTransition();
+  const location = useLocation();
   const active = ctx?.active;
-  const here = !!transitionId && active?.id === transitionId;
+  const here = !!transitionId && active?.id === transitionId && active?.toPath === location.pathname;
   return !here || active.phase === 'revealing';
+}
+
+/** True once any shared element arriving at this route has settled. */
+export function useRouteEntranceRevealed() {
+  const ctx = useTransition();
+  const location = useLocation();
+  const active = ctx?.active;
+  const arriving = active?.toPath === location.pathname;
+  return !arriving || active.phase === 'revealing';
 }
 
 /**
@@ -260,7 +366,8 @@ export function useEntranceRevealed(transitionId) {
  */
 export function useElementEntranceTarget(transitionId, elRef) {
   const ctx = useTransition();
-  const here = !!transitionId && ctx?.active?.id === transitionId;
+  const location = useLocation();
+  const here = !!transitionId && ctx?.active?.id === transitionId && ctx?.active?.toPath === location.pathname;
 
   useEffect(() => {
     if (!ctx || !here) return undefined;
@@ -278,7 +385,7 @@ export function useElementEntranceTarget(transitionId, elRef) {
 // A centred box inside the canvas mount, sized to frame a corner-view mattress.
 // It doesn't need to pixel-match the WebGL render - the crossfade absorbs the
 // difference between a flat texture crop and a lit 3D corner view.
-function heroBoxWithin(mountRect) {
+export function getProductHeroRect(mountRect) {
   const pad = 0.14;
   const availW = mountRect.width * (1 - pad * 2);
   const availH = mountRect.height * (1 - pad * 2);
@@ -302,7 +409,7 @@ export function useProductEntranceTarget(transitionId, mountRef) {
     const el = mountRef.current;
     if (!el) return undefined;
     const report = () =>
-      ctx.registerTarget(transitionId, heroBoxWithin(el.getBoundingClientRect()), { waitForCanvas: true });
+      ctx.registerTarget(transitionId, getProductHeroRect(el.getBoundingClientRect()), { waitForCanvas: true });
     report();
     const ro = new ResizeObserver(report);
     ro.observe(el);
