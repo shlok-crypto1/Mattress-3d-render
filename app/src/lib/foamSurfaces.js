@@ -236,6 +236,42 @@ export function makeCoilRibNormal(ribs = 11) {
   });
 }
 
+/**
+ * Tufted side border: regularly spaced button dimples on a diamond lattice,
+ * over a fine fabric weave. This is what makes a mattress border read as
+ * tailored upholstery rather than a flat fabric-wrapped block. Applied as a
+ * normal map - the dimples are far too small and too numerous to be worth
+ * real geometry.
+ */
+export function makeTuftedBorderNormal(cols = 14, rows = 3) {
+  return memo(`tufted-${cols}-${rows}`, () => {
+    const size = 256;
+    const weave = fbm(size, 3, 88, 4507);
+    const h = new Float32Array(size * size);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        // Two offset grids give the diamond arrangement the reference borders
+        // use, without needing a second pass of dimples.
+        let dip = 0;
+        for (let k = 0; k < 2; k++) {
+          const ox = k * 0.5;
+          const fx = ((x / size) * cols + ox) % 1;
+          const fy = ((y / size) * rows + ox) % 1;
+          const dx = (fx - 0.5) * 2, dy = (fy - 0.5) * 2;
+          const r = Math.sqrt(dx * dx + dy * dy);
+          if (r < 1) {
+            // Smooth bowl, deepest at the button and flat by the rim.
+            const t = 1 - r;
+            dip = Math.max(dip, t * t * (3 - 2 * t));
+          }
+        }
+        h[y * size + x] = (1 - dip * 0.85) * 0.86 + weave[y * size + x] * 0.14;
+      }
+    }
+    return normalFromHeight(h, size, 9);
+  });
+}
+
 /** Rebonded-foam chip speckle (Ortho Bond and the FOAMICO support cores). */
 export function makeSpeckleTexture(base = '#DCD7CE', size = 256) {
   return memo(`speckle-${base}-${size}`, () => {

@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
-import { buildMattressGeometry } from '../lib/mattressGeometry';
-import { makeStudioEnvironment } from '../lib/foamSurfaces';
+import { buildEuroTopGeometry } from '../lib/mattressGeometry';
+import { makeStudioEnvironment, makeTuftedBorderNormal } from '../lib/foamSurfaces';
 import { buildLayerStack } from '../lib/layerStack';
 import {
   useProductEntranceTarget,
@@ -200,6 +200,14 @@ export default function MattressViewer({
     const sideTex = load(publicUrl(textures.side));
     sideTex.wrapS = THREE.RepeatWrapping;
 
+    const W = dimensions?.width ?? 72;
+    const H = dimensions?.height ?? 5;
+    const L = dimensions?.length ?? 72;
+    // The exploded slabs keep their own soft top edge; only the solid box is
+    // built as a Euro-top.
+    const topBevel = Math.min(1.3, H * 0.26);
+    const wallTile = L / 3.3;
+
     const topMatOpts = { map: top, roughness: 0.95, metalness: 0, side: THREE.DoubleSide };
     if (textures.topBump) {
       const topBump = load(publicUrl(textures.topBump));
@@ -208,16 +216,51 @@ export default function MattressViewer({
       topMatOpts.bumpScale = 0.35;
     }
     const topMat = new THREE.MeshStandardMaterial(topMatOpts);
-    const wallMat = new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
+    // Border fabric carries the tufted dimple relief. The map's own UVs already
+    // tile it around the perimeter, so the normal map is given a repeat that
+    // matches roughly one dimple row per inch of border height.
+    const TUFT_PITCH = 3.1; // inches between dimple centres
+    const TUFT_COLS = 14, TUFT_ROWS = 3;
+    const tuftNormal = makeTuftedBorderNormal(TUFT_COLS, TUFT_ROWS).clone();
+    tuftNormal.wrapS = tuftNormal.wrapT = THREE.RepeatWrapping;
+    // The border's UVs run by arc length (u) and by fraction of mattress height
+    // (v), so the repeat has to convert those into a physical dimple pitch -
+    // left at 1x the dimples came out microscopic and vanished.
+    tuftNormal.repeat.set(
+      wallTile / (TUFT_PITCH * TUFT_COLS),
+      H / (TUFT_PITCH * TUFT_ROWS)
+    );
+    tuftNormal.anisotropy = maxAnisotropy;
+    tuftNormal.needsUpdate = true;
+    const wallMat = new THREE.MeshStandardMaterial({
+      map: sideTex,
+      normalMap: tuftNormal,
+      normalScale: new THREE.Vector2(0.8, 0.8),
+      roughness: 0.95,
+      metalness: 0,
+      side: THREE.DoubleSide,
+    });
     const bottomMat = new THREE.MeshStandardMaterial({ map: bottom, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
+    // Piping between base and cushion. It reuses the border photo so the trim
+    // always belongs to its product, darkened a touch so the band reads as a
+    // seam rather than merging into the fabric either side of it.
+    const seamMat = new THREE.MeshStandardMaterial({
+      map: sideTex,
+      color: new THREE.Color(0.86, 0.86, 0.86),
+      roughness: 0.82,
+      metalness: 0,
+      side: THREE.DoubleSide,
+    });
 
-    const W = dimensions?.width ?? 72;
-    const H = dimensions?.height ?? 5;
-    const L = dimensions?.length ?? 72;
-    const topBevel = Math.min(1.3, H * 0.26);
-    const wallTile = L / 3.3;
-    const geometry = buildMattressGeometry(W, H, L, 2.5, topBevel, 8, wallTile);
-    const box = new THREE.Mesh(geometry, [topMat, wallMat, bottomMat]);
+    // Euro-top silhouette: firm base box, separate cushion inset on top, piping
+    // where they meet. Shared by every product - this is a construction style,
+    // not a per-product trait.
+    const geometry = buildEuroTopGeometry(W, H, L, {
+      cornerSegs: Math.max(6, Math.round(10 * quality)),
+      tileWidth: wallTile,
+      seamTile: wallTile / 2,
+    });
+    const box = new THREE.Mesh(geometry, [topMat, wallMat, bottomMat, seamMat]);
     group.add(box);
     s.box = box;
 
@@ -496,7 +539,7 @@ export default function MattressViewer({
       box.visible = reveal < 1;
       if (box.visible) {
         box.scale.setScalar(T > 0 ? 0.995 : 1);
-        [topMat, wallMat, bottomMat].forEach((m) => {
+        [topMat, wallMat, bottomMat, seamMat].forEach((m) => {
           m.transparent = T > 0;
           m.opacity = 1 - reveal;
           m.depthWrite = reveal < 0.5;
@@ -708,6 +751,8 @@ export default function MattressViewer({
       topMat.dispose();
       wallMat.dispose();
       bottomMat.dispose();
+      seamMat.dispose();
+      tuftNormal.dispose();
       shadowTex.dispose();
       shadow.geometry.dispose();
       shadow.material.dispose();
