@@ -102,6 +102,8 @@ export default function BrandSelectPage() {
         .brand-panel:focus-visible { outline: 2px solid currentColor; outline-offset: -6px; }
         @media (prefers-reduced-motion: reduce) {
           .brand-panel__cue { transition: none; }
+          .brand-panel:hover .brand-panel__cue,
+          .brand-panel:focus-visible .brand-panel__cue { transform: none; }
         }
       `}</style>
 

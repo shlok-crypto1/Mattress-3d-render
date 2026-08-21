@@ -692,7 +692,15 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
           textAlign: 'center',
         }}
       >
-        <img src={publicUrl(t.logo)} alt={t.logoAlt} style={{ height: t.logoHeight, width: 'auto' }} />
+        <img
+          src={publicUrl(t.logo)}
+          alt={t.logoAlt}
+          style={{
+            height: t.logoHeight,
+            width: 'auto',
+            ...(animated ? enterStyle(revealed, 0) : null),
+          }}
+        />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div
             style={{
@@ -747,7 +755,21 @@ export default function MattressViewer({ product, autoRotate = true, brand = 've
       </div>
 
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-        <div ref={mountRef} style={{ position: 'absolute', inset: 0, touchAction: 'none', cursor: 'grab' }} />
+        <div
+          ref={mountRef}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            touchAction: 'none',
+            cursor: 'grab',
+            // The scene still mounts and loads behind the overlay so it can
+            // report its first frame, but must not be visible or interactive
+            // until the shared texture has completed its flight.
+            opacity: animated && !revealed ? 0 : 1,
+            pointerEvents: animated && !revealed ? 'none' : 'auto',
+            transition: animated && revealed ? 'opacity 200ms linear' : 'none',
+          }}
+        />
 
         {hasLayers && (
           <div ref={labelsRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
