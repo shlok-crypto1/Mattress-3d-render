@@ -256,7 +256,7 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
     seamProud = 0.13,
     cornerSegs = 10,
     sideSegs = 1,
-    tileWidth = L / 3.3,
+    tileWidth: tileWidthReq = L / 3.3,
     seamTile = L / 6,
   } = opts;
 
@@ -291,6 +291,13 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
     W - 2 * (inset + bevel), L - 2 * (inset + bevel), Math.max(0.2, cushR - bevel), cornerSegs, sideSegs
   );
   const N = base.pts.length;
+
+  // The perimeter has to hold a whole number of tiles. At 13.1 the wall's u ran
+  // 0 -> 13.1 and then jumped back to 0 at the closure, so even a perfectly
+  // seamless photo tore there. Snapping the tile width rather than the count
+  // honours the requested tile size to within half a tile.
+  const wallTiles = Math.max(1, Math.round(base.total / tileWidthReq));
+  const tileWidth = base.total / wallTiles;
 
   // One side-fabric photo has to cover both walls, so it is split by height:
   // the base takes the lower band, the cushion the upper one, and the piping
@@ -425,5 +432,9 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
   geo.addGroup(at, idxWall.length, 1); at += idxWall.length;
   geo.addGroup(at, idxBottom.length, 2); at += idxBottom.length;
   geo.addGroup(at, idxSeam.length, 3);
+  // The border's dimple pitch has to be derived from the same snapped numbers,
+  // or the tuft map reintroduces the closure seam the snapping just removed.
+  geo.userData.wallTile = tileWidth;
+  geo.userData.perimeter = base.total;
   return geo;
 }

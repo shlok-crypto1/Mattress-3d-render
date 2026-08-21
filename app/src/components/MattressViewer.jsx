@@ -197,7 +197,8 @@ export default function MattressViewer({
       topReady = true;
     });
     const bottom = load(publicUrl(textures.bottom));
-    const sideTex = load(publicUrl(textures.side));
+    let onSideReady = null;
+    const sideTex = load(publicUrl(textures.side), () => onSideReady?.());
     sideTex.wrapS = THREE.RepeatWrapping;
 
     const W = dimensions?.width ?? 72;
@@ -206,7 +207,11 @@ export default function MattressViewer({
     // The exploded slabs keep their own soft top edge; only the solid box is
     // built as a Euro-top.
     const topBevel = Math.min(1.3, H * 0.26);
-    const wallTile = L / 3.3;
+    // ~6 tiles around the perimeter rather than the old ~13. Halving the
+    // repetition costs texel density (about 19/in down to 9/in, on par with the
+    // top faces), which is the accepted trade for a border that does not read
+    // as a repeating strip.
+    const wallTile = L / 1.5;
 
     const topMatOpts = { map: top, roughness: 0.95, metalness: 0, side: THREE.DoubleSide };
     if (textures.topBump) {
@@ -219,19 +224,11 @@ export default function MattressViewer({
     // Border fabric carries the tufted dimple relief. The map's own UVs already
     // tile it around the perimeter, so the normal map is given a repeat that
     // matches roughly one dimple row per inch of border height.
-    const TUFT_PITCH = 3.1; // inches between dimple centres
+    const TUFT_PITCH = 3.1; // target inches between dimple centres
     const TUFT_COLS = 14, TUFT_ROWS = 3;
     const tuftNormal = makeTuftedBorderNormal(TUFT_COLS, TUFT_ROWS).clone();
     tuftNormal.wrapS = tuftNormal.wrapT = THREE.RepeatWrapping;
-    // The border's UVs run by arc length (u) and by fraction of mattress height
-    // (v), so the repeat has to convert those into a physical dimple pitch -
-    // left at 1x the dimples came out microscopic and vanished.
-    tuftNormal.repeat.set(
-      wallTile / (TUFT_PITCH * TUFT_COLS),
-      H / (TUFT_PITCH * TUFT_ROWS)
-    );
     tuftNormal.anisotropy = maxAnisotropy;
-    tuftNormal.needsUpdate = true;
     const wallMat = new THREE.MeshStandardMaterial({
       map: sideTex,
       normalMap: tuftNormal,
@@ -241,16 +238,42 @@ export default function MattressViewer({
       side: THREE.DoubleSide,
     });
     const bottomMat = new THREE.MeshStandardMaterial({ map: bottom, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
-    // Piping between base and cushion. It reuses the border photo so the trim
-    // always belongs to its product, darkened a touch so the band reads as a
+    // Piping between base and cushion, darkened a touch so the band reads as a
     // seam rather than merging into the fabric either side of it.
+    //
+    // Its map is the border photo collapsed to a single column of pixels. The
+    // band used to carry the whole photo squeezed into 0.4in and tiled 26 times
+    // around, so every fraction of a pixel of residual slope in the source
+    // repeated as a sawtooth kink. One texel wide, every u samples the same
+    // column: the trim cannot kink or shift shade along the mattress no matter
+    // how un-seamless the photo is, while still taking its colour and vertical
+    // shading from the product's own border.
     const seamMat = new THREE.MeshStandardMaterial({
-      map: sideTex,
       color: new THREE.Color(0.86, 0.86, 0.86),
       roughness: 0.82,
       metalness: 0,
       side: THREE.DoubleSide,
     });
+    const buildSeamProfile = () => {
+      const img = sideTex.image;
+      if (!img || !img.width || disposed) return;
+      const c = document.createElement('canvas');
+      c.width = 1;
+      c.height = img.height;
+      // Downscaling to one column box-filters the width away, which also
+      // averages out any residual slope in the photographed piping.
+      c.getContext('2d').drawImage(img, 0, 0, 1, img.height);
+      const prof = new THREE.CanvasTexture(c);
+      prof.wrapS = prof.wrapT = THREE.RepeatWrapping;
+      prof.colorSpace = THREE.SRGBColorSpace;
+      prof.needsUpdate = true;
+      seamMat.map = prof;
+      seamMat.needsUpdate = true;
+      disposables.push(prof);
+      s.dirty = true;
+    };
+    if (sideTex.image?.width) buildSeamProfile();
+    else onSideReady = buildSeamProfile;
 
     // Euro-top silhouette: firm base box, separate cushion inset on top, piping
     // where they meet. Shared by every product - this is a construction style,
@@ -260,6 +283,17 @@ export default function MattressViewer({
       tileWidth: wallTile,
       seamTile: wallTile / 2,
     });
+    // Dimples have to close on a whole period too, or the tuft map puts back
+    // the closure seam the tile snapping just removed.
+    const snappedTile = geometry.userData.wallTile;
+    const perimeter = geometry.userData.perimeter;
+    const tuftPeriods = Math.max(1, Math.round(perimeter / (TUFT_PITCH * TUFT_COLS)));
+    const tuftPitch = perimeter / (TUFT_COLS * tuftPeriods);
+    tuftNormal.repeat.set(
+      snappedTile / (tuftPitch * TUFT_COLS),
+      H / (tuftPitch * TUFT_ROWS)
+    );
+    tuftNormal.needsUpdate = true;
     const box = new THREE.Mesh(geometry, [topMat, wallMat, bottomMat, seamMat]);
     group.add(box);
     s.box = box;
