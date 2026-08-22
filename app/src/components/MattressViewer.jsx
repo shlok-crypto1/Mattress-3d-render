@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
 import { buildEuroTopGeometry } from '../lib/mattressGeometry';
-import { makeStudioEnvironment, makeTuftedBorderNormal } from '../lib/foamSurfaces';
+import { makeStudioEnvironment } from '../lib/foamSurfaces';
 import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer, buildEdgeStitch, averageColor } from '../lib/quiltSurface';
 import { MOTION, EASE } from '../lib/motion';
 import { buildLayerStack } from '../lib/layerStack';
@@ -312,18 +312,13 @@ export default function MattressViewer({
         bumpTex.colorSpace = THREE.NoColorSpace;
       });
     }
-    // Border fabric carries the tufted dimple relief. The map's own UVs already
-    // tile it around the perimeter, so the normal map is given a repeat that
-    // matches roughly one dimple row per inch of border height.
-    const TUFT_PITCH = 3.1; // target inches between dimple centres
-    const TUFT_COLS = 14, TUFT_ROWS = 3;
-    const tuftNormal = makeTuftedBorderNormal(TUFT_COLS, TUFT_ROWS).clone();
-    tuftNormal.wrapS = tuftNormal.wrapT = THREE.RepeatWrapping;
-    tuftNormal.anisotropy = maxAnisotropy;
+    // The border wears its own photograph and nothing else. A procedural
+    // dimple lattice used to be laid over it, which was near-invisible under
+    // the old flat ambient light but resolves into a hard geometric grid once
+    // the rig is directional - and one that belongs to no product, since every
+    // border here is already photographed fabric with its own weave.
     const wallMat = new THREE.MeshStandardMaterial({
       map: sideTex,
-      normalMap: tuftNormal,
-      normalScale: new THREE.Vector2(0.8, 0.8),
       roughness: 0.95,
       metalness: 0,
       side: THREE.DoubleSide,
@@ -385,17 +380,6 @@ export default function MattressViewer({
       edgeCompression: quiltCfg.edgeCompression,
     };
     const geometry = buildEuroTopGeometry(W, H, L, euroOpts);
-    // Dimples have to close on a whole period too, or the tuft map puts back
-    // the closure seam the tile snapping just removed.
-    const snappedTile = geometry.userData.wallTile;
-    const perimeter = geometry.userData.perimeter;
-    const tuftPeriods = Math.max(1, Math.round(perimeter / (TUFT_PITCH * TUFT_COLS)));
-    const tuftPitch = perimeter / (TUFT_COLS * tuftPeriods);
-    tuftNormal.repeat.set(
-      snappedTile / (tuftPitch * TUFT_COLS),
-      H / (tuftPitch * TUFT_ROWS)
-    );
-    tuftNormal.needsUpdate = true;
     const box = new THREE.Mesh(geometry, [topMat, wallMat, bottomMat, seamMat]);
     group.add(box);
     s.box = box;
@@ -923,7 +907,6 @@ export default function MattressViewer({
       wallMat.dispose();
       bottomMat.dispose();
       seamMat.dispose();
-      tuftNormal.dispose();
       shadowTex.dispose();
       shadow.geometry.dispose();
       shadow.material.dispose();

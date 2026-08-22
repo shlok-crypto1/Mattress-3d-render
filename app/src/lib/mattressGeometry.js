@@ -536,10 +536,6 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
   geo.addGroup(at, idxWall.length, 1); at += idxWall.length;
   geo.addGroup(at, idxBottom.length, 2); at += idxBottom.length;
   geo.addGroup(at, idxSeam.length, 3);
-  // The border's dimple pitch has to be derived from the same snapped numbers,
-  // or the tuft map reintroduces the closure seam the snapping just removed.
-  geo.userData.wallTile = tileWidth;
-  geo.userData.perimeter = base.total;
   // Where the quilt panel is sewn to the binding that wraps the top edge. It
   // is the one stitch path on this mattress that exists as real vectors rather
   // than as pixels in a photograph, which is what makes it the one worth
