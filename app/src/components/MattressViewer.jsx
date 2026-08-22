@@ -1076,21 +1076,29 @@ export default function MattressViewer({
             {name}
           </div>
           {specLine ? (
+            // Two tiers rather than one run-on string. What the product *is*
+            // (variant, thickness, feel) reads first; the warranty is
+            // supporting detail and is set as such. As one line it also ran off
+            // the side of a phone - it was the longest single element on the
+            // page and had nothing to wrap against.
             <div
               className="mv-spec"
               style={{
                 fontWeight: 400,
-                color: '#8a8a8e',
+                color: t.muted,
                 letterSpacing: '0.04em',
                 marginTop: 8,
                 ...(animated ? enterStyle(revealed, 60) : null),
               }}
             >
-              {specLine.variant}
-              {' · '}
-              {specLine.thickness}
-              {' · '}
-              {specLine.warranty}
+              <span>{specLine.variant}</span>
+              <span className="mv-spec-sep" aria-hidden="true" />
+              <span>{specLine.thickness}</span>
+              {specLine.warranty ? (
+                <span className="mv-warranty" style={{ color: t.faint }}>
+                  {specLine.warranty}
+                </span>
+              ) : null}
             </div>
           ) : specsPending ? (
             // Mock-up slot: real variant / thickness / warranty copy drops in here.
@@ -1243,9 +1251,14 @@ export default function MattressViewer({
             </button>
           ))}
           {hasLayers && (
-            <button onClick={toggleLayers} className="mv-view-btn" data-active={exploded}>
-              {exploded ? 'Solid' : 'Layers'}
-            </button>
+            <>
+              {/* Layers is not a sixth camera angle - it changes what the
+                  product *is* on screen. A divider says so without a label. */}
+              <span className="mv-btn-sep" aria-hidden="true" />
+              <button onClick={toggleLayers} className="mv-view-btn" data-active={exploded}>
+                {exploded ? 'Solid' : 'Layers'}
+              </button>
+            </>
           )}
         </div>
         <div className="mv-hint" style={{ color: t.faint }}>
@@ -1287,7 +1300,32 @@ export default function MattressViewer({
              overflows first, so the tracking gives way before the size does. */
           text-indent: 0.22em;
         }
-        .mv-spec { font-size: 12.5px; }
+        .mv-spec {
+          font-size: 12.5px;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          gap: 0 10px;
+          max-width: min(560px, calc(100vw - 40px));
+          margin-left: auto;
+          margin-right: auto;
+        }
+        /* Thin rule instead of a middot: the brief asks for dividers, and a
+           real rule holds its weight at every size where a punctuation mark
+           starts disappearing. */
+        .mv-spec-sep {
+          width: 12px;
+          height: 1px;
+          background: currentColor;
+          opacity: 0.4;
+        }
+        .mv-warranty {
+          flex-basis: 100%;
+          font-size: 0.88em;
+          letter-spacing: 0.05em;
+          margin-top: 5px;
+        }
         .mv-stage-tint {
           position: absolute;
           inset: 0;
@@ -1311,7 +1349,15 @@ export default function MattressViewer({
           gap: 14px;
           padding: 0 20px calc(26px + env(safe-area-inset-bottom));
         }
-        .mv-btnrow { display: flex; gap: 8px; }
+        .mv-btnrow { display: flex; gap: 8px; align-items: center; }
+        .mv-btn-sep {
+          flex: none;
+          width: 1px;
+          align-self: stretch;
+          margin: 4px 4px;
+          background: currentColor;
+          opacity: 0.16;
+        }
         .mv-hint { font-size: 11.5px; font-weight: 300; letter-spacing: 0.03em; }
         .mv-view-btn {
           font-family: inherit;
