@@ -33,6 +33,10 @@ export const QUILT_DEFAULTS = {
   roughness: 0.86,
   // Occlusion in the stitch channels.
   ao: 0.55,
+  // Edge thread. Radius is in inches - about 0.75mm at mattress scale - and
+  // the tint multiplies the fabric's own average colour.
+  stitchRadius: 0.03,
+  stitchTint: 0.92,
 };
 
 // ------------------------------------------------------------- sampling ----
@@ -196,7 +200,28 @@ export function quiltMaps(key, img, opts = {}) {
 
   // Micro detail: the bump map is already exactly this - stitch chains, thread
   // and weave, with the broad shading flat-fielded out - so it goes in as-is.
-  const normal = normalFromHeight(fine.data, fine.w, 9, fine.h);
+  //
+  // Its strength is normalised against the source's own contrast, because that
+  // varies enormously across the catalogue: Magic's ticking has a standard
+  // deviation of 45/255 and Ultima's 6/255. A single fixed strength embosses
+  // the first like stone while the second all but disappears. Referencing every
+  // product to the same perceptual relief is what makes this one system rather
+  // than nine hand-tunings, and the per-product `normalScale` still layers on
+  // top for anything that genuinely wants to differ.
+  let mean = 0;
+  for (let i = 0; i < fine.data.length; i++) mean += fine.data[i];
+  mean /= fine.data.length;
+  let variance = 0;
+  for (let i = 0; i < fine.data.length; i++) {
+    const d = fine.data[i] - mean;
+    variance += d * d;
+  }
+  const sd = Math.sqrt(variance / fine.data.length);
+  // Clamped so a nearly flat source is lifted without amplifying its noise, and
+  // a very busy one is calmed without being erased.
+  const REFERENCE_SD = 0.1;
+  const strength = 9 * Math.min(2.2, Math.max(0.45, REFERENCE_SD / Math.max(1e-4, sd)));
+  const normal = normalFromHeight(fine.data, fine.w, strength, fine.h);
   normal.anisotropy = 8;
 
   // Roughness and occlusion share the channel structure: thread and the
@@ -239,6 +264,53 @@ function dataTexture(data, w, h) {
   t.colorSpace = THREE.NoColorSpace;
   t.needsUpdate = true;
   return t;
+}
+
+/**
+ * Average colour of an image, as a THREE.Color.
+ *
+ * Used to tint the quilt's edge thread. The brief is explicit that the thread
+ * should not be bright white unless the product's own fabric is: it should read
+ * because of geometry and light, not because of contrast.
+ */
+export function averageColor(img) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 16;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(img, 0, 0, 16, 16);
+  const px = g.getImageData(0, 0, 16, 16).data;
+  let r = 0, gg = 0, b = 0;
+  for (let i = 0; i < 256; i++) {
+    r += px[i * 4]; gg += px[i * 4 + 1]; b += px[i * 4 + 2];
+  }
+  // SRGBColorSpace, matching how the photo itself is sampled.
+  return new THREE.Color().setRGB(r / 65280, gg / 65280, b / 65280, THREE.SRGBColorSpace);
+}
+
+/**
+ * Thread running the seam where the quilt panel meets its binding.
+ *
+ * Interior quilt channels are left to the normal map: they exist in these
+ * products only as photographed pixels, and tracing vector stitch lines out of
+ * a 600px photo would be guesswork that fought the very image it sits on. This
+ * one path is different - the geometry builder knows exactly where it runs - so
+ * it gets real thread.
+ *
+ * Radius is in mattress inches; the default is about 0.75mm at this scale.
+ */
+export function buildEdgeStitch(edge, { radius = 0.03, color, segments = 6 } = {}) {
+  const pts = edge.map((p) => new THREE.Vector3(p.x, p.y, p.z));
+  const curve = new THREE.CatmullRomCurve3(pts, true, 'centripetal');
+  // Two tube segments per outline point: enough to stay smooth around the
+  // corner arcs without spending geometry on the long straight runs.
+  const geo = new THREE.TubeGeometry(curve, pts.length * 2, radius, segments, true);
+  const mat = new THREE.MeshStandardMaterial({
+    color: color ?? new THREE.Color(0.8, 0.8, 0.8),
+    // Thread is spun fibre - rougher than the woven face it sits on.
+    roughness: 0.72,
+    metalness: 0,
+  });
+  return new THREE.Mesh(geo, mat);
 }
 
 /**

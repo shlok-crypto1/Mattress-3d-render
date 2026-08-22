@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
 import { buildEuroTopGeometry } from '../lib/mattressGeometry';
 import { makeStudioEnvironment, makeTuftedBorderNormal } from '../lib/foamSurfaces';
-import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer } from '../lib/quiltSurface';
+import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer, buildEdgeStitch, averageColor } from '../lib/quiltSurface';
 import { buildLayerStack } from '../lib/layerStack';
 import {
   useProductEntranceTarget,
@@ -392,12 +392,20 @@ export default function MattressViewer({
     // first real frame, and making it wait on an image decode as well would
     // stall the handoff for no visual gain - the swap is invisible because the
     // panel's outline and every UV are identical either way.
+    let stitch = null;
     quiltReady.then((maps) => {
       if (!maps || disposed) return;
       const displace = quiltDisplacer(maps, geometry.userData.cushW, geometry.userData.cushL, H);
       const sculpted = buildEuroTopGeometry(W, H, L, { ...sculptOpts, displace });
       box.geometry = sculpted;
       geometry.dispose();
+      // Thread along the seam the panel is sewn on, tinted from the product's
+      // own fabric so it reads as stitching rather than as a bright rim.
+      stitch = buildEdgeStitch(sculpted.userData.quiltEdge, {
+        radius: quiltCfg.stitchRadius,
+        color: top.image ? averageColor(top.image).multiplyScalar(quiltCfg.stitchTint) : undefined,
+      });
+      box.add(stitch);
       s.dirty = true;
     });
 
@@ -885,6 +893,10 @@ export default function MattressViewer({
       // box.geometry, not the `geometry` built above: once the sculpted cap has
       // swapped in, that original is already disposed and this is the live one.
       box.geometry.dispose();
+      if (stitch) {
+        stitch.geometry.dispose();
+        stitch.material.dispose();
+      }
       topMat.dispose();
       wallMat.dispose();
       bottomMat.dispose();

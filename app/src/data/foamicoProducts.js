@@ -12,9 +12,16 @@ const tex = (slug) => ({
   bottom: `/textures/foamico/${slug}/bottom.png`,
 });
 
-const product = (slug, name, variant, height, feel, warranty) => ({
+// `quilt` is optional on every product and overrides QUILT_DEFAULTS in
+// src/lib/quiltSurface.js - depth, edgeCompression, normalScale, sheen,
+// roughness, stitchRadius, stitchTint. Left unset the defaults derive
+// everything from the product's own top-bump.png, including normalising the
+// relief against that fabric's contrast, so a new product needs no tuning to
+// look right; this is here for the case where one genuinely wants to differ.
+const product = (slug, name, variant, height, feel, warranty, quilt) => ({
   slug,
   name,
+  ...(quilt ? { quilt } : null),
   specLine: {
     variant,
     thickness: `${height}\u2033 ${feel}`,

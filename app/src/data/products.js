@@ -2,6 +2,12 @@ import { vedasleepLayersBySlug } from './layers/vedasleepLayers';
 
 // VedaSleep line.
 //
+// Any product may carry an optional `quilt` block overriding QUILT_DEFAULTS in
+// src/lib/quiltSurface.js. None do: the defaults derive the quilt's relief from
+// each product's own top-bump.png and normalise it against that fabric's own
+// contrast, which is what lets one system cover a ticking as flat as Ultima's
+// and one as strongly patterned as Magic's.
+//
 // Every product now declares a `layers` array for the explode view. The shape
 // of each stack (count, type, order) is confirmed; the names, descriptions and
 // thickness ratios inside them are placeholders - see
