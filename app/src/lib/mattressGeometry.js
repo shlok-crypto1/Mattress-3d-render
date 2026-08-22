@@ -67,6 +67,41 @@ export function roundedRectPerimeter(W, L, Rc, cornerSegs, sideSegs = 1) {
   return { pts, arcLen, total };
 }
 
+/**
+ * Make every triangle wind so that it is front-facing from the side its own
+ * vertex normals point to.
+ *
+ * The perimeter walk in `roundedRectPerimeter` runs clockwise as seen from
+ * above, so caps built by fanning across it came out back-facing: three then
+ * negates the shading normal for those fragments (materials here are
+ * DoubleSided), and the quilt top was being lit as though it faced the floor.
+ * That was invisible while the scene was lit mostly by an AmbientLight, which
+ * is normal-independent - it only surfaced once the rig became directional.
+ *
+ * Fixing it by flipping the winding rather than the walk direction keeps every
+ * UV, arc length and tile-snapping calculation exactly as it was. Faces whose
+ * normal is perpendicular to their plane (degenerate slivers) are left alone.
+ */
+function orientFaces(positions, normals, index) {
+  for (let t = 0; t < index.length; t += 3) {
+    const a = index[t], b = index[t + 1], c = index[t + 2];
+    const ax = positions[a * 3], ay = positions[a * 3 + 1], az = positions[a * 3 + 2];
+    const e1x = positions[b * 3] - ax, e1y = positions[b * 3 + 1] - ay, e1z = positions[b * 3 + 2] - az;
+    const e2x = positions[c * 3] - ax, e2y = positions[c * 3 + 1] - ay, e2z = positions[c * 3 + 2] - az;
+    const fx = e1y * e2z - e1z * e2y;
+    const fy = e1z * e2x - e1x * e2z;
+    const fz = e1x * e2y - e1y * e2x;
+    const vx = normals[a * 3] + normals[b * 3] + normals[c * 3];
+    const vy = normals[a * 3 + 1] + normals[b * 3 + 1] + normals[c * 3 + 1];
+    const vz = normals[a * 3 + 2] + normals[b * 3 + 2] + normals[c * 3 + 2];
+    if (fx * vx + fy * vy + fz * vz < 0) {
+      index[t + 1] = c;
+      index[t + 2] = b;
+    }
+  }
+  return index;
+}
+
 export function buildMattressGeometry(W, H, L, Rc, Rt, cornerSegs, tileWidth, opts = {}) {
   const { displace = null, capRings = 1, sideSegs = 1 } = opts;
   const hx = W / 2, hz = L / 2;
@@ -207,7 +242,7 @@ export function buildMattressGeometry(W, H, L, Rc, Rt, cornerSegs, tileWidth, op
   geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setIndex([...idxTop, ...idxWall, ...idxBottom]);
+  geo.setIndex(orientFaces(positions, normals, [...idxTop, ...idxWall, ...idxBottom]));
   geo.addGroup(0, idxTop.length, 0);
   geo.addGroup(idxTop.length, idxWall.length, 1);
   geo.addGroup(idxTop.length + idxWall.length, idxBottom.length, 2);
@@ -426,7 +461,7 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
   geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
   geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-  geo.setIndex([...idxTop, ...idxWall, ...idxBottom, ...idxSeam]);
+  geo.setIndex(orientFaces(positions, normals, [...idxTop, ...idxWall, ...idxBottom, ...idxSeam]));
   let at = 0;
   geo.addGroup(at, idxTop.length, 0); at += idxTop.length;
   geo.addGroup(at, idxWall.length, 1); at += idxWall.length;
