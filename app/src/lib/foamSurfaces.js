@@ -71,16 +71,24 @@ function fbm(size, octaves, baseFreq, seed) {
   return out;
 }
 
-/** Height field to tangent-space normal map. */
-function normalFromHeight(h, size, strength) {
+/**
+ * Height field to tangent-space normal map.
+ *
+ * `height` defaults to `width`, which is what every procedural surface in this
+ * file wants; the quilt maps pass it explicitly because product photography is
+ * not always square.
+ */
+export function normalFromHeight(h, width, strength, height = width) {
   const c = document.createElement('canvas');
-  c.width = c.height = size;
+  c.width = width;
+  c.height = height;
   const g = c.getContext('2d');
-  const img = g.createImageData(size, size);
-  const wrap = (v) => ((v % size) + size) % size;
-  const at = (x, y) => h[wrap(y) * size + wrap(x)];
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
+  const img = g.createImageData(width, height);
+  const wrapX = (v) => ((v % width) + width) % width;
+  const wrapY = (v) => ((v % height) + height) % height;
+  const at = (x, y) => h[wrapY(y) * width + wrapX(x)];
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
       const dx = (at(x + 1, y) - at(x - 1, y)) * strength;
       const dy = (at(x, y + 1) - at(x, y - 1)) * strength;
       let nx = -dx;
@@ -90,7 +98,7 @@ function normalFromHeight(h, size, strength) {
       nx /= len;
       ny /= len;
       nz /= len;
-      const p = (y * size + x) * 4;
+      const p = (y * width + x) * 4;
       img.data[p] = (nx * 0.5 + 0.5) * 255;
       img.data[p + 1] = (ny * 0.5 + 0.5) * 255;
       img.data[p + 2] = (nz * 0.5 + 0.5) * 255;

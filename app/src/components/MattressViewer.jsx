@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
 import { buildEuroTopGeometry } from '../lib/mattressGeometry';
 import { makeStudioEnvironment, makeTuftedBorderNormal } from '../lib/foamSurfaces';
+import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer } from '../lib/quiltSurface';
 import { buildLayerStack } from '../lib/layerStack';
 import {
   useProductEntranceTarget,
@@ -92,12 +93,17 @@ const HOVER_GLOW = 0.5;
 
 const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
 
+// [key, label, theta, phi, dist]. `dist` is optional and only Detail sets it -
+// everything else keeps the framing the viewer picks for the mount size.
 const VIEW_DEFS = [
   ['corner', 'Corner', 0.6, 0.62],
   ['front', 'Front', 0, 0.12],
   ['side', 'Side', Math.PI / 2, 0.12],
   ['top', 'Top', 0, 1.35],
   ['bottom', 'Bottom', 0, -1.35],
+  // Close, and raked low enough that the light skims the quilt: the view that
+  // shows the surface is fabric rather than a picture of fabric.
+  ['detail', 'Detail', 0.85, 0.46, 88],
 ];
 
 /** Coarse device budget: trims coil count and sculpted-cap tessellation. */
@@ -249,14 +255,50 @@ export default function MattressViewer({
     // as a repeating strip.
     const wallTile = L / 1.5;
 
-    const topMatOpts = { map: top, roughness: 0.95, metalness: 0, side: THREE.DoubleSide };
+    // The sleeping surface is upholstery, so it gets a fabric material rather
+    // than a generic standard one: sheen is the term that makes a textile catch
+    // light along a grazing angle the way cloth does instead of the way plastic
+    // does. Kept low - premium ticking is matte.
+    const quiltCfg = { ...QUILT_DEFAULTS, ...(product.quilt ?? {}) };
+    const topMatOpts = {
+      map: top,
+      roughness: quiltCfg.roughness,
+      metalness: 0,
+      sheen: quiltCfg.sheen,
+      sheenRoughness: quiltCfg.sheenRoughness,
+      sheenColor: new THREE.Color(0xffffff),
+      side: THREE.DoubleSide,
+    };
+    const topMat = new THREE.MeshPhysicalMaterial(topMatOpts);
+    // The quilt's own relief, reconstructed from the product's bump photo. This
+    // used to be fed in as a luminance bumpMap, which cannot distinguish a pale
+    // printed mark from a raised one and gives no roughness or occlusion
+    // response at all; quiltSurface.js turns the same image into a proper
+    // normal / roughness / occlusion set plus the puff field that sculpts the
+    // cap. Resolved as a promise so the stack can wait for the same maps.
+    let quiltReady = Promise.resolve(null);
     if (textures.topBump) {
-      const topBump = load(publicUrl(textures.topBump));
-      topBump.colorSpace = THREE.NoColorSpace;
-      topMatOpts.bumpMap = topBump;
-      topMatOpts.bumpScale = 0.35;
+      quiltReady = new Promise((resolve) => {
+        const bumpTex = load(publicUrl(textures.topBump), () => {
+          if (disposed || !bumpTex.image?.width) return resolve(null);
+          const maps = quiltMaps(publicUrl(textures.topBump), bumpTex.image, quiltCfg);
+          topMatOpts.normalMap = maps.normal;
+          topMatOpts.normalScale = new THREE.Vector2(quiltCfg.normalScale, quiltCfg.normalScale);
+          topMatOpts.roughnessMap = maps.roughnessMap;
+          topMatOpts.aoMap = maps.aoMap;
+          Object.assign(topMat, {
+            normalMap: maps.normal,
+            roughnessMap: maps.roughnessMap,
+            aoMap: maps.aoMap,
+          });
+          topMat.normalScale.set(quiltCfg.normalScale, quiltCfg.normalScale);
+          topMat.needsUpdate = true;
+          s.dirty = true;
+          resolve(maps);
+        });
+        bumpTex.colorSpace = THREE.NoColorSpace;
+      });
     }
-    const topMat = new THREE.MeshStandardMaterial(topMatOpts);
     // Border fabric carries the tufted dimple relief. The map's own UVs already
     // tile it around the perimeter, so the normal map is given a repeat that
     // matches roughly one dimple row per inch of border height.
@@ -314,11 +356,22 @@ export default function MattressViewer({
     // Euro-top silhouette: firm base box, separate cushion inset on top, piping
     // where they meet. Shared by every product - this is a construction style,
     // not a per-product trait.
-    const geometry = buildEuroTopGeometry(W, H, L, {
+    const euroOpts = {
       cornerSegs: Math.max(6, Math.round(10 * quality)),
       tileWidth: wallTile,
       seamTile: wallTile / 2,
-    });
+    };
+    // Sculpting the cap needs enough perimeter samples to resolve the quilt's
+    // cell pitch, and enough rings to resolve it inward; below that the puff
+    // aliases into long diagonal creases. Both ride the device quality dial,
+    // like every other tessellation choice here.
+    const sculptOpts = {
+      ...euroOpts,
+      sideSegs: Math.max(8, Math.round(26 * quality)),
+      capRings: Math.max(12, Math.round(34 * quality)),
+      edgeCompression: quiltCfg.edgeCompression,
+    };
+    const geometry = buildEuroTopGeometry(W, H, L, euroOpts);
     // Dimples have to close on a whole period too, or the tuft map puts back
     // the closure seam the tile snapping just removed.
     const snappedTile = geometry.userData.wallTile;
@@ -333,6 +386,20 @@ export default function MattressViewer({
     const box = new THREE.Mesh(geometry, [topMat, wallMat, bottomMat, seamMat]);
     group.add(box);
     s.box = box;
+
+    // The flat cap goes up first and the sculpted one replaces it once the
+    // height field has decoded. The card-to-viewer transition is waiting on the
+    // first real frame, and making it wait on an image decode as well would
+    // stall the handoff for no visual gain - the swap is invisible because the
+    // panel's outline and every UV are identical either way.
+    quiltReady.then((maps) => {
+      if (!maps || disposed) return;
+      const displace = quiltDisplacer(maps, geometry.userData.cushW, geometry.userData.cushL, H);
+      const sculpted = buildEuroTopGeometry(W, H, L, { ...sculptOpts, displace });
+      box.geometry = sculpted;
+      geometry.dispose();
+      s.dirty = true;
+    });
 
     // ---- layer explode stack -------------------------------------------
     // The solid box stays the collapsed representation so that view is
@@ -360,7 +427,9 @@ export default function MattressViewer({
     const ensureStack = () => {
       if (!hasLayers || disposed) return Promise.resolve();
       if (stackPromise) return stackPromise;
-      stackPromise = buildLayerStack({
+      // Waits on the quilt maps so the cover that emerges from the box carries
+      // the same fabric response the box already has.
+      stackPromise = quiltReady.then(() => buildLayerStack({
         layerDefs,
         group,
         W,
@@ -375,7 +444,7 @@ export default function MattressViewer({
         productBottomMap: bottom,
         productSideMap: sideTex,
         maxAnisotropy,
-      })
+      }))
         .then((built) => {
           if (disposed) {
             built.dispose();
@@ -557,7 +626,9 @@ export default function MattressViewer({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       const baseDist = w < 560 ? 195 : 150;
-      if (!s.exploded) s.tDist = s.dist = baseDist;
+      // Remembered so the view presets can return to it after Detail.
+      s.baseDist = baseDist;
+      if (!s.exploded && s.view !== 'detail') s.tDist = s.dist = baseDist;
       s.dirty = true;
     };
     const ro = new ResizeObserver(resize);
@@ -811,7 +882,9 @@ export default function MattressViewer({
       el.removeEventListener('pointerleave', onPointerLeave);
       el.removeEventListener('wheel', onWheel);
       renderer.dispose();
-      geometry.dispose();
+      // box.geometry, not the `geometry` built above: once the sculpted cap has
+      // swapped in, that original is already disposed and this is the live one.
+      box.geometry.dispose();
       topMat.dispose();
       wallMat.dispose();
       bottomMat.dispose();
@@ -841,12 +914,19 @@ export default function MattressViewer({
     s.markCanvasReady = markCanvasReady;
   }, [markCanvasReady, s]);
 
-  const goTo = (name, theta, phi) => {
+  const goTo = (name, theta, phi, dist) => {
     if (s.exploded) s.setExplodeState?.(false);
     const twoPi = Math.PI * 2;
     const t = theta + Math.round((s.tTheta - theta) / twoPi) * twoPi;
     s.tTheta = t;
     s.tPhi = phi;
+    // Only Detail carries its own distance; the rest return to the framing the
+    // viewer chose for this mount size. Either way it goes through the same
+    // damped target the drag controls use, so the move eases rather than cuts.
+    s.tDist = dist ?? s.baseDist ?? s.tDist;
+    // Mirrored onto the ref because the scene effect only re-runs per product;
+    // it would otherwise read the `view` captured at mount forever.
+    s.view = name;
     s.idle = performance.now();
     setView(name);
   };
@@ -1084,10 +1164,10 @@ export default function MattressViewer({
         style={{ ...(animated ? enterStyle(revealed, 130) : null) }}
       >
         <div className="mv-btnrow">
-          {VIEW_DEFS.map(([name_, label, th, ph]) => (
+          {VIEW_DEFS.map(([name_, label, th, ph, ds]) => (
             <button
               key={name_}
-              onClick={() => goTo(name_, th, ph)}
+              onClick={() => goTo(name_, th, ph, ds)}
               className="mv-view-btn"
               data-active={view === name_}
             >

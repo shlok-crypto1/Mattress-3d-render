@@ -293,6 +293,9 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
     sideSegs = 1,
     tileWidth: tileWidthReq = L / 3.3,
     seamTile = L / 6,
+    displace = null,
+    capRings = 1,
+    edgeCompression = 0,
   } = opts;
 
   const hy = H / 2;
@@ -439,15 +442,81 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
       prev = ring;
     }
     // Quilt cap, mapped across the cushion's own extent.
-    const cap = [];
-    for (let i = 0; i < N; i++) {
-      const b = capIn.pts[i];
-      const uv = cushUV(b.x, b.z);
-      cap.push(push(b.x, hy, b.z, 0, 1, 0, uv[0], uv[1]));
+    //
+    // With no `displace` this stays the single flat fan it always was. Given
+    // one, it becomes `capRings` concentric rings so the quilt's puffed cells
+    // are real geometry: a normal map alone leaves the silhouette flat, and a
+    // flat silhouette is what makes a quilt read as printed on rather than sewn
+    // in.
+    const rings = displace ? Math.max(3, capRings) : 1;
+    // Displacement fades out over the last slice of the cap so the panel meets
+    // the bound edge flush, exactly as the sculpted foam caps do.
+    const taperAt = (t) => {
+      const k = Math.min(1, Math.max(0, (1 - t) / 0.1));
+      return k * k * (3 - 2 * k);
+    };
+    // ...and just inside that, it is drawn slightly under. A quilt panel is
+    // pulled tight where it is sewn to the border tape, so the fabric dips into
+    // the seam instead of running out flat to it. Zero at both ends of the
+    // band, so the cap still meets the bevel exactly.
+    const dipAt = (t) => {
+      const k = Math.min(1, Math.max(0, (t - 0.72) / 0.28));
+      const s = Math.sin(Math.PI * k);
+      return s * s;
+    };
+    const dipAmp = edgeCompression * (displace ? Math.abs(displace(0, 0)) + 0.06 : 0);
+    const heightAt = (x, z, t) =>
+      displace ? hy + displace(x, z) * taperAt(t) - dipAmp * dipAt(t) : hy;
+
+    // Positions first, normals from the finished surface: differencing the
+    // tessellation itself keeps the puff, the taper and the edge dip all
+    // accounted for, where differencing `displace` alone would miss the last
+    // two and shade the seam as though it were flat.
+    const pos = [];
+    for (let j = 0; j <= rings; j++) {
+      const t = j / rings;
+      const ring = [];
+      for (let i = 0; i < N; i++) {
+        const b = capIn.pts[i];
+        const x = b.x * t, z = b.z * t;
+        ring.push([x, heightAt(x, z, t), z]);
+      }
+      pos.push(ring);
     }
-    const c0 = cushUV(0, 0);
-    const centre = push(0, hy, 0, 0, 1, 0, c0[0], c0[1]);
-    for (let i = 0; i < N; i++) idxTop.push(centre, cap[i], cap[(i + 1) % N]);
+    const capIdx = [];
+    for (let j = 0; j <= rings; j++) {
+      const row = [];
+      for (let i = 0; i < N; i++) {
+        const [x, y, z] = pos[j][i];
+        let nx = 0, ny = 1, nz = 0;
+        if (rings > 1 && j > 0) {
+          const a = pos[j][(i + 1) % N], b2 = pos[j][(i - 1 + N) % N];
+          const o = pos[Math.min(rings, j + 1)][i], u = pos[Math.max(0, j - 1)][i];
+          const t1 = [a[0] - b2[0], a[1] - b2[1], a[2] - b2[2]];
+          const t2 = [o[0] - u[0], o[1] - u[1], o[2] - u[2]];
+          nx = t1[1] * t2[2] - t1[2] * t2[1];
+          ny = t1[2] * t2[0] - t1[0] * t2[2];
+          nz = t1[0] * t2[1] - t1[1] * t2[0];
+          const len = Math.hypot(nx, ny, nz) || 1;
+          nx /= len; ny /= len; nz /= len;
+          if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
+        }
+        const uv = cushUV(x, z);
+        row.push(push(x, y, z, nx, ny, nz, uv[0], uv[1]));
+      }
+      capIdx.push(row);
+    }
+    // Ring 0 collapsed to a point: fan it, then quad-strip the rest.
+    for (let i = 0; i < N; i++) {
+      idxTop.push(capIdx[0][0], capIdx[1] ? capIdx[1][i] : capIdx[0][i], capIdx[1] ? capIdx[1][(i + 1) % N] : capIdx[0][(i + 1) % N]);
+    }
+    for (let j = 1; j < rings; j++) {
+      const a = capIdx[j], b2 = capIdx[j + 1];
+      for (let i = 0; i < N; i++) {
+        const i1 = (i + 1) % N;
+        idxTop.push(a[i], b2[i], b2[i1], a[i], b2[i1], a[i1]);
+      }
+    }
   }
 
   // ---- bottom -----------------------------------------------------------
@@ -471,5 +540,14 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
   // or the tuft map reintroduces the closure seam the snapping just removed.
   geo.userData.wallTile = tileWidth;
   geo.userData.perimeter = base.total;
+  // Where the quilt panel is sewn to the binding that wraps the top edge. It
+  // is the one stitch path on this mattress that exists as real vectors rather
+  // than as pixels in a photograph, which is what makes it the one worth
+  // running actual thread along.
+  geo.userData.quiltEdge = capIn.pts.map((p) => ({ x: p.x, y: hy, z: p.z }));
+  // The extent the quilt photo is mapped across, so a displacement field
+  // derived from that photo can be sampled in the same frame of reference.
+  geo.userData.cushW = cushW;
+  geo.userData.cushL = cushL;
   return geo;
 }
