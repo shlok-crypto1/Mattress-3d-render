@@ -5,10 +5,12 @@ import { publicUrl } from '../lib/publicUrl';
 import { buildEuroTopGeometry } from '../lib/mattressGeometry';
 import { makeStudioEnvironment, makeTuftedBorderNormal } from '../lib/foamSurfaces';
 import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer, buildEdgeStitch, averageColor } from '../lib/quiltSurface';
+import { MOTION, EASE } from '../lib/motion';
 import { buildLayerStack } from '../lib/layerStack';
 import {
   useProductEntranceTarget,
   enterStyle,
+  prefersReducedMotion,
 } from '../transition/ProductTransition';
 
 // Per-brand chrome for the shared viewer. 'vedasleep' reproduces the original
@@ -83,8 +85,8 @@ const BRAND_THEMES = {
 // Explode tuning. The stack is toggled by the Layers button alone - zoom used
 // to cross a threshold and explode the mattress on its own, which fired when
 // someone was only trying to look closer at the solid product.
-const EXPLODE_MS = 720;
-const LAYER_STAGGER = 0.07;
+const EXPLODE_MS = MOTION.explode;
+const LAYER_STAGGER = MOTION.explodeStagger;
 const EXPLODE_DIST = 94; // where the button parks the camera to frame the stack
 const EXPLODE_SCALE = 0.55; // shrink the group so the taller stack stays framed
 const HOVER_LIFT = 1.15;
@@ -135,8 +137,19 @@ export default function MattressViewer({
   // Shared-element handoff: no-op unless a card transition landed here (see
   // ProductTransition.jsx). `revealed` starts true whenever entering any
   // other way (direct link, refresh, back-nav) - zero behaviour change then.
-  const { revealed, markCanvasReady } = useProductEntranceTarget(transitionId, mountRef);
-  const animated = !!transitionId;
+  const { revealed: sharedRevealed, entering, markCanvasReady } = useProductEntranceTarget(transitionId, mountRef);
+  // A shared-element arrival is either in flight when this mounts or it is not,
+  // and that never changes for the life of the mount - so it is captured once.
+  //
+  // Everything below exists because the entrance used to run *only* for the
+  // card-click journey. A direct link or a refresh - which is how the product
+  // URL actually gets shared - dropped the whole page in at once, fully formed,
+  // with no sequence at all. The two paths now arrive the same way; this one
+  // just has no shared element to fly in first.
+  const [directEntry] = useState(() => !entering);
+  const [directRevealed, setDirectRevealed] = useState(false);
+  const revealed = directEntry ? directRevealed : sharedRevealed;
+  const animated = !!transitionId || directEntry;
   // Mutable animation/scene state that must NOT trigger re-renders, mirroring the
   // original `this.*` instance fields from the imperative viewer.
   const s = useRef({}).current;
@@ -501,7 +514,13 @@ export default function MattressViewer({
     s.tDist = 150;
     s.idle = 0;
     s.dirty = true;
-    s.autoRotate = autoRotate;
+    // prefers-reduced-motion is respected everywhere else on the site but was
+    // never plumbed into the 3D scene, which is where the only continuous
+    // motion actually lives. Idle drift is precisely the "unnecessary camera
+    // movement" the setting asks to be rid of; dragging, the view presets and
+    // the layer stack all keep working.
+    s.reduced = prefersReducedMotion();
+    s.autoRotate = autoRotate && !s.reduced;
 
     const el = renderer.domElement;
     const pointers = new Map();
@@ -813,6 +832,9 @@ export default function MattressViewer({
         if (topReady && !s.reportedReady) {
           s.reportedReady = true;
           s.markCanvasReady?.();
+          // Same signal, other journey: with no shared element to wait on, this
+          // is what releases the direct-load entrance.
+          s.onFirstFrame?.();
           // First real frame is out; now spend idle time on the layer stack so
           // the Layers button and the zoom threshold are both instant.
           if (hasLayers) {
@@ -919,12 +941,37 @@ export default function MattressViewer({
   }, [product]);
 
   useEffect(() => {
-    s.autoRotate = autoRotate;
+    s.autoRotate = autoRotate && !s.reduced;
   }, [autoRotate, s]);
 
   useEffect(() => {
     s.markCanvasReady = markCanvasReady;
   }, [markCanvasReady, s]);
+
+  // Direct-load entrance: hold until the scene has a real first frame, so the
+  // mattress fades up already drawn rather than revealing an empty canvas, then
+  // let the same REVEAL slots stagger the chrome. Capped so a slow scene cannot
+  // strand the page invisible, and skipped outright under reduced motion.
+  useEffect(() => {
+    if (!directEntry) return undefined;
+    if (prefersReducedMotion()) {
+      setDirectRevealed(true);
+      return undefined;
+    }
+    let done = false;
+    const show = () => {
+      if (done) return;
+      done = true;
+      setDirectRevealed(true);
+    };
+    s.onFirstFrame = show;
+    const cap = window.setTimeout(show, MOTION.canvasWaitCap);
+    return () => {
+      done = true;
+      s.onFirstFrame = null;
+      window.clearTimeout(cap);
+    };
+  }, [directEntry, s]);
 
   const goTo = (name, theta, phi, dist) => {
     if (s.exploded) s.setExplodeState?.(false);
@@ -1083,7 +1130,16 @@ export default function MattressViewer({
             // until the shared texture has completed its flight.
             opacity: animated && !revealed ? 0 : 1,
             pointerEvents: animated && !revealed ? 'none' : 'auto',
-            transition: animated && revealed ? 'opacity 200ms linear' : 'none',
+            // The shared-element path crossfades fast because the mattress is
+            // already on screen as the flying overlay. A direct load has
+            // nothing to hand over from, so it eases up from slightly small -
+            // the product settling into place rather than appearing.
+            transform: directEntry && !revealed ? 'scale(0.94)' : 'scale(1)',
+            transition: !animated || !revealed
+              ? 'none'
+              : directEntry
+                ? `opacity ${MOTION.enter}ms ${EASE.enter}, transform ${MOTION.enter}ms ${EASE.enter}`
+                : `opacity ${MOTION.fast}ms linear`,
           }}
         />
 

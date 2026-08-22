@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { publicUrl } from '../lib/publicUrl';
 import { useSharedSource, useElementEntranceTarget, prefersReducedMotion } from '../transition/ProductTransition';
+import { MOTION, EASE } from '../lib/motion';
 import { preloadRoute } from '../routePreload';
 
 // Defaults reproduce the VedaSleep card exactly; FOAMICO passes its own theme.
@@ -80,7 +81,7 @@ export default function ProductCard({
           : '0 0 0 0 rgba(0,0,0,0)',
         transition: reduced
           ? 'none'
-          : 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms ease, opacity 200ms ease, border-color 200ms ease',
+          : `transform ${MOTION.fast}ms ${EASE.enter}, box-shadow ${MOTION.fast}ms ease, opacity ${MOTION.fast}ms ease, border-color ${MOTION.fast}ms ease`,
         willChange: lifted ? 'transform' : 'auto',
       }}
     >

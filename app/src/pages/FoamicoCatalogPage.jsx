@@ -11,6 +11,7 @@ import {
   useRouteEntranceRevealed,
   enterStyle,
   REVEAL,
+  REVEAL_STEP,
 } from '../transition/ProductTransition';
 import { preloadAllIn } from '../routePreload';
 
@@ -134,7 +135,7 @@ export default function FoamicoCatalogPage() {
           }}
         >
           {foamicoProducts.map((product, i) => (
-            <div key={product.slug} style={{ display: 'flex', ...enterStyle(revealed, REVEAL.controls + i * 45) }}>
+            <div key={product.slug} style={{ display: 'flex', ...enterStyle(revealed, REVEAL.controls + i * REVEAL_STEP) }}>
               <ProductCard
                 product={product}
                 basePath="/foamico"

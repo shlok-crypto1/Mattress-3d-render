@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { MOTION, EASE, REVEAL, REVEAL_STEP } from '../lib/motion';
 
 // One shared-element transition system for the whole site. Two kinds of
 // journey run through it, deliberately sharing every timing constant and the
@@ -32,21 +33,16 @@ import { useLocation, useNavigate } from 'react-router-dom';
 // renders exactly as it did before this file existed. That's what makes it
 // safe to wire into all eleven routes.
 
-const SELECT_HOLD_MS = 190; // source blur/fade before the route actually swaps
-const FLIP_MS = 820; // shared-element travel
-const CROSSFADE_MS = 200; // overlay -> real destination element
-const CANVAS_WAIT_CAP_MS = 4000; // never let a slow 3D scene stall the reveal forever
-export const EASE_ENTER = 'cubic-bezier(0.22, 1, 0.36, 1)';
-
-// Reveal order after the shared element settles. Stagger sits in the 40-90ms
-// band; every page uses these same slots so the rhythm matches site-wide.
-export const REVEAL = {
-  mark: 0, // logo / brand mark
-  title: 55, // product name, brand wordmark
-  meta: 110, // spec line, tagline
-  controls: 170, // view buttons, Layers, "View collection", product cards
-  back: 235, // back-navigation link - always last
-};
+// Timing and easing live in src/lib/motion.js so the whole site shares one
+// system. Re-exported here because every page already imports the reveal table
+// from this module, and the shared-element machinery is what defines when those
+// slots fire.
+const SELECT_HOLD_MS = MOTION.hold;
+const FLIP_MS = MOTION.product;
+const CROSSFADE_MS = MOTION.fast;
+const CANVAS_WAIT_CAP_MS = MOTION.canvasWaitCap;
+export const EASE_ENTER = EASE.enter;
+export { REVEAL, REVEAL_STEP };
 
 const TransitionCtx = createContext(null);
 
@@ -330,12 +326,12 @@ export function useSourceRecede() {
         filter: 'blur(9px)',
         opacity: 0.42,
         pointerEvents: 'none',
-        transition: `filter ${SELECT_HOLD_MS}ms ${EASE_ENTER}, opacity ${SELECT_HOLD_MS}ms ${EASE_ENTER}`,
+        transition: `filter ${MOTION.hold}ms ${EASE.enter}, opacity ${MOTION.hold}ms ${EASE.enter}`,
       }
     : {
         filter: 'none',
         opacity: 1,
-        transition: `filter 260ms ${EASE_ENTER}, opacity 260ms ${EASE_ENTER}`,
+        transition: `filter ${MOTION.normal}ms ${EASE.enter}, opacity ${MOTION.normal}ms ${EASE.enter}`,
       };
 }
 
@@ -429,7 +425,7 @@ export function enterStyle(revealed, delayMs) {
     opacity: revealed ? 1 : 0,
     transform: revealed ? 'translateY(0)' : 'translateY(12px)',
     transition: revealed
-      ? `opacity 460ms ${EASE_ENTER} ${delayMs}ms, transform 460ms ${EASE_ENTER} ${delayMs}ms`
+      ? `opacity ${MOTION.enter}ms ${EASE.enter} ${delayMs}ms, transform ${MOTION.enter}ms ${EASE.enter} ${delayMs}ms`
       : 'none',
   };
 }

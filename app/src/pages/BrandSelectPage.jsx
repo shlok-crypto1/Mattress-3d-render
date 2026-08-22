@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { MOTION, EASE, REVEAL_STEP } from '../lib/motion';
 import { FOAMICO, VEDASLEEP } from '../data/brands';
 import { publicUrl } from '../lib/publicUrl';
 import {
@@ -10,7 +11,6 @@ import {
   REVEAL,
   prefersReducedMotion,
   canHover,
-  EASE_ENTER,
 } from '../transition/ProductTransition';
 
 // The front door. Two equal panels, each rendered entirely in its own brand's
@@ -88,7 +88,7 @@ export default function BrandSelectPage() {
   // dimmed-out alternative to the one under the pointer.
   const markScale = (key) => (hovered === key ? 1.045 : 1);
   const glow = (key, base) => (hovered === key ? base * 1.9 : base);
-  const markMotion = reduced ? 'none' : `transform 320ms ${EASE_ENTER}`;
+  const markMotion = reduced ? 'none' : `transform ${MOTION.normal}ms ${EASE.enter}`;
 
   return (
     <div className="brand-select" style={recede}>
@@ -127,7 +127,7 @@ export default function BrandSelectPage() {
           ),
           opacity: revealed ? 1 : 0,
           transition: revealed
-            ? `opacity 460ms ${EASE_ENTER} ${REVEAL.controls}ms, transform 460ms ${EASE_ENTER} ${REVEAL.controls}ms`
+            ? `opacity ${MOTION.enter}ms ${EASE.enter} ${REVEAL.controls}ms, transform ${MOTION.enter}ms ${EASE.enter} ${REVEAL.controls}ms`
             : 'none',
         }}
       >
@@ -166,7 +166,7 @@ export default function BrandSelectPage() {
           ),
           opacity: revealed ? 1 : 0,
           transition: revealed
-            ? `opacity 460ms ${EASE_ENTER} ${REVEAL.controls + 45}ms, transform 460ms ${EASE_ENTER} ${REVEAL.controls + 45}ms`
+            ? `opacity ${MOTION.enter}ms ${EASE.enter} ${REVEAL.controls + REVEAL_STEP}ms, transform ${MOTION.enter}ms ${EASE.enter} ${REVEAL.controls + REVEAL_STEP}ms`
             : 'none',
         }}
       >
