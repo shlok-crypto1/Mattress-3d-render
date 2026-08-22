@@ -151,19 +151,55 @@ export default function MattressViewer({
     // quality dial still trims coil count and tessellation on weak devices.
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // Tone mapping is what makes a fabric render possible at all here. Without
+    // it every value above 1.0 clips flat, so a near-white quilt loses both its
+    // relief and its silhouette the moment any specular is added - which is
+    // exactly what happened the last time an environment map was tried on the
+    // cover. Neutral rolls the highlights off while leaving hue alone; ACES
+    // would tint these near-white fabrics warm.
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    renderer.toneMappingExposure = 0.92;
     mount.appendChild(renderer.domElement);
     s.renderer = renderer;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 1000);
     s.camera = camera;
-    scene.add(new THREE.AmbientLight(0xffffff, 3));
-    const dir = new THREE.DirectionalLight(0xffffff, 1.1);
+    // Studio rig. The old setup was ambient 3.0 plus a single key, which put
+    // ~77% of an up-facing surface's light into a perfectly uniform term: no
+    // matter how much relief the quilt had, there was nothing directional
+    // enough to shade it. The budget is now the other way round - the two
+    // directional sources carry ~62% - so surface detail has something to cast
+    // against. Total irradiance on an up-facing normal is held near the old
+    // value so nothing suddenly reads brighter or darker.
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x9a958c, 1.2));
+    // Key: high and off to one side, as a product shot would be lit.
+    const dir = new THREE.DirectionalLight(0xffffff, 2.0);
     dir.position.set(30, 80, 50);
     scene.add(dir);
+    // Grazing fill from the opposite side, deliberately low. Raking light
+    // across the quilt is what turns puffed cells and stitch channels from a
+    // pattern into a construction; it also keeps the channels from going
+    // black, which the spec calls out as the other half of the same problem.
+    const graze = new THREE.DirectionalLight(0xffffff, 1.1);
+    graze.position.set(-55, 18, 25);
+    scene.add(graze);
     const group = new THREE.Group();
     scene.add(group);
     s.group = group;
+
+    // Studio IBL. Set as scene.environment rather than per-material: three
+    // falls back to it for any material with no envMap of its own, so the
+    // solid box picks it up while the layer stack keeps the explicit envMap it
+    // already sets. Fabric needs this - without an environment a standard
+    // material has no specular response at grazing angles and the quilt
+    // flattens out exactly where the raking light should be revealing it.
+    const envRT = makeStudioEnvironment(renderer);
+    const env = envRT.texture;
+    scene.environment = env;
+    // Held well below 1: the quilt should pick up soft directional sheen, not
+    // read as damp or waxy.
+    scene.environmentIntensity = 0.35;
 
     const loader = new THREE.TextureLoader();
     const disposables = [];
@@ -315,8 +351,6 @@ export default function MattressViewer({
     let layers = null;
     let hitMeshes = null;
     let stackPromise = null;
-    let envRT = null;
-    let env = null;
     let explodeT = 0;
     let explodeTarget = 0;
     let explodeLast = null;
@@ -326,10 +360,6 @@ export default function MattressViewer({
     const ensureStack = () => {
       if (!hasLayers || disposed) return Promise.resolve();
       if (stackPromise) return stackPromise;
-      if (!envRT) {
-        envRT = makeStudioEnvironment(renderer);
-        env = envRT.texture;
-      }
       stackPromise = buildLayerStack({
         layerDefs,
         group,
@@ -795,9 +825,7 @@ export default function MattressViewer({
       layers = null;
       hitMeshes = null;
       stackPromise = null;
-      envRT?.dispose();
-      envRT = null;
-      env = null;
+      envRT.dispose();
       disposables.forEach((t) => t.dispose());
       if (mount.contains(el)) mount.removeChild(el);
     };

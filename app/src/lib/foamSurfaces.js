@@ -349,8 +349,10 @@ export function makeContactAOTexture(size = 256) {
  * single biggest step from "coloured box" to "product render". Built from a
  * gradient dome plus two softboxes and prefiltered once per renderer.
  *
- * Applied only to layer materials, so the collapsed mattress keeps the exact
- * lighting it always had and no product's default view changes.
+ * Applied scene-wide (as scene.environment) plus explicitly on the layer
+ * materials, so the solid mattress and the exploded stack sit in the same
+ * studio rather than the box being lit flatter than the layers that come out
+ * of it.
  */
 export function makeStudioEnvironment(renderer) {
   const pmrem = new THREE.PMREMGenerator(renderer);
