@@ -1,1 +1,0 @@
-import{l as e}from"./index-DjJvnkdk.js";import{t}from"./ProductPage-DHI97WA8.js";import{t as n}from"./products-D45lyLks.js";var r=e();function i(){return(0,r.jsx)(t,{product:n(`signature`),backTo:`/vedasleep`,transitionId:`product-vedasleep-signature`})}export{i as default};
