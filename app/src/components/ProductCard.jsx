@@ -10,7 +10,6 @@ export const LIGHT_CARD = {
   background: '#fff',
   border: '#e4e0d4',
   name: 'inherit',
-  spec: '#8a8a8e',
   badge: '#c77d11',
   badgeBg: 'rgba(199,125,17,0.12)',
 };
@@ -119,7 +118,12 @@ export default function ProductCard({
           </span>
         )}
       </div>
-      <div style={{ padding: '16px 18px 20px', minHeight: 92, boxSizing: 'border-box' }}>
+      {/* Name only. The card used to carry a "Classic · 6″ Firm" subline under
+          it; the grade and thickness are a choice the product page now offers
+          rather than one fact to quote here, so the grid states what a product
+          is called and the page states what it can be. `specLine` stays in the
+          data as the record of the baseline - nothing renders it. */}
+      <div style={{ padding: '16px 18px', minHeight: 60, boxSizing: 'border-box', display: 'flex', alignItems: 'center' }}>
         <div
           style={{
             fontFamily: "'Montserrat', sans-serif",
@@ -132,24 +136,6 @@ export default function ProductCard({
         >
           {product.name}
         </div>
-        {product.specLine && (
-          <div
-            style={{
-              fontSize: 11.5,
-              color: theme.spec,
-              marginTop: 6,
-              letterSpacing: '0.02em',
-              lineHeight: 1.4,
-              minHeight: '2.8em',
-              display: '-webkit-box',
-              WebkitBoxOrient: 'vertical',
-              WebkitLineClamp: 2,
-              overflow: 'hidden',
-            }}
-          >
-            {product.specLine.variant} &middot; {product.specLine.thickness}
-          </div>
-        )}
       </div>
     </Link>
   );

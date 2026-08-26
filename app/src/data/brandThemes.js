@@ -1,8 +1,9 @@
 // Per-brand chrome for the product viewers.
 //
-// Lifted out of MattressViewer so SofaViewer can dress itself identically
-// without importing that module - and so without pulling the mattress viewer,
-// the layer stack and the whole of three.js into the Sofa cum Bed route chunk.
+// Lifted out of MattressViewer so the Sofa cum Bed's viewer can dress itself
+// identically without importing that module - and so without pulling the
+// mattress viewer, the layer stack and the whole of three.js into that route's
+// chunk.
 // Values are unchanged from where they lived before.
 export const BRAND_THEMES = {
   vedasleep: {

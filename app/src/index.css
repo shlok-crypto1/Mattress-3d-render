@@ -163,10 +163,28 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
   transition: background 200ms ease;
 }
 .mv-variant-item:hover { background: var(--mv-btn-bg); }
-.mv-variant-item[data-selected="true"] {
+/* Natural is the premium grade of the three products that offer it, and reads
+   in warm gold rather than in the brand accent so it is legible as a different
+   kind of choice from the thickness ladder above it. The colour is fixed
+   rather than themed: it is the grade's own mark, and on VedaSleep - whose
+   accent is already gold - a themed highlight would say nothing. The rule
+   above it separates it from the ladder it is pinned below. */
+.mv-variant-item[data-natural="true"] {
+  color: var(--mv-natural);
+  background: var(--mv-natural-soft);
   font-weight: 600;
-  color: var(--mv-accent);
-  background: var(--mv-accent-soft);
+  letter-spacing: 0.09em;
+  border-top: 1px solid var(--mv-natural-border);
+}
+.mv-variant-item[data-natural="true"]:hover { background: var(--mv-natural-hover); }
+.mv-variant-pill[data-natural="true"] {
+  color: var(--mv-natural);
+  background: var(--mv-natural-soft);
+  border-color: var(--mv-natural-border);
+}
+button.mv-variant-pill[data-natural="true"]:hover,
+button.mv-variant-pill[data-natural="true"][aria-expanded="true"] {
+  border-color: var(--mv-natural);
 }
 .mv-variant-pill:focus-visible,
 .mv-variant-item:focus-visible {
@@ -176,6 +194,17 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
 @media (prefers-reduced-motion: reduce) {
   button.mv-variant-pill,
   .mv-variant-item { transition: none; }
+}
+/* The Sofa cum Bed's stage. The mattress pages put a canvas here; this product
+   is photographed, and every shot was taken on a white sweep - so the plate is
+   white, the picture's own ground becomes the plate, and there is no cut-out
+   edge to go wrong against Key Black. */
+.mv-photo-plate {
+  border-radius: 18px;
+  overflow: hidden;
+  background: #FEFEFE;
+  border: 1px solid var(--mv-menu-border, #2c2c2c);
+  line-height: 0;
 }
 .mv-stage-tint {
   position: absolute;

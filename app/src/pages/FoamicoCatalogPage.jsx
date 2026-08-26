@@ -30,7 +30,6 @@ const SURFACES = {
       background: '#141414',
       border: '#2c2c2c',
       name: FOAMICO.onKey,
-      spec: FOAMICO.muted,
       badge: FOAMICO.accent,
       badgeBg: 'rgba(18,18,18,0.78)',
     },
@@ -42,7 +41,6 @@ const SURFACES = {
       background: '#fff',
       border: '#e2e4dc',
       name: '#2b2b2b',
-      spec: '#8a8a8e',
       badge: '#5f7d1b', // Kiwi Green darkened to hold contrast on a light chip
       badgeBg: 'rgba(255,255,255,0.9)',
     },

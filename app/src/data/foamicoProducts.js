@@ -62,8 +62,15 @@ const product = (slug, name, feel, warranty, variants, extra = {}) => {
 // Sofa cum Bed is the one FOAMICO product that is not a mattress slab: three
 // hinged foam panels in a single upholstered cover, folding from a seat into a
 // flat bed. It has no layer stack - explicitly confirmed as having no layers -
-// and MattressViewer cannot build its shape, so it is rendered by SofaViewer
-// off the model in src/lib/sofaModel.js. `media: '3d'` is what routes it there.
+// and MattressViewer cannot build its shape.
+//
+// It is presented through its own photography rather than in 3D, per the
+// product owner: a fold is a thing this product does, and the studio set
+// records all three positions of it directly. `media: 'photo'` is what routes
+// it to SofaPhotoViewer. The three views replace a camera orbit, so they are
+// named for what the product is doing in each - it is folded flat as a bed
+// (front), seen from the end mid-fold (side), and stood up as a seat (sitting)
+// - rather than for where a camera would be.
 //
 // No spec line and no variant list: variant, thickness, feel, warranty and
 // dimensions are all unconfirmed for this product. Per guidelines/DO_NOT_CHANGE.md
@@ -76,11 +83,16 @@ const product = (slug, name, feel, warranty, variants, extra = {}) => {
 export const sofaCumBed = {
   slug: 'sofa-cum-bed',
   name: 'Sofa cum Bed',
-  media: '3d',
+  media: 'photo',
   cardImage: '/products/sofa-cum-bed/card.jpg',
-  model: {
-    fabric: '/textures/sofa-cum-bed/fabric.png',
-  },
+  // Derived from the supplied studio set at 1600px wide - see
+  // docs/ASSET_MANAGEMENT.md for which original each one is. First entry is
+  // the view the page opens on.
+  views: [
+    { key: 'front', label: 'Front', src: '/products/sofa-cum-bed/front.jpg', alt: 'Sofa cum Bed opened flat as a single bed' },
+    { key: 'side', label: 'Side', src: '/products/sofa-cum-bed/side.jpg', alt: 'Sofa cum Bed from the end, part-folded' },
+    { key: 'sitting', label: 'Sitting', src: '/products/sofa-cum-bed/sitting.jpg', alt: 'Sofa cum Bed folded upright as a seat' },
+  ],
   specLine: null,
   layers: null,
   placeholder: false,
@@ -99,37 +111,39 @@ export const foamicoProducts = [
     { variant: 'Classic', height: 5 },
     { variant: 'Premium', height: 6.5 },
     { variant: 'Luxury', height: 7 },
+    { variant: 'Natural', height: 6 },
   ]),
-  // The catalog confirms no 6" Luma. The 6" this product used to render was not
-  // sourced from anywhere - Luma's Classic is 8".
+  // Corrected by the product owner (2026-08-26): Luma's grades step 6" / 8" /
+  // 10" and Classic is the 6". The earlier reading of the catalog had Classic
+  // at 8" and put a 5" against Luxury, which is not a Luma thickness at all.
   product('luma', 'Luma', 'Medium', '7-Year Warranty + 5-Year Full Replacement', [
-    { variant: 'Classic', height: 8 },
-    { variant: 'Premium', height: 10 },
-    { variant: 'Luxury', height: 5 },
+    { variant: 'Classic', height: 6 },
+    { variant: 'Premium', height: 8 },
+    { variant: 'Luxury', height: 10 },
   ]),
   product('ultima', 'Ultima', 'Firm', '25-Year Warranty + 5-Year Full Replacement', [
     { variant: 'Classic', height: 6 },
     { variant: 'Classic', height: 5 },
     { variant: 'Premium', height: 6 },
     { variant: 'Luxury', height: 6.5 },
-    { variant: 'Natural', height: 7 },
+    // Natural is 6" across all three products that offer it, per the product
+    // owner; the catalog's 7" for Ultima was superseded on 2026-08-26.
+    { variant: 'Natural', height: 6 },
   ]),
   // Riva is the only product in either line whose border carries a woven badge.
   // 21.2in x 4.0in is the badge's real size: its 208x85 crop divided by the
   // photograph's own scale on the wall (about 9.8 px/in across, 21.2 px/in up).
   //
-  // R1000 leads: this collection presents Riva at its 1000 grade. The catalog
-  // puts R1000 at 6", not the 8" this product used to render - 8" is R2000.
+  // R1000 leads: this collection presents Riva at its 1000 grade, at the 6" the
+  // catalog puts it at. Riva is presented by its R grades alone plus Natural -
+  // the product owner's decision (2026-08-26). The Classic / Premium / Luxury
+  // rows the catalog also lists for Riva are not offered here, and neither is
+  // the second Natural at 8": Natural is one 6" grade wherever it appears.
   product('riva', 'Riva', 'Medium', '30-Year Warranty + 5-Year Full Replacement', [
     { variant: 'R1000', height: 6 },
-    { variant: 'Classic', height: 6 },
-    { variant: 'Classic', height: 6.5 },
-    { variant: 'Premium', height: 7 },
-    { variant: 'Luxury', height: 6 },
-    { variant: 'Natural', height: 6 },
-    { variant: 'Natural', height: 8 },
     { variant: 'R2000', height: 8 },
     { variant: 'R3000', height: 9 },
+    { variant: 'Natural', height: 6 },
   ], {
     sideBadge: {
       src: '/textures/foamico/riva/side-badge.png',

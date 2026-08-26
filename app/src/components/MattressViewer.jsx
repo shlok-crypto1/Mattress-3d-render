@@ -54,6 +54,34 @@ const CORNER_VIEW = { key: 'corner', theta: 0.6, phi: 0.62 };
  */
 const variantLabel = (v) => `${v.variant} · ${v.height}″`;
 
+/**
+ * Natural is a grade, not a thickness: it is the premium line wherever it is
+ * offered, so it reads last in the menu and in its own colour rather than
+ * taking its place in the thickness run.
+ */
+const isNatural = (v) => v.variant === 'Natural';
+
+/**
+ * Menu order: thinnest first, so the list steps 5″ → 6″ → 6.5″ → 7″ and a
+ * reader can scan it as a size ladder. Natural is pinned to the end whatever
+ * it measures. Ties hold the order the data declares - Ultima's Classic 6″
+ * still leads its Premium 6″ - because Array#sort is stable and the index is
+ * the final key anyway.
+ *
+ * Entries carry their index in `variants` with them: that index is what state
+ * holds and what the height is read back from, so display order never becomes
+ * a second, disagreeing source of which variant is selected.
+ */
+const menuOrder = (variants) =>
+  variants
+    .map((v, index) => ({ v, index }))
+    .sort(
+      (a, b) =>
+        Number(isNatural(a.v)) - Number(isNatural(b.v)) ||
+        a.v.height - b.v.height ||
+        a.index - b.index,
+    );
+
 /** Coarse device budget: trims coil count and sculpted-cap tessellation. */
 function deviceQuality() {
   if (typeof window === 'undefined') return 1;
@@ -1203,6 +1231,12 @@ export default function MattressViewer({
         '--mv-menu-border': t.cardBorder,
         '--mv-menu-shadow': t.cardShadow,
         '--mv-menu-color': t.text,
+        // Natural's gold is the grade's own colour, not the brand's - see the
+        // note on .mv-variant-item[data-natural] in index.css.
+        '--mv-natural': '#D9B25A',
+        '--mv-natural-soft': 'rgba(217,178,90,0.13)',
+        '--mv-natural-hover': 'rgba(217,178,90,0.22)',
+        '--mv-natural-border': 'rgba(217,178,90,0.42)',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         overflow: 'hidden',
@@ -1259,6 +1293,7 @@ export default function MattressViewer({
                 ref={variantButtonRef}
                 type="button"
                 className="mv-variant-pill"
+                data-natural={isNatural(activeVariant)}
                 aria-expanded={variantMenuOpen}
                 aria-controls={variantMenuId}
                 onClick={() => setVariantMenuOpen((open) => !open)}
@@ -1267,22 +1302,28 @@ export default function MattressViewer({
                 <span className="mv-variant-caret" aria-hidden="true" />
               </button>
             ) : (
-              <span className="mv-variant-pill">{variantLabel(activeVariant)}</span>
+              <span className="mv-variant-pill" data-natural={isNatural(activeVariant)}>
+                {variantLabel(activeVariant)}
+              </span>
             )}
+            {/* The menu lists what you can switch to, so the variant already
+                named on the pill is left out of it rather than repeated
+                directly underneath itself. */}
             {variantMenuOpen && hasVariantChoice && (
               <div id={variantMenuId} className="mv-variant-menu">
-                {variants.map((v, i) => (
-                  <button
-                    key={`${v.variant}-${v.height}`}
-                    type="button"
-                    className="mv-variant-item"
-                    aria-current={i === activeIndex}
-                    data-selected={i === activeIndex}
-                    onClick={() => selectVariant(i)}
-                  >
-                    {variantLabel(v)}
-                  </button>
-                ))}
+                {menuOrder(variants)
+                  .filter(({ index }) => index !== activeIndex)
+                  .map(({ v, index }) => (
+                    <button
+                      key={`${v.variant}-${v.height}`}
+                      type="button"
+                      className="mv-variant-item"
+                      data-natural={isNatural(v)}
+                      onClick={() => selectVariant(index)}
+                    >
+                      {variantLabel(v)}
+                    </button>
+                  ))}
               </div>
             )}
           </div>

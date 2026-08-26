@@ -10,6 +10,12 @@ import { useProductEntranceTarget, enterStyle, prefersReducedMotion } from '../t
 
 // Viewer for the Sofa cum Bed.
 //
+// NOT CURRENTLY ROUTED. The product page shows the supplied studio photography
+// instead (see SofaPhotoViewer.jsx), which is the product owner's decision of
+// 2026-08-26 and not a fault in this model. It is kept, with sofaModel.js,
+// because it is a complete working viewer and the photography could be
+// superseded; nothing imports it, so it costs nothing in the bundle.
+//
 // Deliberately a separate component from MattressViewer rather than a mode
 // inside it. That file's whole spine is mattress-shaped - one euro-top slab, a
 // quilt reconstructed from a top-face photo, an explodable layer stack - and a
