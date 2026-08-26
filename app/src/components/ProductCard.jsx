@@ -89,7 +89,11 @@ export default function ProductCard({
         ref={ref}
         style={{
           aspectRatio: '4 / 3',
-          backgroundImage: `url(${publicUrl(product.textures.top)})`,
+          // Mattresses show their own quilt photo, which is also the texture the
+          // 3D top face wears - that shared image is what the shared-element
+          // transition flies into the canvas. A photo-only product (Sofa cum
+          // Bed) has no 3D maps at all and supplies `cardImage` instead.
+          backgroundImage: `url(${publicUrl(product.cardImage ?? product.textures.top)})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           position: 'relative',

@@ -23,6 +23,8 @@ const SovaPage = lazy(() => import('./pages/foamico/SovaPage'));
 const LumaPage = lazy(() => import('./pages/foamico/LumaPage'));
 const UltimaPage = lazy(() => import('./pages/foamico/UltimaPage'));
 const RivaPage = lazy(() => import('./pages/foamico/RivaPage'));
+// Photo-only product - its chunk pulls no three.js at all.
+const SofaCumBedPage = lazy(() => import('./pages/foamico/SofaCumBedPage'));
 
 // Just enough of each brand to paint a holding screen. Deliberately not the
 // full BRAND_THEMES table from MattressViewer: importing that would pull the
@@ -37,7 +39,10 @@ const CHROME = {
 function routeIdentity(pathname) {
   const [, brand, slug] = pathname.split('/');
   const chrome = CHROME[brand] ?? CHROME.vedasleep;
-  return { chrome, word: CHROME[brand] ? chrome.word : null, slug: slug ?? null };
+  // Slugs are the product name lowercased, so they read back as the name once
+  // the hyphens are spaces again - "sofa-cum-bed" holding screen should say
+  // SOFA CUM BED, not SOFA-CUM-BED.
+  return { chrome, word: CHROME[brand] ? chrome.word : null, slug: slug ? slug.replace(/-/g, ' ') : null };
 }
 
 /**
@@ -202,6 +207,7 @@ export default function App() {
             <Route path="/foamico/luma" element={<LumaPage />} />
             <Route path="/foamico/ultima" element={<UltimaPage />} />
             <Route path="/foamico/riva" element={<RivaPage />} />
+            <Route path="/foamico/sofa-cum-bed" element={<SofaCumBedPage />} />
 
             {/* Links shared before the brand split pointed at /#/duro etc. */}
             <Route path="/duro" element={<Navigate to="/vedasleep/duro" replace />} />

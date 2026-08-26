@@ -15,6 +15,7 @@ const loaders = {
   'foamico/luma': () => import('./pages/foamico/LumaPage'),
   'foamico/ultima': () => import('./pages/foamico/UltimaPage'),
   'foamico/riva': () => import('./pages/foamico/RivaPage'),
+  'foamico/sofa-cum-bed': () => import('./pages/foamico/SofaCumBedPage'),
 };
 
 const key = (basePath, slug) => `${basePath.replace(/^\//, '')}/${slug}`;
