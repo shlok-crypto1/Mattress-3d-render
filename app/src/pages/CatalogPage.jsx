@@ -77,20 +77,8 @@ export default function CatalogPage() {
             ref={logoRef}
             src={publicUrl('/brand/vedasleep-logo.png')}
             alt="Veda Sleep"
-            style={{ height: 40, width: 'auto', ...enterStyle(revealed, REVEAL.mark) }}
+            style={{ height: 62, width: 'auto', ...enterStyle(revealed, REVEAL.mark) }}
           />
-          <div
-            style={{
-              fontFamily: "'Montserrat', sans-serif",
-              fontWeight: 800,
-              fontSize: 30,
-              letterSpacing: '0.24em',
-              textTransform: 'uppercase',
-              ...enterStyle(revealed, REVEAL.title),
-            }}
-          >
-            VedaSleep
-          </div>
           <div
             style={{
               fontSize: 13,
