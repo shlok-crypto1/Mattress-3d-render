@@ -238,16 +238,33 @@ export function createLayerMaterials(def, ctx) {
   // gives the zig-zag silhouette in the reference photos; the normal map alone
   // only shades a flat plane.
   let displace = null;
+  let displaceDepth = 0;
   let capRings = 1;
   let sideSegs = 1;
   if (surface === 'convoluted' || surface === 'pyramid' || surface === 'channelled') {
     const amp = Math.min(h * 0.45, surface === 'channelled' ? 0.5 : 0.62);
+    // How far the sculpted cap cuts down into the slab. Reported back because a
+    // caller stacking something underneath this one has to know how much of the
+    // slab the relief has already eaten - see the bonded band in layerStack.js.
+    displaceDepth = amp;
     const cell = surface === 'channelled' ? 8 : 6;
     const k = (Math.PI * 2) / cell;
     if (surface === 'convoluted') {
       displace = (x, z) => -amp * (1 - (Math.sin(x * k) * Math.sin(z * k) + 1) * 0.5);
     } else if (surface === 'pyramid') {
-      const tri = (v) => Math.abs(((v / cell) % 1) * 2 - 1);
+      // Floor, not `%`. JavaScript's remainder takes the sign of the dividend,
+      // so `(v / cell) % 1` is negative for every negative coordinate and this
+      // wave peaked at 2.98 instead of 1 across the whole x<0 / z<0 half of the
+      // slab - inverting the pyramid pattern there and cutting nearly three
+      // times as deep as `amp` says. On Ultima's transition sheet that was a
+      // 1.175in gouge into 0.875in of foam. It went unnoticed while the sheet
+      // was a band with nothing beneath it; the moment the base was bonded
+      // underneath, the overcut surfaced as base cloth showing through the
+      // orange. `p - Math.floor(p)` is the fractional part for both signs.
+      const tri = (v) => {
+        const p = v / cell;
+        return Math.abs((p - Math.floor(p)) * 2 - 1);
+      };
       displace = (x, z) => -amp * Math.max(tri(x), tri(z));
     } else {
       displace = (x, z) => -amp * (1 - (Math.cos(z * k) + 1) * 0.5);
@@ -259,6 +276,7 @@ export function createLayerMaterials(def, ctx) {
   return {
     materials: [topMat, wallMat, botMat],
     displace,
+    displaceDepth,
     capRings,
     sideSegs,
     disposables,
