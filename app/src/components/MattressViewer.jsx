@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
 import { buildEuroTopGeometry } from '../lib/mattressGeometry';
-import { makeStudioEnvironment } from '../lib/foamSurfaces';
+import { makeStudioEnvironment, makeWovenNormal } from '../lib/foamSurfaces';
 import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer, buildEdgeStitch, averageColor } from '../lib/quiltSurface';
 import { MOTION, EASE } from '../lib/motion';
 import { buildLayerStack } from '../lib/layerStack';
@@ -29,8 +29,6 @@ const BRAND_THEMES = {
     btnColor: '#6e6e73',
     btnActiveBg: '#1d1d1f',
     btnActiveColor: '#fff',
-    pendingBorder: 'rgba(199,125,17,0.45)',
-    pendingColor: '#c77d11',
     // Layer explode chrome. Veda Gold.
     accent: '#c77d11',
     accentSoft: 'rgba(199,125,17,0.10)',
@@ -62,8 +60,6 @@ const BRAND_THEMES = {
     btnColor: '#b5b5b5',
     btnActiveBg: '#95C12B',
     btnActiveColor: '#1A1A1A',
-    pendingBorder: 'rgba(149,193,43,0.45)',
-    pendingColor: '#95C12B',
     // Layer explode chrome. Kiwi Green on Key Black - the card and labels have
     // to invert here or they punch a white hole through the dark stage.
     accent: '#95C12B',
@@ -95,18 +91,24 @@ const HOVER_GLOW = 0.5;
 
 const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
 
-// [key, label, theta, phi, dist]. `dist` is optional and only Detail sets it -
-// everything else keeps the framing the viewer picks for the mount size.
+// [key, label, theta, phi, dist]. `dist` is optional; without it a preset keeps
+// the framing the viewer picks for the mount size.
+//
+// Corner and Detail used to sit at either end of this row. Corner was never a
+// destination - it is the framing the viewer already opens on, so the button
+// only ever restated where you were - and Detail was the one preset that moved
+// the camera dolly as well as its angle, which made it read as a different
+// product rather than a different view of one. Dragging does both jobs better.
+// CORNER_VIEW below keeps the framing itself; only the buttons are gone.
 const VIEW_DEFS = [
-  ['corner', 'Corner', 0.6, 0.62],
   ['front', 'Front', 0, 0.12],
   ['side', 'Side', Math.PI / 2, 0.12],
   ['top', 'Top', 0, 1.35],
   ['bottom', 'Bottom', 0, -1.35],
-  // Close, and raked low enough that the light skims the quilt: the view that
-  // shows the surface is fabric rather than a picture of fabric.
-  ['detail', 'Detail', 0.85, 0.46, 88],
 ];
+
+/** The resting three-quarter framing: mount default, and where Solid returns. */
+const CORNER_VIEW = { key: 'corner', theta: 0.6, phi: 0.62 };
 
 /** Coarse device budget: trims coil count and sculpted-cap tessellation. */
 function deviceQuality() {
@@ -126,7 +128,7 @@ export default function MattressViewer({
 }) {
   const mountRef = useRef(null);
   const labelsRef = useRef(null);
-  const [view, setView] = useState('corner');
+  const [view, setView] = useState(CORNER_VIEW.key);
   // Layer explode is driven entirely by product.layers. Without it none of the
   // code below runs and the viewer behaves exactly as it always has.
   const layerDefs = product.layers ?? null;
@@ -203,6 +205,22 @@ export default function MattressViewer({
     const graze = new THREE.DirectionalLight(0xffffff, 1.1);
     graze.position.set(-55, 18, 25);
     scene.add(graze);
+    // Bounce off the sweep. Every source above is overhead, so a downward-
+    // facing normal was lit by the hemisphere's ground term alone - about 23%
+    // of what an up-facing one receives. The base cloth is genuinely a dark
+    // charcoal non-woven, so at that exposure the underside crushed to near
+    // black and took its weave and its edge with it, which is the shadow depth
+    // CAMERA_AND_LIGHTING.md rules out. The reference photography is shot on a
+    // white sweep that throws a lot of light back up; this is that bounce.
+    // Aimed straight up, so it lands on undersides and contributes nothing to
+    // the quilt - a top-facing normal gets zero from it and a side wall gets
+    // near zero, so the mattress's sleeping surface and border are lit exactly
+    // as they were. Intensity is solved against the reference: the base cloth
+    // photographs at #474847, and at 3.5 the rendered underside sits at the
+    // same tone instead of the near-black (RGB ~30 against a ~26 page) it was.
+    const bounce = new THREE.DirectionalLight(0xffffff, 3.5);
+    bounce.position.set(0, -60, 0);
+    scene.add(bounce);
     const group = new THREE.Group();
     scene.add(group);
     s.group = group;
@@ -323,7 +341,30 @@ export default function MattressViewer({
       metalness: 0,
       side: THREE.DoubleSide,
     });
-    const bottomMat = new THREE.MeshStandardMaterial({ map: bottom, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
+    // The underside carried no normal map at all, so even once it was lit it
+    // read as a flat dark card rather than cloth. It gets the same woven relief
+    // the base band uses in the exploded stack, at the base cloth's own pitch,
+    // so the two agree when the stack opens out of the box.
+    // Cloned, not used directly: makeWovenNormal memoises one texture per
+    // thread count and the exploded stack's fabric bands share that instance,
+    // so setting a repeat on it here would rescale their weave too. A clone
+    // carries its own UV transform while three still uploads the pixels once.
+    const bottomNormal = makeWovenNormal(46).clone();
+    bottomNormal.wrapS = bottomNormal.wrapT = THREE.RepeatWrapping;
+    // 3.8in is the base cloth's physical thread pitch - the same value
+    // SURFACE_PITCH.woven uses in layerMaterials.js.
+    bottomNormal.repeat.set(W / 3.8, L / 3.8);
+    bottomNormal.anisotropy = maxAnisotropy;
+    bottomNormal.needsUpdate = true;
+    disposables.push(bottomNormal);
+    const bottomMat = new THREE.MeshStandardMaterial({
+      map: bottom,
+      normalMap: bottomNormal,
+      normalScale: new THREE.Vector2(0.4, 0.4),
+      roughness: 0.9,
+      metalness: 0,
+      side: THREE.DoubleSide,
+    });
     // Piping between base and cushion, darkened a touch so the band reads as a
     // seam rather than merging into the fabric either side of it.
     //
@@ -490,11 +531,11 @@ export default function MattressViewer({
     scene.add(shadow);
     s.shadow = shadow;
 
-    s.theta = 0.6;
-    s.phi = 0.62;
+    s.theta = CORNER_VIEW.theta;
+    s.phi = CORNER_VIEW.phi;
     s.dist = 150;
-    s.tTheta = 0.6;
-    s.tPhi = 0.62;
+    s.tTheta = CORNER_VIEW.theta;
+    s.tPhi = CORNER_VIEW.phi;
     s.tDist = 150;
     s.idle = 0;
     s.dirty = true;
@@ -637,9 +678,9 @@ export default function MattressViewer({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       const baseDist = w < 560 ? 195 : 150;
-      // Remembered so the view presets can return to it after Detail.
+      // Remembered so the view presets can return to the size-appropriate framing.
       s.baseDist = baseDist;
-      if (!s.exploded && s.view !== 'detail') s.tDist = s.dist = baseDist;
+      if (!s.exploded) s.tDist = s.dist = baseDist;
       s.dirty = true;
     };
     const ro = new ResizeObserver(resize);
@@ -840,7 +881,7 @@ export default function MattressViewer({
       window.setTimeout(() => {
         if (disposed) return;
         const twoPi = Math.PI * 2;
-        s.tTheta = 0.6 + Math.round((s.tTheta - 0.6) / twoPi) * twoPi;
+        s.tTheta = CORNER_VIEW.theta + Math.round((s.tTheta - CORNER_VIEW.theta) / twoPi) * twoPi;
         s.tPhi = q.has('phi') ? Number(q.get('phi')) : 0.3;
         s.tDist = q.has('dist') ? Number(q.get('dist')) : EXPLODE_DIST;
         s.theta = s.tTheta; s.phi = s.tPhi; s.dist = s.tDist;
@@ -976,21 +1017,21 @@ export default function MattressViewer({
   const toggleLayers = () => {
     const next = !s.exploded;
     const twoPi = Math.PI * 2;
-    s.tTheta = 0.6 + Math.round((s.tTheta - 0.6) / twoPi) * twoPi;
+    s.tTheta = CORNER_VIEW.theta + Math.round((s.tTheta - CORNER_VIEW.theta) / twoPi) * twoPi;
     if (next) {
       s.tPhi = 0.3;
       s.tDist = EXPLODE_DIST;
       setView('layers');
     } else {
-      s.tPhi = 0.62;
+      s.tPhi = CORNER_VIEW.phi;
       s.tDist = mountRef.current && mountRef.current.clientWidth < 560 ? 195 : 150;
-      setView('corner');
+      setView(CORNER_VIEW.key);
     }
     s.idle = performance.now();
     s.setExplodeState?.(next);
   };
 
-  const { name, specLine, specsPending, dimensions } = product;
+  const { name, dimensions } = product;
   const t = theme;
 
   // Placeholder ratios resolve against the product's real height, so the card
@@ -1045,63 +1086,17 @@ export default function MattressViewer({
             ...(animated ? enterStyle(revealed, 0) : null),
           }}
         />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div
-            className="mv-title"
-            style={{
-              fontFamily: "'Montserrat', sans-serif",
-              fontWeight: 800,
-              lineHeight: 1,
-              textTransform: 'uppercase',
-              ...(animated ? enterStyle(revealed, 0) : null),
-            }}
-          >
-            {name}
-          </div>
-          {specLine ? (
-            // Two tiers rather than one run-on string. What the product *is*
-            // (variant, thickness, feel) reads first; the warranty is
-            // supporting detail and is set as such. As one line it also ran off
-            // the side of a phone - it was the longest single element on the
-            // page and had nothing to wrap against.
-            <div
-              className="mv-spec"
-              style={{
-                fontWeight: 400,
-                color: t.muted,
-                letterSpacing: '0.04em',
-                marginTop: 8,
-                ...(animated ? enterStyle(revealed, 60) : null),
-              }}
-            >
-              <span>{specLine.variant}</span>
-              <span className="mv-spec-sep" aria-hidden="true" />
-              <span>{specLine.thickness}</span>
-              {specLine.warranty ? (
-                <span className="mv-warranty" style={{ color: t.faint }}>
-                  {specLine.warranty}
-                </span>
-              ) : null}
-            </div>
-          ) : specsPending ? (
-            // Mock-up slot: real variant / thickness / warranty copy drops in here.
-            <div
-              style={{
-                marginTop: 10,
-                alignSelf: 'center',
-                fontSize: 10.5,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: t.pendingColor,
-                border: `1px dashed ${t.pendingBorder}`,
-                borderRadius: 100,
-                padding: '5px 12px',
-                ...(animated ? enterStyle(revealed, 60) : null),
-              }}
-            >
-              Spec details to follow
-            </div>
-          ) : null}
+        <div
+          className="mv-title"
+          style={{
+            fontFamily: "'Montserrat', sans-serif",
+            fontWeight: 800,
+            lineHeight: 1,
+            textTransform: 'uppercase',
+            ...(animated ? enterStyle(revealed, 0) : null),
+          }}
+        >
+          {name}
         </div>
       </div>
 
@@ -1283,32 +1278,6 @@ export default function MattressViewer({
              overflows first, so the tracking gives way before the size does. */
           text-indent: 0.22em;
         }
-        .mv-spec {
-          font-size: 12.5px;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          justify-content: center;
-          gap: 0 10px;
-          max-width: min(560px, calc(100vw - 40px));
-          margin-left: auto;
-          margin-right: auto;
-        }
-        /* Thin rule instead of a middot: the brief asks for dividers, and a
-           real rule holds its weight at every size where a punctuation mark
-           starts disappearing. */
-        .mv-spec-sep {
-          width: 12px;
-          height: 1px;
-          background: currentColor;
-          opacity: 0.4;
-        }
-        .mv-warranty {
-          flex-basis: 100%;
-          font-size: 0.88em;
-          letter-spacing: 0.05em;
-          margin-top: 5px;
-        }
         .mv-stage-tint {
           position: absolute;
           inset: 0;
@@ -1367,7 +1336,6 @@ export default function MattressViewer({
         @media (max-width: 620px) {
           .mv-head { gap: 7px; padding-top: calc(16px + env(safe-area-inset-top)); }
           .mv-title { font-size: clamp(20px, 6.4vw, 30px); letter-spacing: 0.13em; text-indent: 0.13em; }
-          .mv-spec { font-size: 11.5px; margin-top: 6px !important; }
           .mv-hint { font-size: 10.5px; }
           .mv-controls { gap: 10px; padding: 0 0 calc(14px + env(safe-area-inset-bottom)); }
           .mv-btnrow {
@@ -1406,7 +1374,7 @@ export default function MattressViewer({
           .mv-head { padding-top: calc(10px + env(safe-area-inset-top)); gap: 4px; }
           .mv-head img { height: 22px; }
           .mv-title { font-size: 20px; letter-spacing: 0.1em; text-indent: 0.1em; }
-          .mv-spec, .mv-hint { display: none; }
+          .mv-hint { display: none; }
           .mv-controls { padding-bottom: calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
         }
 
