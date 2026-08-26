@@ -85,7 +85,7 @@ export const duroLayers = [
     description: TBD,
     nameTbd: true,
   },
-  base('#DCD3BE'),
+  base('#646263'),
 ];
 
 // Maxa / Magic / Signature share the same confirmed band shape.
@@ -98,14 +98,14 @@ const vedaFiveBand = (coverColor, comfortColor, foamColor, coreColor, transition
   base(baseColor),
 ];
 
-export const maxaLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#6BC163', '#C9CE4E', '#E8871E', '#B9AE96');
+export const maxaLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#6BC163', '#C9CE4E', '#E8871E', '#5D5C5C');
 
 // SPEC CHANGE: Magic previously shipped as a single uniform 5" Float Sense Foam
 // core with no internal divisions. That is superseded - Magic is a multi-band
 // construction from here on.
-export const magicLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#6BC163', '#C9CE4E', '#E8871E', '#B9AE96');
+export const magicLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#6BC163', '#C9CE4E', '#E8871E', '#5B5C5E');
 
-export const signatureLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#DCD9C8', '#C9CE4E', '#E8871E', '#B9AE96');
+export const signatureLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#DCD9C8', '#C9CE4E', '#E8871E', '#B79692');
 
 export const vedasleepLayersBySlug = {
   duro: duroLayers,
