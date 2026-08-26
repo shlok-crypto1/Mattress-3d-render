@@ -36,3 +36,151 @@ a {
 button {
   font-family: inherit;
 }
+
+/* ---------------------------------------------------------------- viewers --
+ * Chrome shared by every product viewer: the header, the back pill, the view
+ * button row and their phone breakpoints. This lived in a <style> block inside
+ * MattressViewer, which meant SofaViewer - same chrome, different product -
+ * could only have had it by duplicating the whole thing. The few rules here
+ * that belong to the layer stack (.mv-card, .mv-label, .mv-stage-tint,
+ * .mv-btn-sep) simply match nothing on a page that has no layers.
+ *
+ * Sizing has to live in a stylesheet rather than inline: an inline style
+ * outranks every media query, so the phone breakpoints below could never win.
+ * Colours still come from the brand theme, passed in as --mv-* custom
+ * properties on the viewer root.
+ */
+
+/* Sizing lives here rather than inline so the phone breakpoints can
+   actually win - an inline style would outrank every media query. */
+.mv-root {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+.mv-back {
+  position: absolute;
+  top: calc(18px + env(safe-area-inset-top));
+  left: calc(18px + env(safe-area-inset-left));
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 100px;
+}
+.mv-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: calc(28px + env(safe-area-inset-top)) 20px 0;
+  text-align: center;
+}
+.mv-title {
+  font-size: 34px;
+  letter-spacing: 0.22em;
+  /* The wordmark is set very wide; on a narrow phone that is what
+     overflows first, so the tracking gives way before the size does. */
+  text-indent: 0.22em;
+}
+.mv-stage-tint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 420ms ease;
+}
+.mv-label { font-size: 10.5px; }
+.mv-card {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  max-width: 320px;
+  border-radius: 16px;
+  padding: 16px 18px 18px;
+  cursor: pointer;
+}
+.mv-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px calc(26px + env(safe-area-inset-bottom));
+}
+.mv-btnrow { display: flex; gap: 8px; align-items: center; }
+.mv-btn-sep {
+  flex: none;
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 4px;
+  background: currentColor;
+  opacity: 0.16;
+}
+.mv-hint { font-size: 11.5px; font-weight: 300; letter-spacing: 0.03em; }
+.mv-view-btn {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 8px 15px;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: var(--mv-btn-bg);
+  color: var(--mv-btn-color);
+  white-space: nowrap;
+}
+.mv-view-btn[data-active="true"] {
+  background: var(--mv-btn-active-bg);
+  color: var(--mv-btn-active-color);
+}
+
+/* Phones. Six view buttons never fit one line at 390px, so the row
+   scrolls sideways instead of wrapping into a ragged block or pushing
+   the canvas off-screen. */
+@media (max-width: 620px) {
+  .mv-head { gap: 7px; padding-top: calc(16px + env(safe-area-inset-top)); }
+  .mv-title { font-size: clamp(20px, 6.4vw, 30px); letter-spacing: 0.13em; text-indent: 0.13em; }
+  .mv-hint { font-size: 10.5px; }
+  .mv-controls { gap: 10px; padding: 0 0 calc(14px + env(safe-area-inset-bottom)); }
+  .mv-btnrow {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    padding: 2px calc(16px + env(safe-area-inset-left)) 2px calc(16px + env(safe-area-inset-right));
+    justify-content: flex-start;
+  }
+  .mv-btnrow::-webkit-scrollbar { display: none; }
+  .mv-view-btn {
+    scroll-snap-align: center;
+    /* Comfortable thumb target - 8px/15px lands well under 44px. */
+    min-height: 44px;
+    padding: 8px 17px;
+    font-size: 12.5px;
+  }
+  .mv-label { font-size: 9.5px; letter-spacing: 0.07em; padding: 3px 9px !important; }
+  /* The floating card covers the model on a narrow screen; as a bottom
+     sheet it sits under it instead. */
+  .mv-card {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: none;
+    border-radius: 18px;
+    padding: 14px 16px 16px;
+  }
+}
+
+/* Landscape phones: almost no vertical room, so the header collapses to
+   the wordmark and the stage keeps the rest. */
+@media (max-height: 480px) and (orientation: landscape) {
+  .mv-head { padding-top: calc(10px + env(safe-area-inset-top)); gap: 4px; }
+  .mv-head img { height: 22px; }
+  .mv-title { font-size: 20px; letter-spacing: 0.1em; text-indent: 0.1em; }
+  .mv-hint { display: none; }
+  .mv-controls { padding-bottom: calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mv-stage-tint { transition: none; }
+}
+      
