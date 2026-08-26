@@ -31,23 +31,6 @@ const panelStyle = (background) => ({
   overflow: 'hidden',
 });
 
-const wordmarkStyle = (color, size) => ({
-  fontFamily: "'Montserrat', sans-serif",
-  fontWeight: 800,
-  fontSize: size,
-  letterSpacing: '0.22em',
-  textTransform: 'uppercase',
-  color,
-  lineHeight: 1,
-});
-
-const taglineStyle = (color) => ({
-  fontSize: 12.5,
-  letterSpacing: '0.14em',
-  textTransform: 'uppercase',
-  color,
-});
-
 const markSlot = {
   display: 'flex',
   alignItems: 'center',
@@ -145,13 +128,13 @@ export default function BrandSelectPage() {
             }}
           />
         </div>
-        <div style={taglineStyle(FOAMICO.onKey)}>{FOAMICO.tagline}</div>
         <div className="brand-panel__cue" style={cueStyle(FOAMICO.muted)}>
           View collection &rarr;
         </div>
       </Link>
 
-      {/* VedaSleep - Paper / Veda Gold, with the existing lotus wordmark asset */}
+      {/* VedaSleep - Paper / Veda Gold. The lotus lockup already sets the
+          brand name, so no separate text wordmark rides underneath it. */}
       <Link
         to="/vedasleep"
         className="brand-panel"
@@ -170,13 +153,13 @@ export default function BrandSelectPage() {
             : 'none',
         }}
       >
-        <div style={{ ...markSlot, height: 56 }}>
+        <div style={{ ...markSlot, height: 104 }}>
           <img
             ref={veda.ref}
             src={publicUrl('/brand/vedasleep-logo.png')}
-            alt=""
+            alt="VedaSleep"
             style={{
-              height: 52,
+              height: 98,
               width: 'auto',
               transform: `scale(${markScale('vedasleep')})`,
               transition: markMotion,
@@ -184,8 +167,6 @@ export default function BrandSelectPage() {
             }}
           />
         </div>
-        <div style={wordmarkStyle(VEDASLEEP.onKey, 'clamp(26px, 4vw, 40px)')}>VedaSleep</div>
-        <div style={taglineStyle(VEDASLEEP.accent)}>{VEDASLEEP.tagline}</div>
         <div className="brand-panel__cue" style={cueStyle(VEDASLEEP.muted)}>
           View collection &rarr;
         </div>

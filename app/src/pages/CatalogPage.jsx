@@ -99,7 +99,7 @@ export default function CatalogPage() {
               ...enterStyle(revealed, REVEAL.meta),
             }}
           >
-            The VedaSleep mattress collection &middot; tap a product to explore it in 3D
+            Tap a product to explore it in 3D
           </div>
         </div>
 
