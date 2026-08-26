@@ -32,9 +32,6 @@ export const BRAND_THEMES = {
       'radial-gradient(ellipse 68% 60% at 50% 54%, rgba(31,33,28,0.13) 0%, rgba(31,33,28,0) 72%)',
     cardBg: '#FEFEFE',
     cardBorder: '#e4e0d4',
-    cardTitle: '#1A1A1A',
-    cardBody: '#6e6e73',
-    cardMeta: '#2b2b2b',
     cardShadow: '0 10px 34px rgba(0,0,0,0.10)',
   },
   foamico: {
@@ -61,9 +58,6 @@ export const BRAND_THEMES = {
     stageTint: null,
     cardBg: '#212121',
     cardBorder: '#343434',
-    cardTitle: '#FEFEFE',
-    cardBody: '#a8a8a8',
-    cardMeta: '#e4e4e4',
     cardShadow: '0 10px 34px rgba(0,0,0,0.45)',
   },
 };

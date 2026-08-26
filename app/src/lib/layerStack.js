@@ -111,7 +111,11 @@ export async function buildLayerStack({
     };
 
     if (def.type === 'coil' && coilMod) {
-      coil = coilMod.buildCoilLayer({ W: W * 0.94, L: L * 0.94, h, color: def.color, env, quality });
+      // The unit fills the band's own footprint, so the springs read as the
+      // same size as the foam either side of them. The 2% is the rounded corner
+      // the slabs are cut with - a spring at the very corner would stand
+      // outside it.
+      coil = coilMod.buildCoilLayer({ W: W * 0.98, L: L * 0.98, h, color: def.color, env, quality });
       object = coil.group;
       hitMesh = coil.hitMesh;
       mats = coil.materials;

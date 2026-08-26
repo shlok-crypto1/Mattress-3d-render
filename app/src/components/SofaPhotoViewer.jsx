@@ -92,7 +92,24 @@ export default function SofaPhotoViewer({ product, brand = 'foamico', transition
         </div>
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, position: 'relative', padding: '14px 20px 0' }}>
+      {/* The plate is given room on all four sides rather than filling the
+          stage: butted up against the title above it and the buttons below it,
+          a full-width white panel reads as the page's background rather than as
+          one thing being shown on it. */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          // Centred as a flex child rather than as an absolutely positioned one:
+          // an absolute box is laid out against the padding box, so `inset: 0`
+          // would ignore this padding and the plate would go back to touching
+          // the title and the buttons.
+          padding: '30px 20px 26px',
+        }}
+      >
         {/* Every shot was taken on a white sweep, so the picture's own ground
             becomes the plate and the product floats on Key Black with no
             cut-out edge to go wrong. */}
@@ -100,10 +117,8 @@ export default function SofaPhotoViewer({ product, brand = 'foamico', transition
           ref={plateRef}
           className="mv-photo-plate"
           style={{
-            position: 'absolute',
-            inset: 0,
-            margin: 'auto',
-            maxWidth: 'min(980px, 100%)',
+            position: 'relative',
+            width: 'min(980px, 100%)',
             maxHeight: '100%',
             aspectRatio: '3 / 2',
             opacity: shown ? 1 : 0,

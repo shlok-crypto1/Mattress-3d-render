@@ -42,8 +42,8 @@ button {
  * button row and their phone breakpoints. This lived in a <style> block inside
  * MattressViewer, which meant SofaViewer - same chrome, different product -
  * could only have had it by duplicating the whole thing. The few rules here
- * that belong to the layer stack (.mv-card, .mv-label, .mv-stage-tint,
- * .mv-btn-sep) simply match nothing on a page that has no layers.
+ * that belong to the layer stack (.mv-label, .mv-stage-tint, .mv-btn-sep)
+ * simply match nothing on a page that has no layers.
  *
  * Sizing has to live in a stylesheet rather than inline: an inline style
  * outranks every media query, so the phone breakpoints below could never win.
@@ -213,15 +213,6 @@ button.mv-variant-pill[data-natural="true"][aria-expanded="true"] {
   transition: opacity 420ms ease;
 }
 .mv-label { font-size: 10.5px; }
-.mv-card {
-  position: absolute;
-  left: 18px;
-  bottom: 18px;
-  max-width: 320px;
-  border-radius: 16px;
-  padding: 16px 18px 18px;
-  cursor: pointer;
-}
 .mv-controls {
   display: flex;
   flex-direction: column;
@@ -285,16 +276,6 @@ button.mv-variant-pill[data-natural="true"][aria-expanded="true"] {
     font-size: 12.5px;
   }
   .mv-label { font-size: 9.5px; letter-spacing: 0.07em; padding: 3px 9px !important; }
-  /* The floating card covers the model on a narrow screen; as a bottom
-     sheet it sits under it instead. */
-  .mv-card {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    max-width: none;
-    border-radius: 18px;
-    padding: 14px 16px 16px;
-  }
 }
 
 /* Landscape phones: almost no vertical room, so the header collapses to

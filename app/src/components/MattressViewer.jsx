@@ -108,7 +108,6 @@ export default function MattressViewer({
   const layerDefs = product.layers ?? null;
   const hasLayers = Array.isArray(layerDefs) && layerDefs.length > 0;
   const [exploded, setExploded] = useState(false);
-  const [selectedLayer, setSelectedLayer] = useState(null);
   const [hoveredLayer, setHoveredLayer] = useState(null);
   // Variant selection. `variants` is the product's confirmed variant list,
   // baseline first (see src/data/foamicoProducts.js), and the only thing held
@@ -739,25 +738,15 @@ export default function MattressViewer({
       lastPinch = 0;
       s.idle = performance.now();
       el.style.cursor = hoverIdx === null ? 'grab' : 'pointer';
-      // A tap (not a drag) while exploded picks a layer, or dismisses the card.
-      if (hasLayers && s.exploded && downAt && dragDist < 6) {
+      // A tap (not a drag) while exploded names the band it landed on. Touch has
+      // no hover, so the tap stands in for one: the label lights and then fades
+      // by itself. On a pointer that can hover there is nothing to do - the
+      // label is already lit under the cursor.
+      if (hasLayers && s.exploded && downAt && dragDist < 6 && e.pointerType === 'touch') {
+        window.clearTimeout(touchHoverTimer);
         const idx = pickLayer(e.clientX, e.clientY);
-        if (e.pointerType === 'touch') {
-          // Touch has no hover, so flash the highlight first and let the card
-          // follow - otherwise the card appears with nothing tying it to a band.
-          window.clearTimeout(touchHoverTimer);
-          setHover(idx);
-          if (idx !== null) {
-            touchHoverTimer = window.setTimeout(() => {
-              setSelectedLayer((cur) => (cur === idx ? null : idx));
-              touchHoverTimer = window.setTimeout(() => setHover(null), 700);
-            }, 170);
-          } else {
-            setSelectedLayer(null);
-          }
-        } else {
-          setSelectedLayer((cur) => (idx === null || cur === idx ? null : idx));
-        }
+        setHover(idx);
+        if (idx !== null) touchHoverTimer = window.setTimeout(() => setHover(null), 1400);
         s.dirty = true;
       }
       downAt = null;
@@ -781,7 +770,6 @@ export default function MattressViewer({
       if (next) {
         ensureStack();
       } else {
-        setSelectedLayer(null);
         setHover(null);
         window.clearTimeout(touchHoverTimer);
       }
@@ -1199,14 +1187,6 @@ export default function MattressViewer({
     };
   }, [variantMenuOpen]);
 
-  // Placeholder ratios resolve against the height actually on screen, so the
-  // card can quote a thickness even before real per-layer specs land - and so
-  // the bands it describes add back up to the variant the viewer is showing.
-  const ratioSum = hasLayers ? layerDefs.reduce((a, l) => a + (l.thicknessRatio ?? 1), 0) : 0;
-  const layerThickness = (l) =>
-    ratioSum ? `${((currentHeight * (l.thicknessRatio ?? 1)) / ratioSum).toFixed(1)}″` : '—';
-  const active = selectedLayer !== null ? layerDefs[selectedLayer] : null;
-
   return (
     <div
       className="mv-root"
@@ -1389,58 +1369,6 @@ export default function MattressViewer({
           </div>
         )}
 
-        {active && (
-          <div
-            onClick={() => setSelectedLayer(null)}
-            className="mv-card"
-            style={{
-              background: t.cardBg,
-              border: `1px solid ${t.cardBorder}`,
-              boxShadow: t.cardShadow,
-            }}
-          >
-            <div
-              style={{
-                display: 'inline-block',
-                fontSize: 9.5,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                color: t.accent,
-                background: t.accentSoft,
-                borderRadius: 100,
-                padding: '3px 9px',
-                marginBottom: 10,
-              }}
-            >
-              Layer {selectedLayer + 1} of {layerDefs.length}
-              {active.nameTbd ? ' · name TBD' : ''}
-            </div>
-            <div
-              style={{
-                fontFamily: "'Montserrat', sans-serif",
-                fontWeight: 800,
-                fontSize: 15,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                color: t.cardTitle,
-                lineHeight: 1.25,
-              }}
-            >
-              {active.name}
-            </div>
-            {active.role ? (
-              <div style={{ fontSize: 11, color: t.accent, marginTop: 5, letterSpacing: '0.05em' }}>
-                {active.role}
-              </div>
-            ) : null}
-            <div style={{ fontSize: 12, color: t.cardBody, marginTop: 8, lineHeight: 1.5 }}>
-              {active.description}
-            </div>
-            <div style={{ fontSize: 12, color: t.cardMeta, marginTop: 10, letterSpacing: '0.04em' }}>
-              Thickness <strong style={{ fontWeight: 600 }}>{layerThickness(active)}</strong>
-            </div>
-          </div>
-        )}
       </div>
 
       <div
@@ -1471,7 +1399,7 @@ export default function MattressViewer({
         </div>
         <div className="mv-hint" style={{ color: t.faint }}>
           {hasLayers && exploded
-            ? 'Tap a layer for details · Solid to collapse'
+            ? 'Drag to rotate · Solid to collapse'
             : hasLayers
               ? 'Drag to rotate · Layers to open the stack'
               : 'Drag to rotate'}

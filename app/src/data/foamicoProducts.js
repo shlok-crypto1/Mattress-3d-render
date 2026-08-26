@@ -2,8 +2,9 @@
 // "Foamico mattresses/<Name>/" through the same pipeline as the VedaSleep set.
 //
 // Each product lists the variants docs/PRODUCT_CATALOG.md confirms for it,
-// baseline first. The baseline is the variant the collection presents: the grid
-// card quotes it and the viewer opens on it.
+// baseline first. The baseline is the product's top grade: a page opens on the
+// best version of the product it can show, and every product does the same, so
+// which grade that is is a data question rather than a per-product decision.
 
 import { foamicoLayersBySlug } from './layers/foamicoLayers';
 
@@ -100,32 +101,30 @@ export const sofaCumBed = {
 
 export const foamicoProducts = [
   product('resto', 'Resto', 'Firm', '10-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'Luxury', height: 7 },
     { variant: 'Classic', height: 6 },
     { variant: 'Premium', height: 6.5 },
-    { variant: 'Luxury', height: 7 },
   ]),
-  // Classic 6" leads rather than Classic 5" only so the baseline stays the one
-  // this product has always presented; both are confirmed Classic variants.
   product('sova', 'Sova', 'Firm', '15-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'Luxury', height: 7 },
     { variant: 'Classic', height: 6 },
     { variant: 'Classic', height: 5 },
     { variant: 'Premium', height: 6.5 },
-    { variant: 'Luxury', height: 7 },
     { variant: 'Natural', height: 6 },
   ]),
   // Corrected by the product owner (2026-08-26): Luma's grades step 6" / 8" /
   // 10" and Classic is the 6". The earlier reading of the catalog had Classic
   // at 8" and put a 5" against Luxury, which is not a Luma thickness at all.
   product('luma', 'Luma', 'Medium', '7-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'Luxury', height: 10 },
     { variant: 'Classic', height: 6 },
     { variant: 'Premium', height: 8 },
-    { variant: 'Luxury', height: 10 },
   ]),
   product('ultima', 'Ultima', 'Firm', '25-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'Luxury', height: 6.5 },
     { variant: 'Classic', height: 6 },
     { variant: 'Classic', height: 5 },
     { variant: 'Premium', height: 6 },
-    { variant: 'Luxury', height: 6.5 },
     // Natural is 6" across all three products that offer it, per the product
     // owner; the catalog's 7" for Ultima was superseded on 2026-08-26.
     { variant: 'Natural', height: 6 },
@@ -134,15 +133,17 @@ export const foamicoProducts = [
   // 21.2in x 4.0in is the badge's real size: its 208x85 crop divided by the
   // photograph's own scale on the wall (about 9.8 px/in across, 21.2 px/in up).
   //
-  // R1000 leads: this collection presents Riva at its 1000 grade, at the 6" the
-  // catalog puts it at. Riva is presented by its R grades alone plus Natural -
+  // R3000 leads: Riva has no grade called Luxury in what it presents, and R3000
+  // is the top of its R ladder, so that is the grade its page opens on - the
+  // product owner's decision (2026-08-26), matching every other product opening
+  // on its best. Riva is presented by its R grades alone plus Natural -
   // the product owner's decision (2026-08-26). The Classic / Premium / Luxury
   // rows the catalog also lists for Riva are not offered here, and neither is
   // the second Natural at 8": Natural is one 6" grade wherever it appears.
   product('riva', 'Riva', 'Medium', '30-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'R3000', height: 9 },
     { variant: 'R1000', height: 6 },
     { variant: 'R2000', height: 8 },
-    { variant: 'R3000', height: 9 },
     { variant: 'Natural', height: 6 },
   ], {
     sideBadge: {

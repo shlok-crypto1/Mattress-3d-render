@@ -73,14 +73,22 @@ const foam = (id, index, role, ratio, color, surface) => ({
   ...(surface ? { surface } : null),
 });
 
+// Layers 3-6 are the foam a product is specified by, and the product owner
+// gives their split as percentages of that foam, not of the mattress: 30 / 30 /
+// 20 / 20 from the bottom up (layer 6 and layer 5 at 30% each, layers 4 and 3 at
+// 20% each). The cover, the convoluted top band and the bonded base are
+// unchanged - they are upholstery and a base, not foam anyone quotes a
+// percentage of - so the four bands keep their combined 0.52 of the stack and
+// only divide it differently. 0.52 x 0.20 = 0.104, 0.52 x 0.30 = 0.156.
+
 // Resto — cover + six foam bands + base. No coil.
 export const restoLayers = [
   cover('#B9BCC2'),
   foam('comfort', 2, 'Convoluted comfort foam', 0.09, '#C9D14A', 'convoluted'),
-  foam('foam-3', 3, 'Comfort foam', 0.1, '#29B6DC'),
-  foam('foam-4', 4, 'Comfort foam', 0.1, '#C07CE0'),
-  foam('foam-5', 5, 'Support foam', 0.12, '#EDEDEA'),
-  foam('foam-6', 6, 'Support core', 0.2, '#A5764E'),
+  foam('foam-3', 3, 'Comfort foam', 0.104, '#29B6DC'),
+  foam('foam-4', 4, 'Comfort foam', 0.104, '#C07CE0'),
+  foam('foam-5', 5, 'Support foam', 0.156, '#EDEDEA'),
+  foam('foam-6', 6, 'Support core', 0.156, '#A5764E'),
   base('#484648', 0.13, '#F0921E', 0.15),
 ];
 
@@ -88,25 +96,30 @@ export const restoLayers = [
 export const sovaLayers = [
   cover('#E4E4EC'),
   foam('comfort', 2, 'Convoluted comfort foam', 0.09, '#D2D95E', 'convoluted'),
-  foam('foam-3', 3, 'Comfort foam', 0.1, '#37B9E0'),
-  foam('foam-4', 4, 'Comfort foam', 0.1, '#C07CE0'),
-  foam('foam-5', 5, 'Support foam', 0.12, '#6FC04A'),
-  foam('core', 6, 'Rebonded support core', 0.2, '#D8D5CC', 'speckled'),
+  foam('foam-3', 3, 'Comfort foam', 0.104, '#37B9E0'),
+  foam('foam-4', 4, 'Comfort foam', 0.104, '#C07CE0'),
+  foam('foam-5', 5, 'Support foam', 0.156, '#6FC04A'),
+  foam('core', 6, 'Rebonded support core', 0.156, '#D8D5CC', 'speckled'),
   base('#565555', 0.13, '#F0921E', 0.15),
 ];
 
 // Luma — the only stack in either line with a pocketed spring unit.
+//
+// Luma is specified as 80% spring unit, 20% comfort foam: the product owner's
+// split of layer 5 against layer 3. As with Resto, Sova and Ultima the two keep
+// their combined 0.41 of the stack - cover, convoluted band, the two insulator
+// pads and the base are unchanged - and divide it 0.328 / 0.082.
 export const lumaLayers = [
   cover('#DCDEEC'),
   foam('comfort', 2, 'Convoluted comfort foam', 0.08, '#D6DC72', 'convoluted'),
-  foam('foam-3', 3, 'Comfort foam', 0.13, '#F0EFEC'),
+  foam('foam-3', 3, 'Comfort foam', 0.082, '#F0EFEC'),
   foam('coil-top', 4, 'Coil insulator pad', 0.05, '#8C3A22'),
   {
     id: 'coils',
     name: 'Layer 5 — TBD',
     role: 'Pocketed spring unit',
     type: 'coil',
-    thicknessRatio: 0.28,
+    thicknessRatio: 0.328,
     color: '#F2F1ED',
     description: TBD,
     nameTbd: true,
@@ -119,10 +132,10 @@ export const lumaLayers = [
 export const ultimaLayers = [
   cover('#EFEFEC'),
   foam('comfort', 2, 'Convoluted comfort foam', 0.08, '#C9D14A', 'convoluted'),
-  foam('foam-3', 3, 'Comfort foam', 0.09, '#29B6DC'),
-  foam('foam-4', 4, 'Comfort foam', 0.09, '#C07CE0'),
-  foam('core', 5, 'Rebonded support core', 0.16, '#E8E6E1', 'speckled'),
-  foam('foam-6', 6, 'Support foam', 0.18, '#B9B4AE'),
+  foam('foam-3', 3, 'Comfort foam', 0.104, '#29B6DC'),
+  foam('foam-4', 4, 'Comfort foam', 0.104, '#C07CE0'),
+  foam('core', 5, 'Rebonded support core', 0.156, '#E8E6E1', 'speckled'),
+  foam('foam-6', 6, 'Support foam', 0.156, '#B9B4AE'),
   base('#464846', 0.13, '#F0921E', 0.14),
 ];
 

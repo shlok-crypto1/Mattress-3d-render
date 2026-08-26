@@ -9,7 +9,6 @@ const loaders = {
   'vedasleep/duro': () => import('./pages/DuroPage'),
   'vedasleep/maxa': () => import('./pages/MaxaPage'),
   'vedasleep/magic': () => import('./pages/MagicPage'),
-  'vedasleep/signature': () => import('./pages/SignaturePage'),
   'foamico/resto': () => import('./pages/foamico/RestoPage'),
   'foamico/sova': () => import('./pages/foamico/SovaPage'),
   'foamico/luma': () => import('./pages/foamico/LumaPage'),

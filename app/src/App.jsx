@@ -16,7 +16,6 @@ const FoamicoCatalogPage = lazy(() => import('./pages/FoamicoCatalogPage'));
 const DuroPage = lazy(() => import('./pages/DuroPage'));
 const MaxaPage = lazy(() => import('./pages/MaxaPage'));
 const MagicPage = lazy(() => import('./pages/MagicPage'));
-const SignaturePage = lazy(() => import('./pages/SignaturePage'));
 
 const RestoPage = lazy(() => import('./pages/foamico/RestoPage'));
 const SovaPage = lazy(() => import('./pages/foamico/SovaPage'));
@@ -199,7 +198,6 @@ export default function App() {
             <Route path="/vedasleep/duro" element={<DuroPage />} />
             <Route path="/vedasleep/maxa" element={<MaxaPage />} />
             <Route path="/vedasleep/magic" element={<MagicPage />} />
-            <Route path="/vedasleep/signature" element={<SignaturePage />} />
 
             <Route path="/foamico" element={<FoamicoCatalogPage />} />
             <Route path="/foamico/resto" element={<RestoPage />} />
@@ -213,7 +211,6 @@ export default function App() {
             <Route path="/duro" element={<Navigate to="/vedasleep/duro" replace />} />
             <Route path="/maxa" element={<Navigate to="/vedasleep/maxa" replace />} />
             <Route path="/magic" element={<Navigate to="/vedasleep/magic" replace />} />
-            <Route path="/signature" element={<Navigate to="/vedasleep/signature" replace />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

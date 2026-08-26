@@ -37,14 +37,25 @@ export function buildCoilLayer({ W, L, h, color = '#F2F1ED', env = null, quality
 
   // Coil pitch: placeholder density, tuned so the grid reads as individually
   // pocketed springs rather than a texture. Trimmed on low-quality devices.
-  const pitch = 5.4 / Math.min(1, Math.max(0.55, quality));
-  const inset = 3.0;
-  const cols = Math.max(5, Math.floor((W - inset * 2) / pitch));
-  const rows = Math.max(5, Math.floor((L - inset * 2) / pitch));
+  //
+  // The pitch sets how many springs there are; the spacing is then solved to
+  // fill the footprint it was handed, so the unit is the same size as the foam
+  // bands above and below it. A grid laid out at a fixed pitch from a fixed
+  // inset stopped several inches short of the edge on every side, which read as
+  // a smaller mattress sitting inside the mattress. Half a cell of margin all
+  // round is exactly what a spring needs: its sleeve is a touch under half a
+  // pitch across, so the outermost springs land on the edge without crossing it.
+  const targetPitch = 5.4 / Math.min(1, Math.max(0.55, quality));
+  const cols = Math.max(5, Math.round(W / targetPitch));
+  const rows = Math.max(5, Math.round(L / targetPitch));
   const count = cols * rows;
 
-  const spanX = (cols - 1) * pitch;
-  const spanZ = (rows - 1) * pitch;
+  const pitchX = W / cols;
+  const pitchZ = L / rows;
+  // Springs stay circular, so the radius comes from the tighter of the two axes.
+  const pitch = Math.min(pitchX, pitchZ);
+  const spanX = (cols - 1) * pitchX;
+  const spanZ = (rows - 1) * pitchZ;
   const coilR = pitch * 0.44;
   const sleeveR = pitch * 0.47;
 
@@ -115,8 +126,8 @@ export function buildCoilLayer({ W, L, h, color = '#F2F1ED', env = null, quality
   let i = 0;
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const x = -spanX / 2 + c * pitch;
-      const z = -spanZ / 2 + r * pitch;
+      const x = -spanX / 2 + c * pitchX;
+      const z = -spanZ / 2 + r * pitchZ;
       pos.set(x, 0, z);
       // Random yaw only: the springs stand upright, but the seam and the wire
       // start point should not line up into a visible moire across the grid.
