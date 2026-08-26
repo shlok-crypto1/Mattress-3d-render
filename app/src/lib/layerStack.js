@@ -226,6 +226,12 @@ export async function buildLayerStack({
     gap,
     dispose() {
       built.forEach((l) => {
+        // Off the scene as well as out of GPU memory. A stack is disposed both
+        // when the viewer unmounts - where the whole group goes with it - and
+        // when it is rebuilt at a new thickness under a live scene, where
+        // anything left attached would hang in the frame as a ghost of the
+        // previous variant.
+        group.remove(l.object);
         if (l.coil) {
           l.coil.dispose();
         } else {
@@ -236,6 +242,7 @@ export async function buildLayerStack({
         }
         [l.drop, l.ao].forEach((p) => {
           if (!p) return;
+          group.remove(p);
           p.geometry.dispose();
           p.material.dispose();
         });

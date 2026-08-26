@@ -12,8 +12,15 @@ import { vedasleepLayersBySlug } from './layers/vedasleepLayers';
 // of each stack (count, type, order) is confirmed; the names, descriptions and
 // thickness ratios inside them are placeholders - see
 // src/data/layers/vedasleepLayers.js.
+//
+// Every product also declares `variants`: the variant list confirmed for it in
+// docs/PRODUCT_CATALOG.md, baseline first, each entry `{ variant, height }`
+// with `height` a number of inches. See the header of ./foamicoProducts.js for
+// why the height is a number and not a label. `dimensions.height` is filled in
+// from the baseline below rather than written out here, so the thickness the
+// viewer renders and the thickness the card quotes cannot drift apart.
 
-export const products = [
+const catalog = [
   {
     slug: 'duro',
     name: 'Duro',
@@ -22,7 +29,7 @@ export const products = [
       thickness: 'Multi-Layer Comfort System · 5″',
       warranty: '10-Year Warranty',
     },
-    dimensions: { width: 72, length: 72, height: 5 },
+    dimensions: { width: 72, length: 72 },
     constructionDetail: '',
     layers: vedasleepLayersBySlug.duro,
     textures: {
@@ -32,16 +39,24 @@ export const products = [
       bottom: '/textures/duro/bottom.png',
     },
     placeholder: false,
+    variants: [
+      { variant: 'Classic', height: 5 },
+      { variant: 'Premium', height: 6 },
+      { variant: 'Luxury', height: 6 },
+    ],
   },
   {
     slug: 'maxa',
     name: 'Maxa',
     specLine: {
-      variant: 'Comfort',
-      thickness: '6″ High-Density Foam',
+      // "Comfort" is Maxa's category in the catalog (VedaSleep Comfort), not a
+      // variant of it. The one confirmed variant is Classic, at 5" - so the 6"
+      // this product used to render was not sourced from anywhere.
+      variant: 'Classic',
+      thickness: '5″ High-Density Foam',
       warranty: '10-Year Warranty',
     },
-    dimensions: { width: 72, length: 72, height: 6 },
+    dimensions: { width: 72, length: 72 },
     constructionDetail: '',
     layers: vedasleepLayersBySlug.maxa,
     textures: {
@@ -51,19 +66,25 @@ export const products = [
       bottom: '/textures/maxa/bottom.png',
     },
     placeholder: false,
+    variants: [
+      { variant: 'Classic', height: 5 },
+    ],
   },
   {
     slug: 'magic',
     name: 'Magic',
     specLine: {
-      variant: 'Memory Foam',
+      // As with Maxa, "Memory Foam" is Magic's category rather than its
+      // variant; the confirmed variant is Classic. The thickness below is
+      // unchanged - Classic is 5", which is what this already rendered.
+      variant: 'Classic',
       thickness: '5″ Memory Foam',
       warranty: '10-Year Warranty',
     },
     // 5", confirmed by the product owner. The 6" this carried was never a
     // confirmed figure - PRODUCT_CATALOG.md had Magic's dimensions as TBD - and
     // the layer proportions in vedasleepLayers.js are solved against 5".
-    dimensions: { width: 72, length: 72, height: 5 },
+    dimensions: { width: 72, length: 72 },
     constructionDetail: '',
     // SPEC CHANGE: Magic used to be described as a single uniform Float Sense
     // Foam core with no internal layer divisions. That is superseded - it is a
@@ -77,16 +98,22 @@ export const products = [
       bottom: '/textures/magic/bottom.png',
     },
     placeholder: false,
+    variants: [
+      { variant: 'Classic', height: 5 },
+    ],
   },
   {
     slug: 'signature',
     name: 'Signature',
     specLine: {
+      // 8" appears nowhere in the catalog: Signature's confirmed variants are
+      // 4" and 5" in each of three grades. Premium leads because that is the
+      // grade this product has always presented.
       variant: 'Premium',
-      thickness: '8″ Pocket Spring + Foam',
+      thickness: '5″ Pocket Spring + Foam',
       warranty: '12-Year Warranty',
     },
-    dimensions: { width: 72, length: 72, height: 8 },
+    dimensions: { width: 72, length: 72 },
     constructionDetail: '',
     layers: vedasleepLayersBySlug.signature,
     textures: {
@@ -96,7 +123,26 @@ export const products = [
       bottom: '/textures/signature/bottom.png',
     },
     placeholder: false,
+    // The catalog lists each grade as "4″/5″" - a grade offered in two
+    // thicknesses, which is two variants, not one variant of some height in
+    // between. Averaging them would invent a 4.5" Signature that does not exist.
+    variants: [
+      { variant: 'Premium', height: 5 },
+      { variant: 'Premium', height: 4 },
+      { variant: 'Classic', height: 4 },
+      { variant: 'Classic', height: 5 },
+      { variant: 'Luxury', height: 4 },
+      { variant: 'Luxury', height: 5 },
+    ],
   },
 ];
+
+// The baseline variant is the first one listed, and it is the single source of
+// the product's rendered thickness. FOAMICO does the same through the `product`
+// factory in ./foamicoProducts.js; these are object literals, so it happens here.
+export const products = catalog.map((p) => ({
+  ...p,
+  dimensions: { ...p.dimensions, height: p.variants[0].height },
+}));
 
 export const getProductBySlug = (slug) => products.find((p) => p.slug === slug);

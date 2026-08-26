@@ -1,7 +1,9 @@
 // FOAMICO line. Renders are built from the reference photos in
 // "Foamico mattresses/<Name>/" through the same pipeline as the VedaSleep set.
-// The collection uses the official baseline variant for each range: Classic
-// for Resto, Sova, Luma and Ultima; Riva 1000 for Riva.
+//
+// Each product lists the variants docs/PRODUCT_CATALOG.md confirms for it,
+// baseline first. The baseline is the variant the collection presents: the grid
+// card quotes it and the viewer opens on it.
 
 import { foamicoLayersBySlug } from './layers/foamicoLayers';
 
@@ -23,24 +25,39 @@ const tex = (slug) => ({
 // so the badge appears exactly twice, which is how a real mattress is made up.
 // `width`/`height` are inches, sized from the badge's own footprint in the
 // product's side photograph. Only a product that genuinely carries one sets it.
-const product = (slug, name, variant, height, feel, warranty, quilt, sideBadge) => ({
-  slug,
-  name,
-  ...(quilt ? { quilt } : null),
-  ...(sideBadge ? { sideBadge } : null),
-  specLine: {
-    variant,
-    thickness: `${height}\u2033 ${feel}`,
-    warranty,
-  },
-  dimensions: { width: 72, length: 72, height },
-  constructionDetail: '',
-  // Explode stack. Shape (count/type/order) is confirmed; names, copy and
-  // proportions are placeholders - see src/data/layers/foamicoLayers.js.
-  layers: foamicoLayersBySlug[slug] ?? null,
-  textures: tex(slug),
-  placeholder: false,
-});
+//
+// `variants` is the product's confirmed variant list, baseline first. Each entry
+// is `{ variant, height }` and `height` is a number of inches, not a label: the
+// viewer renders the selected variant at that thickness, so it has to be a
+// figure the code can use directly. A label like "4\"/5\"" would have to be
+// parsed back into a number and there is no honest way to turn a pair into one
+// - such a range is listed as the two variants it actually is.
+//
+// The spec line and `dimensions.height` are both derived from the baseline
+// rather than passed in beside it, so a product's thickness is written down
+// once and the card cannot drift out of step with what the viewer draws.
+const product = (slug, name, feel, warranty, variants, extra = {}) => {
+  const [baseline] = variants;
+  return {
+    slug,
+    name,
+    ...(extra.quilt ? { quilt: extra.quilt } : null),
+    ...(extra.sideBadge ? { sideBadge: extra.sideBadge } : null),
+    variants,
+    specLine: {
+      variant: baseline.variant,
+      thickness: `${baseline.height}\u2033 ${feel}`,
+      warranty,
+    },
+    dimensions: { width: 72, length: 72, height: baseline.height },
+    constructionDetail: '',
+    // Explode stack. Shape (count/type/order) is confirmed; names, copy and
+    // proportions are placeholders - see src/data/layers/foamicoLayers.js.
+    layers: foamicoLayersBySlug[slug] ?? null,
+    textures: tex(slug),
+    placeholder: false,
+  };
+};
 
 // Sofa cum Bed is the one FOAMICO product that is not a mattress slab: three
 // hinged foam panels in a single upholstered cover, folding from a seat into a
@@ -48,9 +65,12 @@ const product = (slug, name, variant, height, feel, warranty, quilt, sideBadge) 
 // and MattressViewer cannot build its shape, so it is rendered by SofaViewer
 // off the model in src/lib/sofaModel.js. `media: '3d'` is what routes it there.
 //
-// No spec line: variant, thickness, feel, warranty and dimensions are all
-// unconfirmed for this product. Per guidelines/DO_NOT_CHANGE.md they are left
-// out rather than guessed, and are recorded as TBD in docs/PRODUCT_CATALOG.md.
+// No spec line and no variant list: variant, thickness, feel, warranty and
+// dimensions are all unconfirmed for this product. Per guidelines/DO_NOT_CHANGE.md
+// they are left out rather than guessed, and are recorded as TBD in
+// docs/PRODUCT_CATALOG.md. The catalog does record "Classic 8\"" and "Premium 8\""
+// for it, but this product has no MattressViewer and no thickness to drive, so
+// there is nothing here for a variant control to change.
 // The model's proportions are measured off the product photography and are
 // shape, not size - see sofaModel.js.
 export const sofaCumBed = {
@@ -67,17 +87,55 @@ export const sofaCumBed = {
 };
 
 export const foamicoProducts = [
-  product('resto', 'Resto', 'Classic', 6, 'Firm', '10-Year Warranty + 5-Year Full Replacement'),
-  product('sova', 'Sova', 'Classic', 6, 'Firm', '15-Year Warranty + 5-Year Full Replacement'),
-  product('luma', 'Luma', 'Classic', 6, 'Medium', '7-Year Warranty + 5-Year Full Replacement'),
-  product('ultima', 'Ultima', 'Classic', 6, 'Firm', '25-Year Warranty + 5-Year Full Replacement'),
+  product('resto', 'Resto', 'Firm', '10-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'Classic', height: 6 },
+    { variant: 'Premium', height: 6.5 },
+    { variant: 'Luxury', height: 7 },
+  ]),
+  // Classic 6" leads rather than Classic 5" only so the baseline stays the one
+  // this product has always presented; both are confirmed Classic variants.
+  product('sova', 'Sova', 'Firm', '15-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'Classic', height: 6 },
+    { variant: 'Classic', height: 5 },
+    { variant: 'Premium', height: 6.5 },
+    { variant: 'Luxury', height: 7 },
+  ]),
+  // The catalog confirms no 6" Luma. The 6" this product used to render was not
+  // sourced from anywhere - Luma's Classic is 8".
+  product('luma', 'Luma', 'Medium', '7-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'Classic', height: 8 },
+    { variant: 'Premium', height: 10 },
+    { variant: 'Luxury', height: 5 },
+  ]),
+  product('ultima', 'Ultima', 'Firm', '25-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'Classic', height: 6 },
+    { variant: 'Classic', height: 5 },
+    { variant: 'Premium', height: 6 },
+    { variant: 'Luxury', height: 6.5 },
+    { variant: 'Natural', height: 7 },
+  ]),
   // Riva is the only product in either line whose border carries a woven badge.
   // 21.2in x 4.0in is the badge's real size: its 208x85 crop divided by the
   // photograph's own scale on the wall (about 9.8 px/in across, 21.2 px/in up).
-  product('riva', 'Riva', '1000', 8, 'Medium', '30-Year Warranty + 5-Year Full Replacement', undefined, {
-    src: '/textures/foamico/riva/side-badge.png',
-    width: 21.2,
-    height: 4,
+  //
+  // R1000 leads: this collection presents Riva at its 1000 grade. The catalog
+  // puts R1000 at 6", not the 8" this product used to render - 8" is R2000.
+  product('riva', 'Riva', 'Medium', '30-Year Warranty + 5-Year Full Replacement', [
+    { variant: 'R1000', height: 6 },
+    { variant: 'Classic', height: 6 },
+    { variant: 'Classic', height: 6.5 },
+    { variant: 'Premium', height: 7 },
+    { variant: 'Luxury', height: 6 },
+    { variant: 'Natural', height: 6 },
+    { variant: 'Natural', height: 8 },
+    { variant: 'R2000', height: 8 },
+    { variant: 'R3000', height: 9 },
+  ], {
+    sideBadge: {
+      src: '/textures/foamico/riva/side-badge.png',
+      width: 21.2,
+      height: 4,
+    },
   }),
   sofaCumBed,
 ];

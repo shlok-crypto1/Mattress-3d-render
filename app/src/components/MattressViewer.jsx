@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
 import { buildEuroTopGeometry } from '../lib/mattressGeometry';
 import { makeStudioEnvironment, makeWovenNormal } from '../lib/foamSurfaces';
 import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer, buildEdgeStitch, averageColor } from '../lib/quiltSurface';
-import { MOTION, EASE } from '../lib/motion';
+import { MOTION, EASE, REVEAL } from '../lib/motion';
 import { buildLayerStack } from '../lib/layerStack';
 import { BRAND_THEMES } from '../data/brandThemes';
 import {
@@ -46,6 +46,14 @@ const VIEW_DEFS = [
 /** The resting three-quarter framing: mount default, and where Solid returns. */
 const CORNER_VIEW = { key: 'corner', theta: 0.6, phi: 0.62 };
 
+/**
+ * How a variant reads on screen.
+ *
+ * The same "Grade · 6″" shape the grid cards set their spec line in, so the
+ * card you clicked and the pill you land on are recognisably the same fact.
+ */
+const variantLabel = (v) => `${v.variant} · ${v.height}″`;
+
 /** Coarse device budget: trims coil count and sculpted-cap tessellation. */
 function deviceQuality() {
   if (typeof window === 'undefined') return 1;
@@ -64,6 +72,8 @@ export default function MattressViewer({
 }) {
   const mountRef = useRef(null);
   const labelsRef = useRef(null);
+  const variantRef = useRef(null);
+  const variantButtonRef = useRef(null);
   const [view, setView] = useState(CORNER_VIEW.key);
   // Layer explode is driven entirely by product.layers. Without it none of the
   // code below runs and the viewer behaves exactly as it always has.
@@ -72,6 +82,24 @@ export default function MattressViewer({
   const [exploded, setExploded] = useState(false);
   const [selectedLayer, setSelectedLayer] = useState(null);
   const [hoveredLayer, setHoveredLayer] = useState(null);
+  // Variant selection. `variants` is the product's confirmed variant list,
+  // baseline first (see src/data/foamicoProducts.js), and the only thing held
+  // in state is which one is chosen - the thickness is read back off it rather
+  // than stored separately, so the two can never disagree. The clamp covers a
+  // product swapping under the same mount: the index survives, the height is
+  // always the new product's.
+  //
+  // These sit above the scene effect because it reads `currentHeight` when it
+  // builds. Declared below it, the effect's dependency array - evaluated during
+  // render, before the declaration - would throw on every mattress route.
+  const variants = product.variants ?? [];
+  const [variantIndex, setVariantIndex] = useState(0);
+  const [variantMenuOpen, setVariantMenuOpen] = useState(false);
+  const activeIndex = variants.length ? Math.min(variantIndex, variants.length - 1) : -1;
+  const activeVariant = variants.length ? variants[activeIndex] : null;
+  const currentHeight = activeVariant?.height ?? product.dimensions?.height ?? 5;
+  const hasVariantChoice = variants.length > 1;
+  const variantMenuId = useId();
   // Shared-element handoff: no-op unless a card transition landed here (see
   // ProductTransition.jsx). `revealed` starts true whenever entering any
   // other way (direct link, refresh, back-nav) - zero behaviour change then.
@@ -201,7 +229,7 @@ export default function MattressViewer({
     let topReady = false;
     s.reportedReady = false;
 
-    const { textures, dimensions } = product;
+    const { textures } = product;
     const top = load(publicUrl(textures.top), () => {
       topReady = true;
     });
@@ -210,12 +238,15 @@ export default function MattressViewer({
     const sideTex = load(publicUrl(textures.side), () => onSideReady?.());
     sideTex.wrapS = THREE.RepeatWrapping;
 
-    const W = dimensions?.width ?? 72;
-    const H = dimensions?.height ?? 5;
-    const L = dimensions?.length ?? 72;
+    const W = product.dimensions?.width ?? 72;
+    // Height alone is mutable: picking a variant changes it, and `s.applyHeight`
+    // below rebuilds the parts that depend on it. Read once here, from the
+    // render that mounted this scene, which is always the baseline variant.
+    let H = currentHeight;
+    const L = product.dimensions?.length ?? 72;
     // The exploded slabs keep their own soft top edge; only the solid box is
     // built as a Euro-top.
-    const topBevel = Math.min(1.3, H * 0.26);
+    let topBevel = Math.min(1.3, H * 0.26);
     // ~6 tiles around the perimeter rather than the old ~13. Halving the
     // repetition costs texel density (about 19/in down to 9/in, on par with the
     // top faces), which is the accepted trade for a border that does not read
@@ -372,13 +403,20 @@ export default function MattressViewer({
     // Declared per product, never by slug: only a product that actually has a
     // woven badge sets `sideBadge`, and the viewer does nothing at all without it.
     const badgeMats = [];
+    const badgeMeshes = [];
+    // Centred on the band the badge is sewn to, not on the mattress: the
+    // cushion above it is upholstery and the badge never crosses the piping.
+    // Read off the live geometry every time, because which band that is moves
+    // when the mattress changes thickness.
+    const placeBadges = () => {
+      if (!badgeMeshes.length) return;
+      const { yBottom, yTop } = box.geometry.userData.baseWall;
+      const y = (yBottom + yTop) / 2;
+      badgeMeshes.forEach((m) => { m.position.y = y; });
+    };
     if (product.sideBadge) {
       const { src, width: bw, height: bh } = product.sideBadge;
       const badgeTex = load(publicUrl(src));
-      const { yBottom, yTop } = geometry.userData.baseWall;
-      // Centred on the band the badge is sewn to, not on the mattress: the
-      // cushion above it is upholstery and the badge never crosses the piping.
-      const y = (yBottom + yTop) / 2;
       const badgeGeo = new THREE.PlaneGeometry(bw, bh);
       disposables.push({ dispose: () => badgeGeo.dispose() });
       // depthWrite off and a negative polygon offset so it sits on the fabric
@@ -399,14 +437,16 @@ export default function MattressViewer({
         return m;
       };
       const front = new THREE.Mesh(badgeGeo, mkBadge());
-      front.position.set(0, y, L / 2 + 0.05);
+      front.position.set(0, 0, L / 2 + 0.05);
       const back = new THREE.Mesh(badgeGeo, mkBadge());
-      back.position.set(0, y, -L / 2 - 0.05);
+      back.position.set(0, 0, -L / 2 - 0.05);
       back.rotation.y = Math.PI;
+      badgeMeshes.push(front, back);
       // Children of the box, so they inherit its visibility and its transform
       // through both the explode cross-fade and the entrance scale.
       box.add(front);
       box.add(back);
+      placeBadges();
     }
 
     // The flat cap goes up first and the sculpted one replaces it once the
@@ -415,12 +455,32 @@ export default function MattressViewer({
     // stall the handoff for no visual gain - the swap is invisible because the
     // panel's outline and every UV are identical either way.
     let stitch = null;
-    quiltReady.then((maps) => {
-      if (!maps || disposed) return;
-      const displace = quiltDisplacer(maps, geometry.userData.cushW, geometry.userData.cushL, H);
+    // Held once resolved so the cap can be sculpted again at a new thickness
+    // without re-decoding the bump image.
+    let quiltMapsReady = null;
+
+    /** Put `geo` on the box, dispose what it replaced, keep the badges with it. */
+    const swapGeometry = (geo) => {
+      const prev = box.geometry;
+      box.geometry = geo;
+      if (prev && prev !== geo) prev.dispose();
+      placeBadges();
+      s.dirty = true;
+    };
+
+    /** Re-cut the cap's relief for the box's current height. */
+    const applySculpt = () => {
+      if (!quiltMapsReady || disposed) return;
+      const { cushW, cushL } = box.geometry.userData;
+      const displace = quiltDisplacer(quiltMapsReady, cushW, cushL, H);
       const sculpted = buildEuroTopGeometry(W, H, L, { ...sculptOpts, displace });
-      box.geometry = sculpted;
-      geometry.dispose();
+      if (stitch) {
+        box.remove(stitch);
+        stitch.geometry.dispose();
+        stitch.material.dispose();
+        stitch = null;
+      }
+      swapGeometry(sculpted);
       // Thread along the seam the panel is sewn on, tinted from the product's
       // own fabric so it reads as stitching rather than as a bright rim.
       stitch = buildEdgeStitch(sculpted.userData.quiltEdge, {
@@ -428,7 +488,23 @@ export default function MattressViewer({
         color: top.image ? averageColor(top.image).multiplyScalar(quiltCfg.stitchTint) : undefined,
       });
       box.add(stitch);
-      s.dirty = true;
+    };
+
+    /**
+     * Rebuild the solid mattress at the current H. The flat cap goes on first
+     * because `applySculpt` needs the cushion extents this geometry reports;
+     * if the quilt maps have not arrived yet the flat one simply stays until
+     * they do, which is the same order a fresh mount goes through.
+     */
+    const rebuildBox = () => {
+      swapGeometry(buildEuroTopGeometry(W, H, L, euroOpts));
+      applySculpt();
+    };
+
+    quiltReady.then((maps) => {
+      if (!maps || disposed) return;
+      quiltMapsReady = maps;
+      applySculpt();
     });
 
     // ---- layer explode stack -------------------------------------------
@@ -513,6 +589,43 @@ export default function MattressViewer({
     shadow.position.y = -H / 2 - 1.5;
     scene.add(shadow);
     s.shadow = shadow;
+
+    /**
+     * Rebuild the exploded stack at the current H.
+     *
+     * The old bands are disposed only once the new ones exist, so changing
+     * thickness with the stack open swaps one stack for another rather than
+     * blinking through an empty stage. If the stack was never built, there is
+     * nothing to redo - whenever it is built it reads the current H.
+     */
+    const rebuildStack = () => {
+      if (!stackPromise) return;
+      const prev = stack;
+      stack = null;
+      layers = null;
+      hitMeshes = null;
+      stackPromise = null;
+      ensureStack().then(() => prev?.dispose());
+    };
+
+    /**
+     * Change the mattress's thickness in place.
+     *
+     * Everything else in this scene - renderer, lights, environment, textures,
+     * materials, camera - is thickness-independent, so a variant change rebuilds
+     * only the geometry that actually encodes H. Re-running the whole effect
+     * would drop the WebGL context, re-fetch every texture and throw away where
+     * the user had orbited to, which is a lot of work to arrive at the same
+     * pixels either side of one changed number.
+     */
+    s.applyHeight = (next) => {
+      if (disposed || next === H) return;
+      H = next;
+      topBevel = Math.min(1.3, H * 0.26);
+      shadow.position.y = -H / 2 - 1.5;
+      rebuildBox();
+      rebuildStack();
+    };
 
     s.theta = CORNER_VIEW.theta;
     s.phi = CORNER_VIEW.phi;
@@ -908,6 +1021,7 @@ export default function MattressViewer({
 
     return () => {
       disposed = true;
+      s.applyHeight = null;
       cancelAnimationFrame(s.raf);
       window.clearTimeout(touchHoverTimer);
       if (s.warmHandle) {
@@ -948,8 +1062,16 @@ export default function MattressViewer({
       if (mount.contains(el)) mount.removeChild(el);
     };
     // Re-run whenever the product (and hence its textures/dimensions) changes.
+    // Not on variant height - that goes through s.applyHeight, which rebuilds
+    // the geometry without tearing the scene down.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
+
+  // Mirrored onto the scene the same way autoRotate is. The first run after a
+  // mount is a no-op: the scene was built at exactly this height.
+  useEffect(() => {
+    s.applyHeight?.(currentHeight);
+  }, [currentHeight, s]);
 
   useEffect(() => {
     s.autoRotate = autoRotate && !s.reduced;
@@ -1018,15 +1140,43 @@ export default function MattressViewer({
     s.setExplodeState?.(next);
   };
 
-  const { name, dimensions } = product;
+  const { name } = product;
   const t = theme;
 
-  // Placeholder ratios resolve against the product's real height, so the card
-  // can quote a thickness even before real per-layer specs land.
-  const totalHeight = dimensions?.height ?? 0;
+  const selectVariant = (index) => {
+    setVariantIndex(index);
+    setVariantMenuOpen(false);
+    variantButtonRef.current?.focus();
+  };
+
+  // Dismiss the variant menu on an outside press or on Escape. Containment is
+  // tested against the wrapper node rather than by class name, so it stays
+  // right if the markup changes; pointerdown rather than click so a press that
+  // starts outside dismisses immediately.
+  useEffect(() => {
+    if (!variantMenuOpen) return undefined;
+    const onPointerDown = (e) => {
+      if (!variantRef.current?.contains(e.target)) setVariantMenuOpen(false);
+    };
+    const onKeyDown = (e) => {
+      if (e.key !== 'Escape') return;
+      setVariantMenuOpen(false);
+      variantButtonRef.current?.focus();
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [variantMenuOpen]);
+
+  // Placeholder ratios resolve against the height actually on screen, so the
+  // card can quote a thickness even before real per-layer specs land - and so
+  // the bands it describes add back up to the variant the viewer is showing.
   const ratioSum = hasLayers ? layerDefs.reduce((a, l) => a + (l.thicknessRatio ?? 1), 0) : 0;
   const layerThickness = (l) =>
-    ratioSum ? `${((totalHeight * (l.thicknessRatio ?? 1)) / ratioSum).toFixed(1)}″` : '—';
+    ratioSum ? `${((currentHeight * (l.thicknessRatio ?? 1)) / ratioSum).toFixed(1)}″` : '—';
   const active = selectedLayer !== null ? layerDefs[selectedLayer] : null;
 
   return (
@@ -1043,6 +1193,16 @@ export default function MattressViewer({
         '--mv-btn-color': t.btnColor,
         '--mv-btn-active-bg': t.btnActiveBg,
         '--mv-btn-active-color': t.btnActiveColor,
+        // The variant control dresses itself from the same theme the layer
+        // chrome uses; the rules themselves live in index.css, because a media
+        // query cannot override an inline style.
+        '--mv-accent': t.accent,
+        '--mv-accent-soft': t.accentSoft,
+        '--mv-accent-border': t.accentBorder,
+        '--mv-menu-bg': t.cardBg,
+        '--mv-menu-border': t.cardBorder,
+        '--mv-menu-shadow': t.cardShadow,
+        '--mv-menu-color': t.text,
         userSelect: 'none',
         WebkitUserSelect: 'none',
         overflow: 'hidden',
@@ -1085,6 +1245,48 @@ export default function MattressViewer({
         >
           {name}
         </div>
+        {/* Variant pill. Present only where the catalog confirms variants, and
+            interactive only where it confirms more than one - a range with a
+            single grade is a fact about the product, not a choice to offer. */}
+        {activeVariant && (
+          <div
+            ref={variantRef}
+            className="mv-variant"
+            style={{ ...(animated ? enterStyle(revealed, REVEAL.meta) : null) }}
+          >
+            {hasVariantChoice ? (
+              <button
+                ref={variantButtonRef}
+                type="button"
+                className="mv-variant-pill"
+                aria-expanded={variantMenuOpen}
+                aria-controls={variantMenuId}
+                onClick={() => setVariantMenuOpen((open) => !open)}
+              >
+                {variantLabel(activeVariant)}
+                <span className="mv-variant-caret" aria-hidden="true" />
+              </button>
+            ) : (
+              <span className="mv-variant-pill">{variantLabel(activeVariant)}</span>
+            )}
+            {variantMenuOpen && hasVariantChoice && (
+              <div id={variantMenuId} className="mv-variant-menu">
+                {variants.map((v, i) => (
+                  <button
+                    key={`${v.variant}-${v.height}`}
+                    type="button"
+                    className="mv-variant-item"
+                    aria-current={i === activeIndex}
+                    data-selected={i === activeIndex}
+                    onClick={() => selectVariant(i)}
+                  >
+                    {variantLabel(v)}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
