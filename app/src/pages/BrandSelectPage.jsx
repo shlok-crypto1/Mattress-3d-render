@@ -31,10 +31,18 @@ const panelStyle = (background) => ({
   overflow: 'hidden',
 });
 
+// Both panels reserve the same height for their mark, whatever size the mark
+// itself is. Without this the shorter lockup made a shorter column, and since
+// each panel centres its own column the "View collection" cues ended up at
+// different heights across the split - the one thing on this screen that has to
+// line up, because it is the same affordance offered twice.
+const MARK_SLOT = 176;
+
 const markSlot = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  height: MARK_SLOT,
 };
 
 const cueStyle = (color) => ({
@@ -114,7 +122,7 @@ export default function BrandSelectPage() {
             : 'none',
         }}
       >
-        <div style={{ ...markSlot, height: 176 }}>
+        <div style={markSlot}>
           <img
             ref={foamico.ref}
             src={publicUrl('/brand/foamico-logo-light.png')}
@@ -153,7 +161,7 @@ export default function BrandSelectPage() {
             : 'none',
         }}
       >
-        <div style={{ ...markSlot, height: 104 }}>
+        <div style={markSlot}>
           <img
             ref={veda.ref}
             src={publicUrl('/brand/vedasleep-logo.png')}
