@@ -34,7 +34,6 @@ export async function buildLayerStack({
   quality = 1,
   productTop,
   productBottomMap,
-  productSideMap,
   maxAnisotropy = 1,
 }) {
   const disposables = [];
@@ -64,7 +63,6 @@ export async function buildLayerStack({
       maxAnisotropy,
       productTop: i === 0 ? productTop : null,
       productBottomMap: i === layerDefs.length - 1 ? productBottomMap : null,
-      productSideMap: i === layerDefs.length - 1 ? productSideMap : null,
     };
 
     let object;

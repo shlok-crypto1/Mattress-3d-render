@@ -80,10 +80,10 @@ function tiled(tex, repeatX, repeatY, maxAnisotropy = 1) {
  * Builds the three face materials for one layer plus, when the layer has a
  * sculpted surface, the displacement function the geometry builder needs.
  *
- * ctx: { W, L, h, wallTile, env, quality, productTop, productBottomMap, productSideMap }
+ * ctx: { W, L, h, wallTile, env, quality, productTop, productBottomMap }
  *   productTop        material options for the real photographed quilt top
- *   productBottomMap  the real photographed base cloth
- *   productSideMap    the real photographed gusset, wrapped around the base band
+ *   productBottomMap  the real photographed base cloth, worn by every face of
+ *                     the base band
  */
 export function createLayerMaterials(def, ctx) {
   const { W, L, h, wallTile, env, quality = 1, maxAnisotropy = 1 } = ctx;
@@ -183,24 +183,22 @@ export function createLayerMaterials(def, ctx) {
     wallMat = mk({ normal: makeWovenNormal(46), repeat: [wallTile / SURFACE_PITCH.woven, Math.max(0.35, h / SURFACE_PITCH.woven)] });
     botMat = mk({ normal: makeWovenNormal(46), repeat: [W / SURFACE_PITCH.woven, L / SURFACE_PITCH.woven] });
   } else if (type === 'fabric-base') {
-    // The base band is the part of the mattress you actually see from the side
-    // in the reference renders - branded tape and all - so it wears the real
-    // gusset and base photography.
+    // The base band is a slab wrapped in base cloth, so all three of its faces
+    // are that one cloth: the photograph on the underside, the same photograph
+    // tiled at the weave's own pitch around the wall, and the colour sampled
+    // from it on the cut top face.
+    //
+    // The wall used to wear `productSideMap` instead - the whole mattress's
+    // gusset photograph, which spans cover, piping and border, squeezed onto a
+    // band under an inch tall. That is what made the bottom band read charcoal
+    // on top and cream down its sides in the exploded view.
     topMat = mk({ normal: makeWovenNormal(46), repeat: [W / SURFACE_PITCH.woven, L / SURFACE_PITCH.woven] });
-    wallMat = ctx.productSideMap
-      ? new THREE.MeshPhysicalMaterial({
-          map: ctx.productSideMap,
-          roughness: base.roughness,
-          metalness: 0,
-          envMap: env ?? null,
-          envMapIntensity: base.envMapIntensity,
-          sheen: 0.3,
-          sheenRoughness: 0.8,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: 0,
-          emissive: new THREE.Color('#000000'),
-          emissiveIntensity: 0,
+    wallMat = ctx.productBottomMap
+      ? mk({
+          colorMap: ctx.productBottomMap,
+          colorRepeat: wallRepeat,
+          normal: makeWovenNormal(46),
+          repeat: wallRepeat,
         })
       : mk({ normal: makeWovenNormal(46), repeat: wallRepeat });
     botMat = ctx.productBottomMap
