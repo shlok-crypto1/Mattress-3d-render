@@ -18,13 +18,20 @@ const cover = (color, ratio = 0.13) => ({
   nameTbd: true,
 });
 
-const base = (color, ratio = 0.16) => ({
+// One layer, not two - see the header of foamicoLayers.js for why the
+// transition sheet and the base are inseparable and how `bonded` expresses it.
+const base = (color, ratio, sheetColor, sheetRatio) => ({
   id: 'base',
   name: 'Base — TBD',
-  role: 'Fabric-wrapped base',
+  role: 'Transition foam bonded to a fabric-wrapped base',
   type: 'fabric-base',
-  thicknessRatio: ratio,
+  thicknessRatio: ratio + sheetRatio,
   color,
+  bonded: {
+    color: sheetColor,
+    surface: 'pyramid',
+    fraction: sheetRatio / (ratio + sheetRatio),
+  },
   description: TBD,
   nameTbd: true,
 });
@@ -74,18 +81,7 @@ export const duroLayers = [
     color: '#DCD7CE',
     description: 'High-density rebonded foam for orthopaedic support.',
   },
-  {
-    id: 'transition',
-    name: 'Layer 4 — TBD',
-    role: 'Pyramid transition foam',
-    type: 'foam',
-    surface: 'pyramid',
-    thicknessRatio: 0.14,
-    color: '#E4883C',
-    description: TBD,
-    nameTbd: true,
-  },
-  base('#646263'),
+  base('#646263', 0.16, '#E4883C', 0.14),
 ];
 
 // Maxa / Magic / Signature share the same confirmed band shape.
@@ -94,8 +90,7 @@ const vedaFiveBand = (coverColor, comfortColor, foamColor, coreColor, transition
   foam('comfort', 2, 'Convoluted comfort foam', 0.09, comfortColor, 'convoluted'),
   foam('foam-3', 3, 'Comfort foam', 0.18, foamColor),
   foam('core', 4, 'Rebonded support core', 0.24, coreColor, 'speckled'),
-  foam('transition', 5, 'Pyramid transition foam', 0.12, transitionColor, 'pyramid'),
-  base(baseColor),
+  base(baseColor, 0.16, transitionColor, 0.12),
 ];
 
 export const maxaLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#6BC163', '#C9CE4E', '#E8871E', '#5D5C5C');
@@ -103,7 +98,34 @@ export const maxaLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#6BC163', '#C9CE4E
 // SPEC CHANGE: Magic previously shipped as a single uniform 5" Float Sense Foam
 // core with no internal divisions. That is superseded - Magic is a multi-band
 // construction from here on.
-export const magicLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#6BC163', '#C9CE4E', '#E8871E', '#5B5C5E');
+//
+// Magic is the first product with real proportions rather than the shared
+// template's, so it no longer goes through vedaFiveBand. On a 5" mattress the
+// cover and the base take their real thicknesses first - they are upholstery
+// and a bonded base, not foam anyone specifies a percentage of - and the 5"
+// left over is split across the foam: 80% to the support core, 15% to the
+// comfort foam above it, the remaining 5% to the convoluted top band.
+//
+// Ratios are normalised against the product's real height at build time, so
+// these are written as fractions of the whole 5" and sum to 1.
+//
+//   cover   0.070  ->  0.35"   upholstery
+//   Layer 2 0.0405 ->  0.2025" convoluted        (5% of the 4.05" of foam)
+//   Layer 3 0.1215 ->  0.6075" comfort foam      (15%)
+//   Layer 4 0.6480 ->  3.24"   support core      (80%)
+//   base    0.1200 ->  0.60"   bonded sheet + base
+//
+// Maxa and Signature deliberately still use vedaFiveBand: their proportions
+// have not been given yet, and inventing them from Magic's would be a spec
+// nobody has confirmed.
+export const magicLayers = [
+  cover('#E9E4D6', 0.07),
+  foam('comfort', 2, 'Convoluted comfort foam', 0.0405, '#E4E3A8', 'convoluted'),
+  foam('foam-3', 3, 'Comfort foam', 0.1215, '#6BC163'),
+  foam('core', 4, 'Rebonded support core', 0.648, '#C9CE4E', 'speckled'),
+  // Split kept at Magic's previous transition:base proportion (0.12 : 0.16).
+  base('#5B5C5E', 0.0686, '#E8871E', 0.0514),
+];
 
 export const signatureLayers = vedaFiveBand('#E9E4D6', '#E4E3A8', '#DCD9C8', '#C9CE4E', '#E8871E', '#B79692');
 

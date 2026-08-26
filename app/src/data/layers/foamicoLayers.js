@@ -35,13 +35,28 @@ const cover = (color, ratio = 0.09) => ({
 // than eyeballed off the cutaway render. The band is wrapped in that same
 // photograph on its underside, so any other value showed the base as one colour
 // on its cut face and another on the cloth immediately below it.
-const base = (color, ratio = 0.13) => ({
+// The transition sheet and the fabric-wrapped base are ONE layer.
+//
+// The pierced foam sheet is bonded to the top of the base - glued on, not a
+// band anyone could lift off it - so the stack must never pull the two apart.
+// `bonded` describes the sheet riding on top: it keeps its own sculpted relief
+// so it still reads as the orange foam pasted onto the base, and `fraction` is
+// its share of the band's thickness. The two ratios are passed separately at
+// each call site and summed here, so the proportions stay exactly what they
+// were when these shipped as two bands - the merge changes what the stack does,
+// not what it looks like.
+const base = (color, ratio, sheetColor, sheetRatio) => ({
   id: 'base',
   name: 'Base — TBD',
-  role: 'Fabric-wrapped base',
+  role: 'Transition foam bonded to a fabric-wrapped base',
   type: 'fabric-base',
-  thicknessRatio: ratio,
+  thicknessRatio: ratio + sheetRatio,
   color,
+  bonded: {
+    color: sheetColor,
+    surface: 'pyramid',
+    fraction: sheetRatio / (ratio + sheetRatio),
+  },
   description: TBD,
   nameTbd: true,
 });
@@ -66,8 +81,7 @@ export const restoLayers = [
   foam('foam-4', 4, 'Comfort foam', 0.1, '#C07CE0'),
   foam('foam-5', 5, 'Support foam', 0.12, '#EDEDEA'),
   foam('foam-6', 6, 'Support core', 0.2, '#A5764E'),
-  foam('transition', 7, 'Pyramid transition foam', 0.15, '#F0921E', 'pyramid'),
-  base('#484648'),
+  base('#484648', 0.13, '#F0921E', 0.15),
 ];
 
 // Sova — cover + six foam bands (one rebonded chip core) + base.
@@ -78,8 +92,7 @@ export const sovaLayers = [
   foam('foam-4', 4, 'Comfort foam', 0.1, '#C07CE0'),
   foam('foam-5', 5, 'Support foam', 0.12, '#6FC04A'),
   foam('core', 6, 'Rebonded support core', 0.2, '#D8D5CC', 'speckled'),
-  foam('transition', 7, 'Pyramid transition foam', 0.15, '#F0921E', 'pyramid'),
-  base('#565555'),
+  base('#565555', 0.13, '#F0921E', 0.15),
 ];
 
 // Luma — the only stack in either line with a pocketed spring unit.
@@ -99,8 +112,7 @@ export const lumaLayers = [
     nameTbd: true,
   },
   foam('coil-bottom', 6, 'Coil insulator pad', 0.05, '#8C3A22'),
-  foam('transition', 7, 'Pyramid transition foam', 0.13, '#F0921E', 'pyramid'),
-  base('#616163', 0.14),
+  base('#616163', 0.14, '#F0921E', 0.13),
 ];
 
 // Ultima — the deepest stack: cover + six foam bands + base.
@@ -111,8 +123,7 @@ export const ultimaLayers = [
   foam('foam-4', 4, 'Comfort foam', 0.09, '#C07CE0'),
   foam('core', 5, 'Rebonded support core', 0.16, '#E8E6E1', 'speckled'),
   foam('foam-6', 6, 'Support foam', 0.18, '#B9B4AE'),
-  foam('transition', 7, 'Pyramid transition foam', 0.14, '#F0921E', 'pyramid'),
-  base('#464846'),
+  base('#464846', 0.13, '#F0921E', 0.14),
 ];
 
 // Riva — foam only, explicitly no coil band.
@@ -123,8 +134,7 @@ export const rivaLayers = [
   foam('foam-4', 4, 'Support foam', 0.11, '#C21E4E'),
   foam('foam-5', 5, 'Support foam', 0.11, '#D3D2BC'),
   foam('core', 6, 'Zoned support core', 0.2, '#A9A44E', 'channelled'),
-  foam('transition', 7, 'Pyramid transition foam', 0.15, '#F0921E', 'pyramid'),
-  base('#585559'),
+  base('#585559', 0.13, '#F0921E', 0.15),
 ];
 
 export const foamicoLayersBySlug = {
