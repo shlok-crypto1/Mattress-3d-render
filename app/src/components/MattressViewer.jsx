@@ -7,76 +7,12 @@ import { makeStudioEnvironment, makeWovenNormal } from '../lib/foamSurfaces';
 import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer, buildEdgeStitch, averageColor } from '../lib/quiltSurface';
 import { MOTION, EASE } from '../lib/motion';
 import { buildLayerStack } from '../lib/layerStack';
+import { BRAND_THEMES } from '../data/brandThemes';
 import {
   useProductEntranceTarget,
   enterStyle,
   prefersReducedMotion,
 } from '../transition/ProductTransition';
-
-// Per-brand chrome for the shared viewer. 'vedasleep' reproduces the original
-// values exactly, so VedaSleep product pages are unchanged.
-const BRAND_THEMES = {
-  vedasleep: {
-    logo: '/brand/vedasleep-logo.png',
-    logoAlt: 'Veda Sleep',
-    logoHeight: 32,
-    surface:
-      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 62%), #F6F8F1',
-    text: '#2b2b2b',
-    muted: '#8a8a8e',
-    faint: '#b0b0b4',
-    btnBg: '#f4f4f5',
-    btnColor: '#6e6e73',
-    btnActiveBg: '#1d1d1f',
-    btnActiveColor: '#fff',
-    // Layer explode chrome. Veda Gold.
-    accent: '#c77d11',
-    accentSoft: 'rgba(199,125,17,0.10)',
-    accentBorder: 'rgba(199,125,17,0.35)',
-    labelBg: 'rgba(254,254,254,0.92)',
-    labelColor: '#2b2b2b',
-    // Soft pool behind the exploded stack. On this near-white stage a white
-    // cover has no silhouette to read against; a touch of shade under the
-    // model gives it an edge without darkening the page.
-    stageTint:
-      'radial-gradient(ellipse 68% 60% at 50% 54%, rgba(31,33,28,0.13) 0%, rgba(31,33,28,0) 72%)',
-    cardBg: '#FEFEFE',
-    cardBorder: '#e4e0d4',
-    cardTitle: '#1A1A1A',
-    cardBody: '#6e6e73',
-    cardMeta: '#2b2b2b',
-    cardShadow: '0 10px 34px rgba(0,0,0,0.10)',
-  },
-  foamico: {
-    logo: '/brand/foamico-logo-light.png',
-    logoAlt: 'Foamico',
-    logoHeight: 54,
-    surface:
-      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(149,193,43,0.10) 0%, rgba(149,193,43,0) 62%), #1A1A1A',
-    text: '#FEFEFE',
-    muted: '#8f8f8f',
-    faint: '#6e6e6e',
-    btnBg: '#242424',
-    btnColor: '#b5b5b5',
-    btnActiveBg: '#95C12B',
-    btnActiveColor: '#1A1A1A',
-    // Layer explode chrome. Kiwi Green on Key Black - the card and labels have
-    // to invert here or they punch a white hole through the dark stage.
-    accent: '#95C12B',
-    accentSoft: 'rgba(149,193,43,0.14)',
-    accentBorder: 'rgba(149,193,43,0.38)',
-    labelBg: 'rgba(26,26,26,0.88)',
-    labelColor: '#FEFEFE',
-    // Key Black already separates a pale layer cleanly - nothing to add.
-    stageTint: null,
-    cardBg: '#212121',
-    cardBorder: '#343434',
-    cardTitle: '#FEFEFE',
-    cardBody: '#a8a8a8',
-    cardMeta: '#e4e4e4',
-    cardShadow: '0 10px 34px rgba(0,0,0,0.45)',
-  },
-};
 
 // Explode tuning. The stack is toggled by the Layers button alone - zoom used
 // to cross a threshold and explode the mattress on its own, which fired when
@@ -425,6 +361,54 @@ export default function MattressViewer({
     group.add(box);
     s.box = box;
 
+    // ---- woven brand badge ------------------------------------------------
+    // A badge is sewn onto a mattress once at the head and once at the foot. It
+    // used to live inside the border photograph, which the wall repeats about
+    // six times around the perimeter, so the mark appeared six times - down both
+    // long sides as well, where no real mattress carries it. The photograph is
+    // now clean fabric that can tile as often as it likes, and the badge is
+    // placed here as a decal on exactly two faces.
+    //
+    // Declared per product, never by slug: only a product that actually has a
+    // woven badge sets `sideBadge`, and the viewer does nothing at all without it.
+    const badgeMats = [];
+    if (product.sideBadge) {
+      const { src, width: bw, height: bh } = product.sideBadge;
+      const badgeTex = load(publicUrl(src));
+      const { yBottom, yTop } = geometry.userData.baseWall;
+      // Centred on the band the badge is sewn to, not on the mattress: the
+      // cushion above it is upholstery and the badge never crosses the piping.
+      const y = (yBottom + yTop) / 2;
+      const badgeGeo = new THREE.PlaneGeometry(bw, bh);
+      disposables.push({ dispose: () => badgeGeo.dispose() });
+      // depthWrite off and a negative polygon offset so it sits on the fabric
+      // without z-fighting it; the tiny push along the face covers the wall's
+      // own displacement.
+      const mkBadge = () => {
+        const m = new THREE.MeshStandardMaterial({
+          map: badgeTex,
+          transparent: true,
+          roughness: 0.88,
+          metalness: 0,
+          depthWrite: false,
+          polygonOffset: true,
+          polygonOffsetFactor: -2,
+          polygonOffsetUnits: -2,
+        });
+        badgeMats.push(m);
+        return m;
+      };
+      const front = new THREE.Mesh(badgeGeo, mkBadge());
+      front.position.set(0, y, L / 2 + 0.05);
+      const back = new THREE.Mesh(badgeGeo, mkBadge());
+      back.position.set(0, y, -L / 2 - 0.05);
+      back.rotation.y = Math.PI;
+      // Children of the box, so they inherit its visibility and its transform
+      // through both the explode cross-fade and the entrance scale.
+      box.add(front);
+      box.add(back);
+    }
+
     // The flat cap goes up first and the sculpted one replaces it once the
     // height field has decoded. The card-to-viewer transition is waiting on the
     // first real frame, and making it wait on an image decode as well would
@@ -488,7 +472,6 @@ export default function MattressViewer({
         quality,
         productTop: topMatOpts,
         productBottomMap: bottom,
-        productSideMap: sideTex,
         maxAnisotropy,
       }))
         .then((built) => {
@@ -731,6 +714,9 @@ export default function MattressViewer({
           m.opacity = 1 - reveal;
           m.depthWrite = reveal < 0.5;
         });
+        // The badge is already transparent and already never writes depth, so
+        // it only needs its opacity carried along with the surface it is on.
+        badgeMats.forEach((m) => { m.opacity = 1 - reveal; });
       }
 
       const hoverStep = Math.min(1, dt / 150);
@@ -947,6 +933,7 @@ export default function MattressViewer({
       topMat.dispose();
       wallMat.dispose();
       bottomMat.dispose();
+      badgeMats.forEach((m) => m.dispose());
       seamMat.dispose();
       shadowTex.dispose();
       shadow.geometry.dispose();
@@ -1248,140 +1235,6 @@ export default function MattressViewer({
         </div>
       </div>
 
-      <style>{`
-        /* Sizing lives here rather than inline so the phone breakpoints can
-           actually win - an inline style would outrank every media query. */
-        .mv-root {
-          -webkit-tap-highlight-color: transparent;
-          overscroll-behavior: none;
-        }
-        .mv-back {
-          position: absolute;
-          top: calc(18px + env(safe-area-inset-top));
-          left: calc(18px + env(safe-area-inset-left));
-          font-size: 12px;
-          padding: 6px 12px;
-          border-radius: 100px;
-        }
-        .mv-head {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 10px;
-          padding: calc(28px + env(safe-area-inset-top)) 20px 0;
-          text-align: center;
-        }
-        .mv-title {
-          font-size: 34px;
-          letter-spacing: 0.22em;
-          /* The wordmark is set very wide; on a narrow phone that is what
-             overflows first, so the tracking gives way before the size does. */
-          text-indent: 0.22em;
-        }
-        .mv-stage-tint {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          transition: opacity 420ms ease;
-        }
-        .mv-label { font-size: 10.5px; }
-        .mv-card {
-          position: absolute;
-          left: 18px;
-          bottom: 18px;
-          max-width: 320px;
-          border-radius: 16px;
-          padding: 16px 18px 18px;
-          cursor: pointer;
-        }
-        .mv-controls {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 14px;
-          padding: 0 20px calc(26px + env(safe-area-inset-bottom));
-        }
-        .mv-btnrow { display: flex; gap: 8px; align-items: center; }
-        .mv-btn-sep {
-          flex: none;
-          width: 1px;
-          align-self: stretch;
-          margin: 4px 4px;
-          background: currentColor;
-          opacity: 0.16;
-        }
-        .mv-hint { font-size: 11.5px; font-weight: 300; letter-spacing: 0.03em; }
-        .mv-view-btn {
-          font-family: inherit;
-          font-size: 12px;
-          font-weight: 500;
-          letter-spacing: 0.02em;
-          padding: 8px 15px;
-          border-radius: 100px;
-          border: 1px solid transparent;
-          cursor: pointer;
-          transition: all 0.25s ease;
-          background: var(--mv-btn-bg);
-          color: var(--mv-btn-color);
-          white-space: nowrap;
-        }
-        .mv-view-btn[data-active="true"] {
-          background: var(--mv-btn-active-bg);
-          color: var(--mv-btn-active-color);
-        }
-
-        /* Phones. Six view buttons never fit one line at 390px, so the row
-           scrolls sideways instead of wrapping into a ragged block or pushing
-           the canvas off-screen. */
-        @media (max-width: 620px) {
-          .mv-head { gap: 7px; padding-top: calc(16px + env(safe-area-inset-top)); }
-          .mv-title { font-size: clamp(20px, 6.4vw, 30px); letter-spacing: 0.13em; text-indent: 0.13em; }
-          .mv-hint { font-size: 10.5px; }
-          .mv-controls { gap: 10px; padding: 0 0 calc(14px + env(safe-area-inset-bottom)); }
-          .mv-btnrow {
-            width: 100%;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
-            scroll-snap-type: x proximity;
-            padding: 2px calc(16px + env(safe-area-inset-left)) 2px calc(16px + env(safe-area-inset-right));
-            justify-content: flex-start;
-          }
-          .mv-btnrow::-webkit-scrollbar { display: none; }
-          .mv-view-btn {
-            scroll-snap-align: center;
-            /* Comfortable thumb target - 8px/15px lands well under 44px. */
-            min-height: 44px;
-            padding: 8px 17px;
-            font-size: 12.5px;
-          }
-          .mv-label { font-size: 9.5px; letter-spacing: 0.07em; padding: 3px 9px !important; }
-          /* The floating card covers the model on a narrow screen; as a bottom
-             sheet it sits under it instead. */
-          .mv-card {
-            left: 12px;
-            right: 12px;
-            bottom: 12px;
-            max-width: none;
-            border-radius: 18px;
-            padding: 14px 16px 16px;
-          }
-        }
-
-        /* Landscape phones: almost no vertical room, so the header collapses to
-           the wordmark and the stage keeps the rest. */
-        @media (max-height: 480px) and (orientation: landscape) {
-          .mv-head { padding-top: calc(10px + env(safe-area-inset-top)); gap: 4px; }
-          .mv-head img { height: 22px; }
-          .mv-title { font-size: 20px; letter-spacing: 0.1em; text-indent: 0.1em; }
-          .mv-hint { display: none; }
-          .mv-controls { padding-bottom: calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .mv-stage-tint { transition: none; }
-        }
-      `}</style>
     </div>
   );
 }

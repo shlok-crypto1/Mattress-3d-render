@@ -545,5 +545,10 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
   // derived from that photo can be sampled in the same frame of reference.
   geo.userData.cushW = cushW;
   geo.userData.cushL = cushL;
+  // Vertical extent of the base wall - the plain band under the piping. A woven
+  // brand badge belongs on this band and nowhere else, and the proportions that
+  // decide where it starts and stops are solved here, so a caller placing one
+  // should read them off rather than re-deriving them from H.
+  geo.userData.baseWall = { yBottom: yBot, yTop: yChamfer };
   return geo;
 }
