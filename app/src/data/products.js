@@ -57,14 +57,18 @@ export const products = [
     name: 'Magic',
     specLine: {
       variant: 'Memory Foam',
-      thickness: '6″ Memory Foam',
+      thickness: '5″ Memory Foam',
       warranty: '10-Year Warranty',
     },
-    dimensions: { width: 72, length: 72, height: 6 },
+    // 5", confirmed by the product owner. The 6" this carried was never a
+    // confirmed figure - PRODUCT_CATALOG.md had Magic's dimensions as TBD - and
+    // the layer proportions in vedasleepLayers.js are solved against 5".
+    dimensions: { width: 72, length: 72, height: 5 },
     constructionDetail: '',
     // SPEC CHANGE: Magic used to be described as a single uniform Float Sense
     // Foam core with no internal layer divisions. That is superseded - it is a
-    // multi-band construction now, same band shape as Maxa and Signature.
+    // multi-band construction now. Its band proportions are its own, no longer
+    // the shared Maxa/Signature template.
     layers: vedasleepLayersBySlug.magic,
     textures: {
       top: '/textures/magic/top.png',
