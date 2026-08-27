@@ -14,6 +14,19 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-27 — Luma gains the blue comfort band its top grade always had
+- **Changed:**
+  - **A band was missing.** `LUMA LUXURY.png` shows eight bands; this repository's Luma stack had seven and no blue comfort foam at all, so the product's own top grade could never have rendered correctly. The blue band is added at layer 3 and **Luxury alone carries it** - Premium 8″ and Classic 6″ drop it, which is what the other two renders show.
+  - **Every band below it renumbered.** Numbering follows position in the full stack, the same as every other product, so Luma's spring unit now reads **Layer 6** rather than Layer 5. The product owner referred to it as layer 5, which is what it was in the seven-band stack; it is the same band either way.
+  - **The new band's proportion is solved, not chosen.** The rule given was that Luxury's spring unit matches Premium's. With the other seven ratios summing to 0.95, that fixes the blue band at 0.2375 - which makes it exactly 2.00″ and leaves every other band in Luxury the identical thickness it has in Premium. Luxury is therefore exactly Premium plus this one layer, which is what the renders show. Classic's spring unit lands 33% shorter than Premium's, the visible difference that was asked for.
+  - **Its colour is not a new value.** Sampled off the render, Luma's blue lands within a few points of Resto's blue sampled the same way from the same set, so it takes `#29B6DC`, the albedo already established for that foam, rather than introducing a second near-identical blue.
+- **Reason:** Product owner, 2026-08-27. The instruction named "layer 3 in luxury", which was ambiguous until the render set showed Luxury carrying a band the code had no equivalent for; the product owner confirmed it is the blue one.
+- **Files/areas:** `app/src/data/layers/foamicoLayers.js`, `app/src/data/foamicoProducts.js`, `docs/PRODUCT_CATALOG.md`.
+- **Impact:** Luma Luxury renders eight bands where it rendered seven, and Classic and Premium render the same seven as before minus the blue - so all three grades change. No other product is affected.
+- **Validation:** Proportions solved and checked to sum exactly to each declared height, with Luxury's and Premium's spring units equal to within a thousandth of an inch and every other band identical between them. Verified in a browser: Luxury shows layers 1-7 + base, Premium and Classic show 1, 2, 4, 5, 6, 7 + base with the gap at 3. Console, `oxlint` and `vite build` clean.
+
+---
+
 ### 2026-08-27 — Sova, Ultima and Riva build their grades from different stacks
 - **Changed:**
   - **Sova** - Premium 6.5″ drops layer 3; Classic 6″ and Classic 5″ drop layers 3 and 4. The product owner gave one rule for "sova classic" and Sova presents two Classic heights, so both take it.
