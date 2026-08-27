@@ -31,7 +31,8 @@ These are the fixed values for both brands presented by this project. Do not int
 | Token | Value | Usage |
 |---|---|---|
 | Veda Gold | `#C77D11` | The one color exclusive to VedaSleep — headers, kickers, active states, CTAs, highlight chips. Reserved: never use on FOAMICO material, never use for anything unrelated to VedaSleep. |
-| Paper | `#F7F5F0` | Light background/surface option. Warmed from `#F6F8F1` on 2026-08-27 at the product owner's request; it is one token, so the card grid, the product pages, the page ground, the route-loading holding screen and the VedaSleep panel on the brand selector all carry the same value and cannot drift apart. |
+| Stage Grey | `#D3D3D3` | The ground of the two VedaSleep pages that show product: the card grid and the product pages. Added 2026-08-27 at the product owner's explicit instruction. It exists because VedaSleep's mattresses are near-white tickings photographed on a white sweep, and on Paper they had almost no ground to read against — a product surface is a stage, and a stage is not the same thing as a page. The route-loading holding screen takes it too, since every VedaSleep route that reaches it is one of those two pages and a cream flash before a grey page is the flash that screen exists to prevent. |
+| Paper | `#F7F5F0` | Light background/surface option, and the VedaSleep ground everywhere that is **not** a product stage — the page ground and the VedaSleep panel on the brand selector. Warmed from `#F6F8F1` on 2026-08-27 at the product owner's request. |
 | Egg White | `#FEFEFE` | Light background/surface option (alt) |
 | Key Black | `#1A1A1A` | Primary text on light backgrounds |
 | Slate Grey | `#6B6B6B` | Secondary/body text on light backgrounds |
@@ -80,6 +81,7 @@ whole point of the brand selector.
 
 ## 3D presentation
 - Keep the mattress visually dominant.
+- **A product must have a ground to read against, and that is the stage's job, not the light's.** Both brands met this from opposite directions on 2026-08-27. FOAMICO's Riva - whose border is a charcoal non-woven that photographs at Key Black - vanished into Key Black, rendering as a one-inch white pancake where nine inches of mattress should be; no lighting fixes that, because a matte fabric's diffuse response cannot exceed its own albedo, so the FOAMICO viewer carries a soft pool of Egg White behind the model instead. On the VedaSleep side the product owner moved the two product-facing pages to Stage Grey, where near-white tickings separate as they never quite did on Paper. Both are tints of existing tokens, and both are the thing a studio does when it photographs something the same tone as its background.
 - Maintain consistent scale and framing between product states.
 - Avoid camera changes that make products appear inconsistently sized unless intentional.
 - Material realism rules (physically plausible response, avoiding flat colors) are owned by `docs/MATERIALS_AND_TEXTURES.md` — this file does not restate them, only affirms that visual design depends on getting them right.

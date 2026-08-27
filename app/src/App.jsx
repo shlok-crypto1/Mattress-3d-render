@@ -31,7 +31,10 @@ const SofaCumBedPage = lazy(() => import('./pages/foamico/SofaCumBedPage'));
 // is that landing anywhere loads only what that page needs.
 const CHROME = {
   foamico: { bg: '#1A1A1A', ink: '#FEFEFE', dim: '#8f8f8f', accent: '#95C12B', word: 'FOAMICO' },
-  vedasleep: { bg: '#F7F5F0', ink: '#2b2b2b', dim: '#8a8a8e', accent: '#c77d11', word: 'VEDASLEEP' },
+  // Every VedaSleep route that reaches this fallback is either the card grid
+  // or a product page, and both of those are stage grey - so the holding
+  // screen is too, or each navigation flashes cream before settling.
+  vedasleep: { bg: '#D3D3D3', ink: '#2b2b2b', dim: '#8a8a8e', accent: '#c77d11', word: 'VEDASLEEP' },
 };
 
 /** Brand and product implied by a route, for chrome that renders before it. */

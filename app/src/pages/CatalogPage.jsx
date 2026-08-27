@@ -35,8 +35,10 @@ export default function CatalogPage() {
       style={{
         position: 'relative',
         minHeight: '100dvh',
+        // Stage grey, matching the product pages this grid opens into - see
+        // the note in src/data/brandThemes.js.
         background:
-          'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(199,125,17,0.06) 0%, rgba(199,125,17,0) 60%), #F7F5F0',
+          'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(199,125,17,0.06) 0%, rgba(199,125,17,0) 60%), #D3D3D3',
         padding: '48px 24px 64px',
         ...recede,
       }}

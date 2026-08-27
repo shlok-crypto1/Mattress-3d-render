@@ -25,8 +25,34 @@ const EXPLODE_SCALE = 0.55; // shrink the group so the taller stack stays framed
 const HOVER_LIFT = 1.15;
 const HOVER_SCALE = 0.02;
 const HOVER_GLOW = 0.5;
+// Time constant of the camera damper. An exponential settle is within 1% of
+// its target after ln(100) time constants, so dividing MOTION.camera by 4.6
+// makes "a camera move takes MOTION.camera" true of a damper as well as of a
+// tween - which is what that entry in the motion table always claimed.
+const CAMERA_TAU = MOTION.camera / 4.6;
 
 const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
+/**
+ * The explode's own curve, and the reason it is not `easeOutCubic`.
+ *
+ * The stack's separation used to be `easeOutCubic` of a linearly advancing
+ * clock, which is right in one direction and backwards in the other. Opening,
+ * the bands leave briskly and ease into place. Closing, the same curve is
+ * traversed in reverse - so they drift at first and then cover the last 27% of
+ * their travel in the final 70ms, arriving at full speed. A collapse that
+ * slams shut is exactly what "not smooth" describes, and it contradicts the
+ * motion system's own rule that everything which arrives decelerates
+ * (`EASE.enter` in src/lib/motion.js).
+ *
+ * A curve that is flat at both ends fixes it in both directions at once, and -
+ * unlike picking the easing from the direction of travel - it stays a pure
+ * function of the clock, so reversing mid-flight cannot make a position jump.
+ * Its slope peaks at 2 in the middle, so the gesture keeps its pace; it just
+ * no longer starts or ends at a wall. This also makes exploding and collapsing
+ * genuinely mirror-symmetric in time, which is what
+ * docs/3D_RENDER_GUIDELINES.md asks of them.
+ */
+const easeExplode = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
 // [key, label, theta, phi, dist]. `dist` is optional; without it a preset keeps
 // the framing the viewer picks for the mount size.
@@ -427,7 +453,9 @@ export default function MattressViewer({
     const sculptOpts = {
       ...euroOpts,
       sideSegs: Math.max(8, Math.round(26 * quality)),
-      capRings: Math.max(12, Math.round(34 * quality)),
+      // Raised with the narrowed edge taper in mattressGeometry.js: the ramp
+      // into the binding is only as smooth as the rings that carry it.
+      capRings: Math.max(12, Math.round(44 * quality)),
       edgeCompression: quiltCfg.edgeCompression,
     };
     const geometry = buildEuroTopGeometry(W, H, L, euroOpts);
@@ -514,8 +542,8 @@ export default function MattressViewer({
     /** Re-cut the cap's relief for the box's current height. */
     const applySculpt = () => {
       if (!quiltMapsReady || disposed) return;
-      const { cushW, cushL } = box.geometry.userData;
-      const displace = quiltDisplacer(quiltMapsReady, cushW, cushL, H);
+      const { cushW, cushL, cushionH } = box.geometry.userData;
+      const displace = quiltDisplacer(quiltMapsReady, cushW, cushL, cushionH);
       const sculpted = buildEuroTopGeometry(W, H, L, { ...sculptOpts, displace });
       if (stitch) {
         box.remove(stitch);
@@ -917,9 +945,28 @@ export default function MattressViewer({
     el.addEventListener('pointerleave', onPointerLeave);
     el.addEventListener('wheel', onWheel, { passive: false });
 
+    // Stage box and label widths, measured here and nowhere else.
+    //
+    // Both used to be read inside the per-frame label loop - a
+    // getBoundingClientRect and an offsetWidth per visible band, each one
+    // preceded by style writes to the band before it. That is a forced
+    // synchronous layout per label per frame, and with the writes in between
+    // the browser cannot batch them: eight bands meant eight layouts a frame,
+    // every frame of the explode and of every grade change. It is the reason
+    // those two transitions stuttered while the camera, which touches no DOM,
+    // did not.
+    //
+    // The canvas fills the mount, so clientWidth/clientHeight are the same
+    // numbers the rect carried. Label widths are cached against the text that
+    // was measured and re-measured when the stage resizes, because the phone
+    // breakpoints change .mv-label's type size.
+    let stageW = 0, stageH = 0, labelEpoch = 0;
     const resize = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
       if (!w || !h) return;
+      stageW = w;
+      stageH = h;
+      labelEpoch += 1;
       renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
@@ -936,12 +983,7 @@ export default function MattressViewer({
     s.idle = performance.now();
 
     const projected = new THREE.Vector3();
-    const updateLayers = () => {
-      // Time-based, not per-frame: the transition must last EXPLODE_MS whatever
-      // the refresh rate (and headless/throttled tabs run far below 60fps).
-      const now = performance.now();
-      const dt = Math.min(64, now - (explodeLast ?? now));
-      explodeLast = now;
+    const updateLayers = (dt) => {
       // One clock for both timelines. The grade morph runs first because
       // everything below multiplies the fade it publishes.
       let moving = advanceMorph(dt);
@@ -991,7 +1033,7 @@ export default function MattressViewer({
       const span = 1 - (n - 1) * LAYER_STAGGER;
       // Dollying in makes the stack overflow the frame, so the group shrinks as
       // it separates - the mattress keeps its apparent size while gaining height.
-      const eT = easeOutCubic(T);
+      const eT = easeExplode(T);
       const gs = 1 - (1 - EXPLODE_SCALE) * eT;
       group.scale.setScalar(gs);
       s.groupScale = gs;
@@ -1007,7 +1049,7 @@ export default function MattressViewer({
       const labelEls = labelsRef.current ? labelsRef.current.children : [];
       layers.forEach((l, i) => {
         const lt = Math.max(0, Math.min(1, (T - i * LAYER_STAGGER) / span));
-        const e = easeOutCubic(lt);
+        const e = easeExplode(lt);
 
         // Hover glow in the brand accent, eased so a fast pointer sweep reads as
         // a wash across the stack rather than a flicker.
@@ -1036,7 +1078,7 @@ export default function MattressViewer({
           const below = layers[i + 1];
           const belowTop =
             below.restY +
-            easeOutCubic(Math.max(0, Math.min(1, (T - (i + 1) * LAYER_STAGGER) / span))) * below.explodeDy * sp +
+            easeExplode(Math.max(0, Math.min(1, (T - (i + 1) * LAYER_STAGGER) / span))) * below.explodeDy * sp +
             below.hoverT * HOVER_LIFT +
             below.h / 2;
           const sep = l.object.position.y - l.h / 2 - belowTop;
@@ -1074,24 +1116,29 @@ export default function MattressViewer({
               if (projected.x > bestX) { bestX = projected.x; bestY = projected.y; }
               if (projected.x < leftX) { leftX = projected.x; leftY = projected.y; }
             }
-            const r = el.getBoundingClientRect();
             el2.style.visibility = 'visible';
             el2.style.opacity = String(fade);
             // Labels ride the right corner by default, but a narrow viewport
             // ran them off the edge and clipped the layer names. Hang them off
             // the left corner instead when the right has no room, and clamp so
             // one never leaves the canvas.
-            const lw = el2.offsetWidth;
+            let lw = el2._mvWidth;
+            if (lw === undefined || el2._mvWidthFor !== el2.textContent || el2._mvWidthEpoch !== labelEpoch) {
+              lw = el2.offsetWidth;
+              el2._mvWidth = lw;
+              el2._mvWidthFor = el2.textContent;
+              el2._mvWidthEpoch = labelEpoch;
+            }
             const GAP = 14, EDGE = 8;
-            let lx = ((bestX + 1) / 2) * r.width + GAP;
-            let ly = ((1 - bestY) / 2) * r.height;
-            if (lx + lw > r.width - EDGE) {
-              const flipped = ((leftX + 1) / 2) * r.width - GAP - lw;
+            let lx = ((bestX + 1) / 2) * stageW + GAP;
+            let ly = ((1 - bestY) / 2) * stageH;
+            if (lx + lw > stageW - EDGE) {
+              const flipped = ((leftX + 1) / 2) * stageW - GAP - lw;
               if (flipped >= EDGE) {
                 lx = flipped;
-                ly = ((1 - leftY) / 2) * r.height;
+                ly = ((1 - leftY) / 2) * stageH;
               } else {
-                lx = Math.max(EDGE, r.width - EDGE - lw);
+                lx = Math.max(EDGE, stageW - EDGE - lw);
               }
             }
             el2.style.transform = `translate(${lx}px, ${ly}px) translateY(-50%)`;
@@ -1103,11 +1150,26 @@ export default function MattressViewer({
 
     const tick = () => {
       s.raf = requestAnimationFrame(tick);
-      if (s.autoRotate && pointers.size === 0 && s.idle > 0 && performance.now() - s.idle > 3000 && !s.exploded) {
-        s.tTheta += 0.0018;
+      // One clock for the whole frame. Time-based, not per-frame: a transition
+      // must last as long as it says it does whatever the refresh rate, and a
+      // headless or throttled tab runs far below 60fps. Capped so a tab
+      // returning from the background does not jump every timeline to its end.
+      const now = performance.now();
+      const dt = Math.min(64, now - (explodeLast ?? now));
+      explodeLast = now;
+      if (s.autoRotate && pointers.size === 0 && s.idle > 0 && now - s.idle > 3000 && !s.exploded) {
+        // 0.0018 rad per frame at 60fps, expressed as the rate it always was.
+        s.tTheta += 0.108 * (dt / 1000);
       }
-      const k = 0.08;
-      const layersMoving = updateLayers();
+      // Exponential damper, on the clock rather than on the frame. It used to
+      // be a flat 0.08 of the remaining distance per frame, which makes the
+      // camera converge at whatever rate the display happens to run at - twice
+      // as fast on a 120Hz panel as on a 60Hz one, and visibly slowing down
+      // and speeding up again through any frame drop. Same feel, now the same
+      // feel everywhere: tau is set so the move has settled to within 1% by
+      // MOTION.camera, which reproduces 0.08-per-frame exactly at 60fps.
+      const k = 1 - Math.exp(-dt / CAMERA_TAU);
+      const layersMoving = updateLayers(dt);
       if (
         Math.abs(s.tTheta - s.theta) > 1e-4 ||
         Math.abs(s.tPhi - s.phi) > 1e-4 ||
@@ -1368,12 +1430,10 @@ export default function MattressViewer({
         '--mv-menu-border': t.cardBorder,
         '--mv-menu-shadow': t.cardShadow,
         '--mv-menu-color': t.text,
-        // Natural's gold is the grade's own colour, not the brand's - see the
-        // note on .mv-variant-item[data-natural] in index.css.
-        '--mv-natural': '#D9B25A',
-        '--mv-natural-soft': 'rgba(217,178,90,0.13)',
-        '--mv-natural-hover': 'rgba(217,178,90,0.22)',
-        '--mv-natural-border': 'rgba(217,178,90,0.42)',
+        // Natural's Kiwi Green is the grade's own mark, not the brand's - see
+        // the note on .mv-variant-item[data-natural] in index.css. One value:
+        // the grade is marked by type colour and nothing else now.
+        '--mv-natural': '#95C12B',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         overflow: 'hidden',
@@ -1430,7 +1490,6 @@ export default function MattressViewer({
                 ref={variantButtonRef}
                 type="button"
                 className="mv-variant-pill"
-                data-natural={isNatural(activeVariant)}
                 aria-expanded={variantMenuOpen}
                 aria-controls={variantMenuId}
                 onClick={() => setVariantMenuOpen((open) => !open)}
@@ -1441,7 +1500,7 @@ export default function MattressViewer({
                 <span className="mv-variant-caret" aria-hidden="true" />
               </button>
             ) : (
-              <span className="mv-variant-pill" data-natural={isNatural(activeVariant)}>
+              <span className="mv-variant-pill">
                 {variantLabel(activeVariant)}
               </span>
             )}
@@ -1470,6 +1529,14 @@ export default function MattressViewer({
       </div>
 
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+        {/* Two pools, and they do different jobs. The ground is always on and
+            is what gives a dark-bordered product a silhouette against a dark
+            stage - see the note in src/data/brandThemes.js. The tint fades in
+            with the explode and shades an open stack. Both sit behind the
+            canvas, which is drawn with alpha. */}
+        {t.stageGround ? (
+          <div aria-hidden className="mv-stage-ground" style={{ background: t.stageGround }} />
+        ) : null}
         {hasLayers && t.stageTint ? (
           <div aria-hidden className="mv-stage-tint" style={{ background: t.stageTint, opacity: exploded ? 1 : 0 }} />
         ) : null}

@@ -18,10 +18,25 @@ const cache = new Map();
 
 /** Sensible for every product in the catalogue; overridable per product. */
 export const QUILT_DEFAULTS = {
-  // Puff height as a fraction of mattress thickness. The spec's starting point
-  // is 0.008; that is invisible at this scale, and the value below is what
-  // actually reads as padding without tipping into the inflated-balloon look.
-  depth: 0.04,
+  // Relief between a stitch channel and a cell crown, in mattress inches.
+  //
+  // It used to be a fraction of the mattress's total thickness, which says the
+  // wrong thing: the loft of a quilt panel belongs to the fabric and the
+  // wadding sewn into it, not to what is underneath. Read that way the same
+  // ticking puffed 0.24" on a 6" Classic and 0.40" on a 10" Luma - one product,
+  // two different quilts, and the difference showed on the silhouette every
+  // time a grade changed. Stated in inches it is one quilt at every grade, and
+  // it stays within a couple of hundredths of what a 7" mattress rendered
+  // before, so no product's cap moves noticeably from this alone.
+  depth: 0.3,
+  // ...capped against the quilted panel, so a shallow cushion cannot be
+  // swallowed by its own quilting.
+  depthMax: 0.35,
+  // Slope the cell domes carry into the normal map, as an RMS gradient -
+  // roughly tan of the typical tilt, so 0.22 is about 12 degrees typical and
+  // half again as much on the steepest wall of a cell. Referenced rather than
+  // fixed, for the reason spelled out where it is used.
+  puffRelief: 0.22,
   // How far the fabric is drawn down as it approaches the bound edge. Real
   // quilt panels are pulled tight where they are sewn to the border tape.
   edgeCompression: 0.35,
@@ -221,7 +236,53 @@ export function quiltMaps(key, img, opts = {}) {
   // a very busy one is calmed without being erased.
   const REFERENCE_SD = 0.1;
   const strength = 9 * Math.min(2.2, Math.max(0.45, REFERENCE_SD / Math.max(1e-4, sd)));
-  const normal = normalFromHeight(fine.data, fine.w, strength, fine.h);
+
+  // The cells have to be in here too, not only in the geometry.
+  //
+  // The bump photo is flat-fielded, so on its own this map carried thread and
+  // weave and nothing at the scale of a quilt cell - every dome lived in the
+  // cap tessellation alone. That is about a third of an inch of relief across
+  // six feet of mattress: two or three pixels on screen, and none at all on a
+  // grid card. So the pattern was lit as though it were printed on a flat
+  // sheet, which is exactly what a quilt must not look like. Folding the puff
+  // field into the same height map gives every cell a dome that shades at any
+  // distance, from the same reconstruction the geometry already uses - no
+  // second guess at where the cells are.
+  //
+  // Referenced, not fixed, for the same reason `strength` is: the puff's own
+  // gradient depends on how big that product's cells are, and `strength` has
+  // already been set by the ticking's contrast. Measuring the slope the puff
+  // actually produces and solving back for the scale that lands it on
+  // `puffRelief` is what makes one number right for a lattice as coarse as
+  // Riva's and one as busy as Resto's.
+  const combined = fine.data.slice();
+  {
+    const { w, h } = fine;
+    // RMS of the central difference `normalFromHeight` is about to take,
+    // measured on the coarse field and referred to the fine one. Bilinear
+    // upsampling leaves the slope per unit distance alone, so the per-pixel
+    // gradient simply divides by the scale factor - which beats walking a
+    // megapixel twice just to arrive at one number.
+    const gk = coarse.w / w;
+    const at = (x, y) => puff[(((y % coarse.h) + coarse.h) % coarse.h) * coarse.w + (((x % coarse.w) + coarse.w) % coarse.w)];
+    let acc = 0;
+    for (let y = 0; y < coarse.h; y++) {
+      for (let x = 0; x < coarse.w; x++) {
+        const gx = at(x + 1, y) - at(x - 1, y);
+        const gy = at(x, y + 1) - at(x, y - 1);
+        acc += gx * gx + gy * gy;
+      }
+    }
+    const gradRms = Math.sqrt(acc / (2 * coarse.w * coarse.h)) * gk;
+    const scale = cfg.puffRelief / Math.max(1e-6, gradRms * strength);
+    for (let y = 0; y < h; y++) {
+      const v = (y + 0.5) / h;
+      for (let x = 0; x < w; x++) {
+        combined[y * w + x] += sample(puff, coarse.w, coarse.h, (x + 0.5) / w, v) * scale;
+      }
+    }
+  }
+  const normal = normalFromHeight(combined, fine.w, strength, fine.h);
   normal.anisotropy = 8;
 
   // Roughness and occlusion share the channel structure: thread and the
@@ -317,15 +378,26 @@ export function buildEdgeStitch(edge, { radius = 0.03, color, segments = 6 } = {
  * A `displace(x, z) -> dy` for the geometry builders, in mattress units.
  *
  * `cushW`/`cushL` are the extent the quilt photo is mapped across, so the
- * relief lands exactly under the pattern that produced it.
+ * relief lands exactly under the pattern that produced it. `cushionH` is the
+ * quilted panel's own height - the thing the relief belongs to. All three are
+ * reported by `buildEuroTopGeometry` in the geometry's userData, so a caller
+ * reads them off the cap it is about to sculpt rather than re-deriving them.
  */
-export function quiltDisplacer(maps, cushW, cushL, thickness) {
+export function quiltDisplacer(maps, cushW, cushL, cushionH) {
   const { puff, puffW, puffH, cfg } = maps;
-  const amp = thickness * cfg.depth;
+  const amp = Math.min(cfg.depth, cushionH * cfg.depthMax);
   // Referenced to the mean so the panel puffs and pinches around its original
   // height instead of the whole cap floating upward.
   let mean = 0;
   for (let i = 0; i < puff.length; i++) mean += puff[i];
   mean /= puff.length;
-  return (x, z) => (sample(puff, puffW, puffH, x / cushW + 0.5, z / cushL + 0.5) - mean) * amp;
+  const displace = (x, z) =>
+    (sample(puff, puffW, puffH, x / cushW + 0.5, z / cushL + 0.5) - mean) * amp;
+  // The geometry builder needs the amplitude, not just a sample of it, to size
+  // the dip where the panel is drawn into its binding. It used to estimate it
+  // from `displace(0, 0)` - the relief at the exact centre of the mattress,
+  // which lands wherever that product's pattern happens to put it and is as
+  // likely to be a channel as a crown. Carried on the function instead.
+  displace.amp = amp;
+  return displace;
 }
