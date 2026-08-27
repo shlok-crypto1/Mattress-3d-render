@@ -14,6 +14,15 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-27 — The per-grade cutaway render set enters the repository
+- **Changed:** The product owner's 26 cutaway renders - one per product per grade - are committed at `Layers/`, at the repository root, because the set spans both brands and splitting it by brand would break the comparison that makes it useful. Names are as delivered. This supersedes the `Foamico mattresses/Natural/` folder added earlier the same day, whose three files were byte-identical duplicates of the Natural renders in the set; that folder is removed rather than left as a second copy.
+- **Reason:** It is the reference art the layer stacks are read from, and it was living outside the project. Having it in the repository is also what let the badge on `SOVA NATURAL.png` be settled on evidence.
+- **Files/areas:** `Layers/` (new, 26 files, ~52 MB), `Foamico mattresses/Natural/` (removed), `docs/ASSET_MANAGEMENT.md`, `docs/PRODUCT_CATALOG.md`.
+- **Impact:** Source only - nothing is processed into `app/public/`, nothing is referenced by the experience, and no product data is derived from it beyond Resto, which the product owner had already given and which `RESTO CLASSIC.png` and `RESTO PREMIUM.png` independently corroborate. Adds ~52 MB to the repository permanently, which is the cost of having the art versioned with the code that reads it. Three of the files are Signature, which is no longer a product; they are kept only because they came with the set, and the rule against re-adding Signature from its catalog entry alone applies to them too.
+- **Validation:** All 26 files checksum-verified against the originals after copying. The three Natural files confirmed byte-identical to the folder they replace, so nothing was lost in the swap.
+
+---
+
 ### 2026-08-27 — Resto's grades build different stacks, and Paper warms to #F7F5F0
 - **Changed:**
   - **Resto's grades are now different builds, not one build cut to three thicknesses.** Luxury 7″ is the full seven-band stack; **Premium 6.5″ drops layer 3**, and **Classic 6″ drops layers 3 and 4**. The base is present in every grade. A variant may now declare `omitLayers` - the ids it leaves out - which is subtractive on purpose: it is the direction the product is specified in, and a list of what is missing cannot accidentally drop the base the way a list of what is present could. Every other product declares nothing and gets its whole stack back by identity, so nothing else in either line changes.

@@ -45,42 +45,62 @@ Served assets live under `app/public/`. Anything outside it (`brand/`, `textures
 not shipped — the build only copies `app/public/`. When a source asset is brought
 into the experience it must be processed into `app/public/` and recorded here.
 
-### Source photography — Natural grade — `Foamico mattresses/Natural/`
+### Per-grade cutaway renders — `Layers/`
 
-Cutaway renders of the Natural grade, added 2026-08-27. **Source only** — nothing
-here is processed into `app/public/` or referenced by the experience yet, and no
-product data has been derived from them. Sova, Ultima and Riva already carry a
-Natural variant in their variant lists; these are the reference art for it.
+The product owner's cutaway render set, 26 files, added 2026-08-27. One render per
+product per grade, named `<PRODUCT> <GRADE>.png` exactly as delivered — the names are
+the product owner's and are not lowercased to match the naming section above, which
+governs production assets in `app/public/`, not source.
 
-| File | What it shows | Badge woven on the border |
-|---|---|---|
-| `ULTIMA NATURAL.png` | Bamboo-print cover, six bands, olive/sage border | `ULTIMA NATURAL` |
-| `RIVA NATURAL.png` | Bamboo-print cover, four bands, olive/sage border | `Natural` (grade only, no product name) |
-| `SOVA NATURAL.png` | White/grey patterned cover, seven bands including a speckled rebond core, grey/gold border | `ULTIMA NATURAL` |
+It sits at the repository root rather than inside `Foamico mattresses/` or
+`veda sleep mattresses/` because the set spans both brands and is one coherent thing:
+it is the reference art the layer stacks are read from, and splitting it by brand
+would break the comparison that makes it useful. It supersedes the short-lived
+`Foamico mattresses/Natural/` folder, whose three files were byte-identical
+duplicates of the Natural renders here.
 
-**Resolved 2026-08-27 — the file name is right and the badge is wrong.** The badge
-woven on the border in `SOVA NATURAL.png` reads `ULTIMA NATURAL`, which disagrees
-with the file's own name. The full per-grade render set the product owner supplied
-settles it on evidence rather than inference:
+**Source only.** Nothing here is processed into `app/public/` or referenced by the
+experience, and — apart from Resto, below — no product data is derived from it.
 
-- Every product wears its own border livery across its grades. Sova's is a **grey
-  border with tan/gold piping** under a **white cover with blue chevron
-  brushstrokes** — identical in `SOVA CLASSIC.png`, `SOVA LUXURY.png` and in the
-  mattress inside `SOVA NATURAL.png`. Ultima's is a **taupe border with cream
-  piping** under a **hexagon-quilted cover** (`ULTIMA LUXURY.png`), which the
-  disputed render does not have.
-- The disputed render also carries the perforated cream latex band that marks the
-  Natural grade in `ULTIMA NATURAL.png` and `RIVA NATURAL.png`.
-- 25 of the 26 renders badge exactly what their file name says. This is the one
-  outlier.
+| Product | Renders |
+|---|---|
+| Resto | `CLASSIC`, `PREMIUM`, `LUXURY` |
+| Sova | `CLASSIC`, `PREMIUM`, `LUXURY`, `NATURAL` |
+| Ultima | `CLASSIC`, `PREMIUM`, `LUXURY`, `NATURAL` |
+| Luma | `CLASSIC`, `PREMIUM`, `LUXURY` |
+| Riva | `RIVA 1K`, `RIVA 2K`, `RIVA 3K`, `RIVA NATURAL` — the R1000/R2000/R3000 ladder |
+| Duro | `CLASSIC`, `PREMIUM`, `LUXURY` |
+| Maxa, Magic | `MAXA.png`, `MAGIC.png` — one grade each, so no grade in the name |
+| Signature | `CLASSIC`, `PREMIUM`, `LUXURY` |
 
-So the mattress in `SOVA NATURAL.png` is a Sova, at the Natural grade, and the badge
-simply was not swapped when the render was produced. **The file keeps its name; the
-render needs redoing** so the badge reads `SOVA NATURAL`. Until it is, do not derive
-a badge texture from this file — the rest of it is sound.
+Three things to know before using it.
 
-Layer counts and colours above are described from the renders and are **not**
-confirmed construction; the foam details are still to come.
+**Resto is the only product read into code so far.** `RESTO CLASSIC.png` and
+`RESTO PREMIUM.png` corroborate the per-grade composition the product owner gave for
+Resto, and that composition is implemented. The set plainly implies the same is true
+elsewhere — `SOVA CLASSIC.png` has five bands against `SOVA LUXURY.png`'s seven — but
+that is a reading of reference art, not a statement from the product owner, so
+nothing outside Resto is implemented. See the cross-product rules in
+`docs/PRODUCT_CATALOG.md`; wait for the foam details.
+
+**Signature is not a product any more.** It was removed from the experience on
+2026-08-26 and its three renders are here only because they came with the set.
+`docs/PRODUCT_CATALOG.md` keeps its entry as a record and says not to re-add it from
+that entry alone; the same goes for these files.
+
+**One render has the wrong badge.** `SOVA NATURAL.png` is badged `ULTIMA NATURAL`.
+The set itself settles that this is a badge error rather than a naming error: each
+product wears its own border livery across its grades, and Sova's grey border with
+tan piping under a blue chevron cover is identical in `SOVA CLASSIC.png`,
+`SOVA LUXURY.png` and in the disputed render, while Ultima's taupe border and hexagon
+cover (`ULTIMA LUXURY.png`) are nothing like it. The disputed render also carries the
+perforated latex band that marks the Natural grade, and 25 of the 26 renders badge
+exactly what their file name says. **The file keeps its name; the render needs
+redoing** so the badge reads `SOVA NATURAL`. Until then, do not derive a badge
+texture from it — the rest of the render is sound.
+
+Layer counts and colours read off these renders are **not** confirmed construction.
+`docs/PRODUCT_CATALOG.md` remains the only authority for product facts.
 
 ### Brand marks — `app/public/brand/`
 
