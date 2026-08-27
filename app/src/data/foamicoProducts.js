@@ -16,8 +16,8 @@ const tex = (slug) => ({
 });
 
 // `quilt` is optional on every product and overrides QUILT_DEFAULTS in
-// src/lib/quiltSurface.js - depth, edgeCompression, normalScale, sheen,
-// roughness, stitchRadius, stitchTint. Left unset the defaults derive
+// src/lib/quiltSurface.js - depth, depthMax, puffRelief, edgeCompression,
+// normalScale, sheen, roughness, stitchRadius, stitchTint. Left unset the defaults derive
 // everything from the product's own top-bump.png, including normalising the
 // relief against that fabric's contrast, so a new product needs no tuning to
 // look right; this is here for the case where one genuinely wants to differ.

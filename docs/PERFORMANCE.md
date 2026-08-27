@@ -11,6 +11,11 @@
 
 ## Runtime
 - Avoid unnecessary per-frame calculations.
+- **Never read layout from inside a render loop.** `getBoundingClientRect` and
+  `offsetWidth` are the two that catch you, and reading either after writing a
+  style forces the browser to lay the page out on the spot. Measure on resize,
+  cache, and let the loop write only — the reasoning and the case that produced
+  the rule are in `docs/INTERACTIONS.md` § Animation.
 - Reuse materials and resources where appropriate.
 - Dispose of resources when no longer needed.
 - Avoid unnecessary React/component re-renders if applicable.

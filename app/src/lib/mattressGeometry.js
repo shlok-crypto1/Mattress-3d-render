@@ -451,8 +451,15 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
     const rings = displace ? Math.max(3, capRings) : 1;
     // Displacement fades out over the last slice of the cap so the panel meets
     // the bound edge flush, exactly as the sculpted foam caps do.
+    //
+    // 0.1 of the cap's radius is three and a half inches on a 72" mattress -
+    // a dead-flat border ring right where a viewer reads the silhouette, and
+    // wider than the strip a real panel is actually pulled flat over. Narrowed
+    // to the band the ring count can still resolve: `capRings` sets the ramp's
+    // step, so this cannot be tightened further without more of them.
+    const TAPER = 0.07;
     const taperAt = (t) => {
-      const k = Math.min(1, Math.max(0, (1 - t) / 0.1));
+      const k = Math.min(1, Math.max(0, (1 - t) / TAPER));
       return k * k * (3 - 2 * k);
     };
     // ...and just inside that, it is drawn slightly under. A quilt panel is
@@ -464,7 +471,7 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
       const s = Math.sin(Math.PI * k);
       return s * s;
     };
-    const dipAmp = edgeCompression * (displace ? Math.abs(displace(0, 0)) + 0.06 : 0);
+    const dipAmp = edgeCompression * (displace ? (displace.amp ?? Math.abs(displace(0, 0))) * 0.5 + 0.06 : 0);
     const heightAt = (x, z, t) =>
       displace ? hy + displace(x, z) * taperAt(t) - dipAmp * dipAt(t) : hy;
 
@@ -542,9 +549,11 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
   // running actual thread along.
   geo.userData.quiltEdge = capIn.pts.map((p) => ({ x: p.x, y: hy, z: p.z }));
   // The extent the quilt photo is mapped across, so a displacement field
-  // derived from that photo can be sampled in the same frame of reference.
+  // derived from that photo can be sampled in the same frame of reference -
+  // plus the panel's own height, which is what its relief is scaled against.
   geo.userData.cushW = cushW;
   geo.userData.cushL = cushL;
+  geo.userData.cushionH = cushionH;
   // Vertical extent of the base wall - the plain band under the piping. A woven
   // brand badge belongs on this band and nowhere else, and the proportions that
   // decide where it starts and stops are solved here, so a caller placing one

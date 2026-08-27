@@ -43,12 +43,21 @@ Three rules govern what that list shows:
   left out of it rather than repeated directly underneath itself.
 - **Thinnest first.** The list reads as a size ladder - 5″, 6″, 6.5″, 7″ - so a
   reader can scan it by thickness rather than by grade name.
-- **Natural is last, and looks different.** It is the premium grade of the
-  products that offer it, so it is pinned to the end whatever it measures and
-  reads in warm gold, separated by a hairline from the ladder above it. The
-  colour is fixed rather than brand-themed: it marks the grade, and on
-  VedaSleep - whose accent is already gold - a themed highlight would say
-  nothing. The pill takes the same gold while a Natural variant is selected.
+- **Natural is last, and it is marked by its colour alone.** It is the premium
+  grade of the products that offer it, so it is pinned to the end whatever it
+  measures, separated by a hairline from the ladder above it, and set in Kiwi
+  Green where that ladder is set in the menu's own ink. It carried a filled
+  highlight until 2026-08-27 - a warm gold wash, a tinted border and heavier
+  type, on the row and on the pill both - which the product owner removed: a
+  filled row inside a list of unfilled ones reads as a selected state rather
+  than as a grade, and one green word among white ones already says "a
+  different kind of choice". The pill takes no Natural treatment at all now.
+  The hairline is not part of the highlight and stays; it is what makes "pinned
+  to the end" read as an order rather than as an odd sort. The colour is fixed
+  rather than brand-themed because it marks the grade, not the brand - and only
+  FOAMICO products offer Natural, so it never puts Kiwi Green on a VedaSleep
+  screen. Re-check that against the brand-mixing rule in
+  `guidelines/DESIGN_GUIDELINES.md` if VedaSleep ever gains a Natural grade.
 
 Which variant a page opens on is the product's baseline - its top grade - and
 which variants a product presents at all are product-data questions owned by
@@ -90,6 +99,27 @@ Animations should:
 - avoid excessive duration
 - remain usable on lower-powered devices
 - respect `prefers-reduced-motion` — reduce to fast, functional transitions with no decorative movement when the user has this preference set
+
+Two rules about *how* they are driven, both learned the hard way:
+
+- **Run every timeline off the clock, never off the frame.** A per-frame step is
+  a different animation on every display: the camera's damper took a flat 8% of
+  the remaining distance each frame, which converges twice as fast on a 120Hz
+  panel as on a 60Hz one and visibly slows down and speeds up again through any
+  dropped frame. The idle auto-orbit had the same shape. Both now advance on the
+  frame's own `dt`, and durations are stated in `src/lib/motion.js` in
+  milliseconds, so a move takes as long as the table says it does everywhere.
+  For a damper that means a time constant rather than a per-frame fraction —
+  `MOTION.camera / 4.6`, an exponential settle being within 1% after ln(100)
+  time constants.
+- **Never read layout inside an animation loop.** Reading
+  `getBoundingClientRect` or `offsetWidth` after writing a style forces the
+  browser to lay the page out again then and there, and it cannot batch the
+  work. The layer labels did exactly that once per band per frame — eight forced
+  layouts a frame through the whole explode and every grade change, and none at
+  all in the camera path, which is the shape of "the explode is rough and the
+  orbit is fine". Measure on resize, cache against what was measured, and let
+  the loop write only.
 
 ## Accessibility
 Where UI controls exist, use semantic controls, visible focus states, labels, and keyboard-accessible actions.

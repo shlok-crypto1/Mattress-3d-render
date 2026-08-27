@@ -174,28 +174,25 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
   transition: background 200ms ease;
 }
 .mv-variant-item:hover { background: var(--mv-btn-bg); }
-/* Natural is the premium grade of the three products that offer it, and reads
-   in warm gold rather than in the brand accent so it is legible as a different
-   kind of choice from the thickness ladder above it. The colour is fixed
-   rather than themed: it is the grade's own mark, and on VedaSleep - whose
-   accent is already gold - a themed highlight would say nothing. The rule
-   above it separates it from the ladder it is pinned below. */
+/* Natural is the premium grade of the three products that offer it, and it is
+   marked by its colour alone - Kiwi Green type where the ladder above it is
+   set in the menu's own ink. The filled highlight it used to carry (a warm
+   gold wash, a tinted border and heavier type, on the item and on the pill
+   both) was removed on 2026-08-27 at the product owner's instruction: one
+   green word among white ones is enough to say "different kind of choice",
+   and a filled row inside a list of unfilled ones read as a selected state
+   rather than as a grade.
+
+   The hairline stays. It is not the highlight - it is what makes "Natural is
+   pinned to the end" legible as an order rather than as an odd sort. And so
+   does the colour being fixed rather than brand-themed: it marks the grade,
+   not the brand. Only FOAMICO products offer Natural, so Kiwi Green never
+   meets Veda Gold on a screen here - see the brand-mixing rule in
+   guidelines/DESIGN_GUIDELINES.md. Re-check that if VedaSleep ever gains a
+   Natural grade. */
 .mv-variant-item[data-natural="true"] {
   color: var(--mv-natural);
-  background: var(--mv-natural-soft);
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  border-top: 1px solid var(--mv-natural-border);
-}
-.mv-variant-item[data-natural="true"]:hover { background: var(--mv-natural-hover); }
-.mv-variant-pill[data-natural="true"] {
-  color: var(--mv-natural);
-  background: var(--mv-natural-soft);
-  border-color: var(--mv-natural-border);
-}
-button.mv-variant-pill[data-natural="true"]:hover,
-button.mv-variant-pill[data-natural="true"][aria-expanded="true"] {
-  border-color: var(--mv-natural);
+  border-top: 1px solid var(--mv-menu-border);
 }
 .mv-variant-pill:focus-visible,
 .mv-variant-item:focus-visible {
@@ -223,6 +220,12 @@ button.mv-variant-pill[data-natural="true"][aria-expanded="true"] {
   inset: 0;
   pointer-events: none;
   transition: opacity 420ms ease;
+}
+/* Always on, so it never animates - see the note in src/data/brandThemes.js. */
+.mv-stage-ground {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 .mv-label { font-size: 10.5px; }
 .mv-controls {

@@ -10,8 +10,13 @@ export const BRAND_THEMES = {
     logo: '/brand/vedasleep-logo.png',
     logoAlt: 'Veda Sleep',
     logoHeight: 32,
+    // Stage grey. Paper (#F7F5F0) still grounds the brand selector and the
+    // body; the two pages that show product - this viewer and the card grid -
+    // sit on #D3D3D3 at the product owner's instruction (2026-08-27), because a
+    // near-white ticking photographed on a white sweep has no ground to read
+    // against on cream. The gold radial in front of it is unchanged.
     surface:
-      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 62%), #F7F5F0',
+      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 62%), #D3D3D3',
     text: '#2b2b2b',
     muted: '#8a8a8e',
     faint: '#b0b0b4',
@@ -30,6 +35,9 @@ export const BRAND_THEMES = {
     // model gives it an edge without darkening the page.
     stageTint:
       'radial-gradient(ellipse 68% 60% at 50% 54%, rgba(31,33,28,0.13) 0%, rgba(31,33,28,0) 72%)',
+    // Paper-side products are all pale on a light stage and separate on their
+    // own; nothing to lift.
+    stageGround: null,
     cardBg: '#FEFEFE',
     cardBorder: '#e4e0d4',
     cardShadow: '0 10px 34px rgba(0,0,0,0.10)',
@@ -56,6 +64,24 @@ export const BRAND_THEMES = {
     labelColor: '#FEFEFE',
     // Key Black already separates a pale layer cleanly - nothing to add.
     stageTint: null,
+    // ...but it does not separate a dark one, and that is a different problem.
+    // Riva's border is a charcoal non-woven that photographs at #191919-#202020
+    // - Key Black, to within a couple of levels of the stage it is standing on.
+    // Lit correctly and rendered faithfully it still vanished: nine inches of
+    // mattress read as a one-inch white pancake, because the only part of it
+    // with any tone against the ground was the quilt panel. No amount of light
+    // fixes that; a matte black cloth at 0.95 roughness has no highlight to
+    // give and its diffuse term cannot exceed its own albedo.
+    //
+    // So the ground moves instead of the product, which is what a studio does
+    // when it photographs something black: light the background separately.
+    // A soft pool of Egg White at 6% lifts the centre of the stage to about
+    // #262626 and falls to Key Black at the edges, so a Key Black border has a
+    // silhouette. It is a tint of an existing token over another, not a new
+    // colour - the same construction VedaSleep's stageTint uses in the other
+    // direction, and far below the level where a pale product notices it.
+    stageGround:
+      'radial-gradient(ellipse 64% 56% at 50% 56%, rgba(254,254,254,0.06) 0%, rgba(254,254,254,0) 72%)',
     cardBg: '#212121',
     cardBorder: '#343434',
     cardShadow: '0 10px 34px rgba(0,0,0,0.45)',
