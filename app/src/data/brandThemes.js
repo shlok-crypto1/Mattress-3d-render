@@ -11,7 +11,7 @@ export const BRAND_THEMES = {
     logoAlt: 'Veda Sleep',
     logoHeight: 32,
     surface:
-      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 62%), #F6F8F1',
+      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 62%), #F7F5F0',
     text: '#2b2b2b',
     muted: '#8a8a8e',
     faint: '#b0b0b4',

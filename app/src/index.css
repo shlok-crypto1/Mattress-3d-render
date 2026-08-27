@@ -1,5 +1,5 @@
 :root {
-  --paper: #f6f8f1;
+  --paper: #f7f5f0;
   --egg: #fefefe;
   --ink: #2b2b2b;
   --muted: #8a8a8e;
@@ -114,6 +114,17 @@ button.mv-variant-pill {
   cursor: pointer;
   transition: background 200ms ease, border-color 200ms ease;
 }
+/* The label changing is the control's own acknowledgement of the press, and it
+   lands well before the mattress has finished changing grade. Keyed on the
+   label text in MattressViewer, so it runs when the grade changes and never on
+   an unrelated re-render. */
+.mv-variant-label {
+  animation: mv-variant-swap 200ms ease;
+}
+@keyframes mv-variant-swap {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 button.mv-variant-pill:hover,
 button.mv-variant-pill[aria-expanded="true"] {
   border-color: var(--mv-accent);
@@ -194,6 +205,7 @@ button.mv-variant-pill[data-natural="true"][aria-expanded="true"] {
 @media (prefers-reduced-motion: reduce) {
   button.mv-variant-pill,
   .mv-variant-item { transition: none; }
+  .mv-variant-label { animation: none; }
 }
 /* The Sofa cum Bed's stage. The mattress pages put a canvas here; this product
    is photographed, and every shot was taken on a white sweep - so the plate is

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
@@ -7,6 +7,7 @@ import { makeStudioEnvironment, makeWovenNormal } from '../lib/foamSurfaces';
 import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer, buildEdgeStitch, averageColor } from '../lib/quiltSurface';
 import { MOTION, EASE, REVEAL } from '../lib/motion';
 import { buildLayerStack } from '../lib/layerStack';
+import { layersForVariant } from '../lib/variantLayers';
 import { BRAND_THEMES } from '../data/brandThemes';
 import {
   useProductEntranceTarget,
@@ -104,9 +105,10 @@ export default function MattressViewer({
   const variantButtonRef = useRef(null);
   const [view, setView] = useState(CORNER_VIEW.key);
   // Layer explode is driven entirely by product.layers. Without it none of the
-  // code below runs and the viewer behaves exactly as it always has.
-  const layerDefs = product.layers ?? null;
-  const hasLayers = Array.isArray(layerDefs) && layerDefs.length > 0;
+  // code below runs and the viewer behaves exactly as it always has. Read off
+  // the product rather than off the selected grade's bands: whether there is a
+  // stack to open at all is not a per-grade question.
+  const hasLayers = Array.isArray(product.layers) && product.layers.length > 0;
   const [exploded, setExploded] = useState(false);
   const [hoveredLayer, setHoveredLayer] = useState(null);
   // Variant selection. `variants` is the product's confirmed variant list,
@@ -127,6 +129,20 @@ export default function MattressViewer({
   const currentHeight = activeVariant?.height ?? product.dimensions?.height ?? 5;
   const hasVariantChoice = variants.length > 1;
   const variantMenuId = useId();
+  // Which bands the selected grade is actually built from. For every product
+  // whose grades are one stack cut to several thicknesses this is the product's
+  // own `layers` array, returned by identity; Resto's lower grades get it with
+  // comfort foam removed and the remaining bands re-solved against the grade's
+  // height. See src/lib/variantLayers.js.
+  //
+  // Memoised because the value is a scene input: a fresh array every render
+  // would rebuild the whole layer stack every render.
+  const layerDefs = useMemo(() => layersForVariant(product, activeVariant), [product, activeVariant]);
+  // The scene effect below only re-runs per product, so it cannot close over a
+  // value that changes with the grade - it would read the bands captured at
+  // mount forever. Same reason `s.view` and `s.autoRotate` are mirrored.
+  const layerDefsRef = useRef(layerDefs);
+  layerDefsRef.current = layerDefs;
   // Shared-element handoff: no-op unless a card transition landed here (see
   // ProductTransition.jsx). `revealed` starts true whenever entering any
   // other way (direct link, refresh, back-nav) - zero behaviour change then.
@@ -557,13 +573,41 @@ export default function MattressViewer({
     let hoverIdx = null;
     s.exploded = false;
 
+    // ---- grade change morph ------------------------------------------------
+    //
+    // Choosing a grade rebuilds the box at a new thickness and, on Resto, the
+    // stack from a different set of bands. Doing that in the frame the pill is
+    // released makes the mattress pop, so the swap is hidden inside one
+    // gesture: the build on screen releases, the new one settles into place.
+    // Both halves run the same curve, so 7" -> 6" is the exact reverse of
+    // 6" -> 7" (docs/3D_RENDER_GUIDELINES.md wants explode symmetry, and a
+    // grade change is the other thing that reshapes the stack).
+    //
+    // `morphT` runs 0 -> 1 over MOTION.normal on the same clock as `explodeT`.
+    // The two never fight: this one only ever multiplies what the explode has
+    // already decided to draw.
+    const MORPH_MS = MOTION.normal;
+    /** Where the outgoing build is fully out and the geometry actually changes. */
+    const MORPH_TROUGH = 0.42;
+    /** Longest the trough will wait for a rebuilt stack before settling anyway. */
+    const MORPH_HOLD_CAP = MOTION.explode;
+    let morphT = 1; // 1 = settled, nothing to draw
+    let morphSwap = null; // the geometry change, held until the trough
+    let morphFromScale = 1; // box scale.y the settle starts from
+    let morphHeld = 0; // time already spent waiting at the trough for new bands
+    let shownH = H; // the thickness the geometry on screen was built at
+    let appliedDefs = layerDefsRef.current; // and the bands it was built from
+    s.morphFade = 1;
+    s.morphScaleY = 1;
+    s.morphSpread = 1;
+
     const ensureStack = () => {
       if (!hasLayers || disposed) return Promise.resolve();
       if (stackPromise) return stackPromise;
       // Waits on the quilt maps so the cover that emerges from the box carries
       // the same fabric response the box already has.
       stackPromise = quiltReady.then(() => buildLayerStack({
-        layerDefs,
+        layerDefs: layerDefsRef.current,
         group,
         W,
         H,
@@ -636,22 +680,112 @@ export default function MattressViewer({
     };
 
     /**
-     * Change the mattress's thickness in place.
+     * Step the grade morph. Returns whether it still needs frames.
+     *
+     * Driven from updateLayers rather than from its own place in the tick so
+     * that it shares one `dt` with the explode and cannot end up a frame behind
+     * the values it multiplies.
+     */
+    const advanceMorph = (dt) => {
+      if (morphT >= 1 && !morphSwap) return false;
+      const before = morphT;
+      morphT = Math.min(1, morphT + dt / MORPH_MS);
+
+      if (morphSwap && morphT >= MORPH_TROUGH) {
+        // Everything is at zero opacity here, so this is where the thickness
+        // and the band set change.
+        morphSwap();
+        morphSwap = null;
+      }
+      // Hold at the trough until there is something to settle back in. With the
+      // stack open the new bands are still being built at this point, and
+      // running the settle over an empty stage would fade nothing up and then
+      // pop the bands in at the end of it. Nothing is visible while it holds.
+      //
+      // Bounded, because the thing being waited on can fail: ensureStack
+      // deliberately swallows a failed build so the viewer stays usable, and an
+      // unbounded hold would answer that by leaving the product invisible
+      // instead. Past the cap the settle runs anyway and late bands simply
+      // arrive into it. Measured in the loop's own dt, so a starved or
+      // backgrounded renderer spends no budget here.
+      if (!morphSwap && s.exploded && !layers) {
+        morphHeld += dt;
+        if (morphHeld < MORPH_HOLD_CAP) morphT = MORPH_TROUGH;
+      } else {
+        morphHeld = 0;
+      }
+
+      if (morphT <= MORPH_TROUGH) {
+        // Release: the outgoing build fades, eases a touch smaller, and an open
+        // stack draws together.
+        const e = easeOutCubic(morphT / MORPH_TROUGH);
+        s.morphFade = 1 - e;
+        s.morphScaleY = 1 - 0.015 * e;
+        s.morphSpread = 1 - 0.12 * e;
+      } else {
+        // Settle: the reverse, from the new build's own basis. In solid view
+        // scale.y starts at the old thickness over the new one, so the mattress
+        // grows or shrinks into its grade instead of cutting to it.
+        const e = easeOutCubic((morphT - MORPH_TROUGH) / (1 - MORPH_TROUGH));
+        s.morphFade = e;
+        s.morphScaleY = morphFromScale + (1 - morphFromScale) * e;
+        s.morphSpread = 0.88 + 0.12 * e;
+      }
+      return morphT !== before || morphT < 1;
+    };
+
+    const beginMorph = (swap, fromScale) => {
+      if (s.reduced) {
+        // Reduced motion gets the change without the gesture.
+        swap();
+        morphSwap = null;
+        morphT = 1;
+        s.morphFade = 1;
+        s.morphScaleY = 1;
+        s.morphSpread = 1;
+        s.dirty = true;
+        return;
+      }
+      // A second grade chosen mid-gesture supersedes the pending swap rather
+      // than queueing behind it: this one rebuilds from the same live H and
+      // bands, so it does everything the dropped one would have. Restarting
+      // from the fade already on screen instead of from 1 keeps the gesture
+      // continuous rather than flashing back to full opacity first.
+      morphSwap = swap;
+      morphFromScale = fromScale;
+      morphT = Math.min(morphT, MORPH_TROUGH * (1 - (s.morphFade ?? 1)));
+      s.dirty = true;
+    };
+
+    /**
+     * Change the grade in place: a new thickness, and on Resto a new set of
+     * bands.
      *
      * Everything else in this scene - renderer, lights, environment, textures,
-     * materials, camera - is thickness-independent, so a variant change rebuilds
-     * only the geometry that actually encodes H. Re-running the whole effect
-     * would drop the WebGL context, re-fetch every texture and throw away where
-     * the user had orbited to, which is a lot of work to arrive at the same
-     * pixels either side of one changed number.
+     * materials, camera - is grade-independent, so a variant change rebuilds
+     * only the geometry that actually encodes H and the stack. Re-running the
+     * whole effect would drop the WebGL context, re-fetch every texture and
+     * throw away where the user had orbited to, which is a lot of work to
+     * arrive at the same pixels either side of one changed number.
+     *
+     * The rebuild itself is handed to the morph rather than run here, so it
+     * lands at the point in the gesture where nothing is on screen to pop.
      */
-    s.applyHeight = (next) => {
-      if (disposed || next === H) return;
-      H = next;
+    s.applyVariant = (nextH, nextDefs) => {
+      if (disposed) return;
+      if (nextH === H && nextDefs === appliedDefs) return;
+      // Measured against what is drawn, not against the last grade asked for,
+      // so a change during a gesture still starts from the thickness on screen.
+      const fromScale = shownH / nextH;
+      H = nextH;
+      appliedDefs = nextDefs;
       topBevel = Math.min(1.3, H * 0.26);
-      shadow.position.y = -H / 2 - 1.5;
-      rebuildBox();
-      rebuildStack();
+      beginMorph(() => {
+        shadow.position.y = -H / 2 - 1.5;
+        shownH = H;
+        rebuildBox();
+        rebuildStack();
+      }, fromScale);
     };
 
     s.theta = CORNER_VIEW.theta;
@@ -803,25 +937,55 @@ export default function MattressViewer({
 
     const projected = new THREE.Vector3();
     const updateLayers = () => {
-      // Nothing to drive until the stack exists; explodeT stays parked at 0 so
-      // the solid box never fades out over an empty scene.
-      if (!hasLayers || !layers) return false;
       // Time-based, not per-frame: the transition must last EXPLODE_MS whatever
       // the refresh rate (and headless/throttled tabs run far below 60fps).
       const now = performance.now();
       const dt = Math.min(64, now - (explodeLast ?? now));
       explodeLast = now;
-      const step = dt / EXPLODE_MS;
+      // One clock for both timelines. The grade morph runs first because
+      // everything below multiplies the fade it publishes.
+      let moving = advanceMorph(dt);
+      const mf = s.morphFade ?? 1;
+
+      // The explode only advances against a live stack; explodeT stays parked
+      // at 0 so the solid box never fades out over an empty scene.
       const before = explodeT;
-      // Settle exactly on the target. Stepping unconditionally leaves the value
-      // jittering by one step either side of the endpoint, which pins the render
-      // loop on forever after the animation has visually finished.
-      const diff = explodeTarget - explodeT;
-      if (diff !== 0) {
-        explodeT = Math.abs(diff) <= step ? explodeTarget : explodeT + Math.sign(diff) * step;
+      if (hasLayers && layers) {
+        const step = dt / EXPLODE_MS;
+        // Settle exactly on the target. Stepping unconditionally leaves the
+        // value jittering by one step either side of the endpoint, which pins
+        // the render loop on forever after the animation has visually finished.
+        const diff = explodeTarget - explodeT;
+        if (diff !== 0) {
+          explodeT = Math.abs(diff) <= step ? explodeTarget : explodeT + Math.sign(diff) * step;
+        }
       }
       const T = explodeT;
-      let moving = T !== before;
+      if (T !== before) moving = true;
+
+      // ---- the solid box -------------------------------------------------
+      // Ahead of the early return below, because the box is what a grade change
+      // morphs when the stack is closed - which is most of the time, and is the
+      // one case where there is no stack to drive at all.
+      //
+      // Cross-fade the solid box out over the first slice of the explode.
+      const reveal = Math.min(1, T / 0.28);
+      const bs = T > 0 ? 0.995 : 1;
+      box.scale.set(bs, bs * (s.morphScaleY ?? 1), bs);
+      box.visible = reveal < 1 && mf > 0.001;
+      if (box.visible) {
+        const o = (1 - reveal) * mf;
+        [topMat, wallMat, bottomMat, seamMat].forEach((m) => {
+          m.transparent = T > 0 || mf < 1;
+          m.opacity = o;
+          m.depthWrite = reveal < 0.5 && mf > 0.5;
+        });
+        // The badge is already transparent and already never writes depth, so
+        // it only needs its opacity carried along with the surface it is on.
+        badgeMats.forEach((m) => { m.opacity = o; });
+      }
+
+      if (!hasLayers || !layers) return moving;
 
       const n = layers.length;
       const span = 1 - (n - 1) * LAYER_STAGGER;
@@ -833,20 +997,11 @@ export default function MattressViewer({
       s.groupScale = gs;
       s.shadow.visible = T < 0.98;
       s.shadowFade = 1 - eT;
-      // Cross-fade the solid box out over the first slice of the motion.
-      const reveal = Math.min(1, T / 0.28);
-      box.visible = reveal < 1;
-      if (box.visible) {
-        box.scale.setScalar(T > 0 ? 0.995 : 1);
-        [topMat, wallMat, bottomMat, seamMat].forEach((m) => {
-          m.transparent = T > 0;
-          m.opacity = 1 - reveal;
-          m.depthWrite = reveal < 0.5;
-        });
-        // The badge is already transparent and already never writes depth, so
-        // it only needs its opacity carried along with the surface it is on.
-        badgeMats.forEach((m) => { m.opacity = 1 - reveal; });
-      }
+
+      // How far the open stack sits from its exploded offsets: 1 at rest, drawn
+      // in to 0.88 at the trough of a grade change so the bands ease together
+      // as they leave and back out as they arrive.
+      const sp = s.morphSpread ?? 1;
 
       const hoverStep = Math.min(1, dt / 150);
       const labelEls = labelsRef.current ? labelsRef.current.children : [];
@@ -862,16 +1017,16 @@ export default function MattressViewer({
         if (Math.abs(hoverTarget - l.hoverT) < 0.002) l.hoverT = hoverTarget;
         if (l.hoverT !== prevHover) moving = true;
 
-        l.object.visible = T > 0;
-        l.object.position.y = l.restY + e * l.explodeDy + l.hoverT * HOVER_LIFT;
+        l.object.visible = T > 0 && mf > 0.001;
+        l.object.position.y = l.restY + e * l.explodeDy * sp + l.hoverT * HOVER_LIFT;
         l.object.scale.setScalar(1 + l.hoverT * HOVER_SCALE);
         l.mats.forEach((m) => {
-          m.opacity = reveal;
-          m.transparent = reveal < 1;
-          m.depthWrite = reveal > 0.5;
+          m.opacity = reveal * mf;
+          m.transparent = reveal < 1 || mf < 1;
+          m.depthWrite = reveal > 0.5 && mf > 0.5;
           if (l.hoverT > 0.001) {
             m.emissive.copy(accentColor);
-            m.emissiveIntensity = l.hoverT * HOVER_GLOW * reveal;
+            m.emissiveIntensity = l.hoverT * HOVER_GLOW * reveal * mf;
           } else if (m.emissiveIntensity !== 0) {
             m.emissiveIntensity = 0;
           }
@@ -881,14 +1036,14 @@ export default function MattressViewer({
           const below = layers[i + 1];
           const belowTop =
             below.restY +
-            easeOutCubic(Math.max(0, Math.min(1, (T - (i + 1) * LAYER_STAGGER) / span))) * below.explodeDy +
+            easeOutCubic(Math.max(0, Math.min(1, (T - (i + 1) * LAYER_STAGGER) / span))) * below.explodeDy * sp +
             below.hoverT * HOVER_LIFT +
             below.h / 2;
           const sep = l.object.position.y - l.h / 2 - belowTop;
-          l.drop.visible = T > 0.02 && sep > 0.2;
+          l.drop.visible = T > 0.02 && sep > 0.2 && mf > 0.001;
           l.drop.position.y = belowTop + 0.06;
           const soft = Math.max(0.42, 1 - sep / ((stack?.gap ?? 9.5) * 2.4));
-          l.drop.material.opacity = reveal * soft;
+          l.drop.material.opacity = reveal * soft * mf;
           const spread = 1 + Math.min(0.22, sep * 0.02);
           l.drop.scale.set(spread, spread, 1);
 
@@ -899,14 +1054,14 @@ export default function MattressViewer({
             l.ao.visible = l.drop.visible;
             l.ao.position.y = belowTop + 0.14;
             const tight = Math.max(0, 1 - sep / 7);
-            l.ao.material.opacity = reveal * (0.35 + 0.65 * tight);
+            l.ao.material.opacity = reveal * (0.35 + 0.65 * tight) * mf;
           }
         }
 
         // Labels ride the layer's rightmost screen-space corner.
         const el2 = labelEls[i];
         if (el2) {
-          const fade = Math.max(0, Math.min(1, (lt - 0.55) / 0.45));
+          const fade = Math.max(0, Math.min(1, (lt - 0.55) / 0.45)) * mf;
           if (fade <= 0.001) {
             el2.style.opacity = '0';
             el2.style.visibility = 'hidden';
@@ -966,7 +1121,8 @@ export default function MattressViewer({
         const cp = Math.cos(s.phi), sp = Math.sin(s.phi);
         camera.position.set(s.dist * cp * Math.sin(s.theta), s.dist * sp, s.dist * cp * Math.cos(s.theta));
         camera.lookAt(0, 0, 0);
-        s.shadow.material.opacity = Math.max(0, Math.min(1, sp + 0.15)) * (s.shadowFade ?? 1);
+        s.shadow.material.opacity =
+          Math.max(0, Math.min(1, sp + 0.15)) * (s.shadowFade ?? 1) * (s.morphFade ?? 1);
         renderer.render(scene, camera);
         s.dirty = false;
         if (topReady && !s.reportedReady) {
@@ -1084,10 +1240,11 @@ export default function MattressViewer({
   }, [product]);
 
   // Mirrored onto the scene the same way autoRotate is. The first run after a
-  // mount is a no-op: the scene was built at exactly this height.
+  // mount is a no-op: the scene was built at exactly this height, from exactly
+  // these bands.
   useEffect(() => {
-    s.applyHeight?.(currentHeight);
-  }, [currentHeight, s]);
+    s.applyVariant?.(currentHeight, layerDefs);
+  }, [currentHeight, layerDefs, s]);
 
   useEffect(() => {
     s.autoRotate = autoRotate && !s.reduced;
@@ -1278,7 +1435,9 @@ export default function MattressViewer({
                 aria-controls={variantMenuId}
                 onClick={() => setVariantMenuOpen((open) => !open)}
               >
-                {variantLabel(activeVariant)}
+                <span key={variantLabel(activeVariant)} className="mv-variant-label">
+                  {variantLabel(activeVariant)}
+                </span>
                 <span className="mv-variant-caret" aria-hidden="true" />
               </button>
             ) : (

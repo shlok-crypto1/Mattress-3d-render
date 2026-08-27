@@ -100,10 +100,16 @@ export const sofaCumBed = {
 };
 
 export const foamicoProducts = [
+  // Resto is the one product whose grades are built from different stacks, not
+  // just cut to different thicknesses: Luxury is the full seven-band build and
+  // the grades below it drop comfort foam. `omitLayers` names the layer ids a
+  // grade leaves out - subtractive, because that is the direction the product
+  // is actually specified in, and because a list of what is missing can never
+  // accidentally drop the base the way a list of what is present could.
   product('resto', 'Resto', 'Firm', '10-Year Warranty + 5-Year Full Replacement', [
     { variant: 'Luxury', height: 7 },
-    { variant: 'Classic', height: 6 },
-    { variant: 'Premium', height: 6.5 },
+    { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
+    { variant: 'Premium', height: 6.5, omitLayers: ['foam-3'] },
   ]),
   product('sova', 'Sova', 'Firm', '15-Year Warranty + 5-Year Full Replacement', [
     { variant: 'Luxury', height: 7 },
