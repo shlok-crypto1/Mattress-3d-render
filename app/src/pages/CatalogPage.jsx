@@ -36,7 +36,7 @@ export default function CatalogPage() {
         position: 'relative',
         minHeight: '100dvh',
         background:
-          'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(199,125,17,0.06) 0%, rgba(199,125,17,0) 60%), #F6F8F1',
+          'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(199,125,17,0.06) 0%, rgba(199,125,17,0) 60%), #F7F5F0',
         padding: '48px 24px 64px',
         ...recede,
       }}

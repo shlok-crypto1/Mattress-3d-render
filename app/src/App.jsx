@@ -31,7 +31,7 @@ const SofaCumBedPage = lazy(() => import('./pages/foamico/SofaCumBedPage'));
 // is that landing anywhere loads only what that page needs.
 const CHROME = {
   foamico: { bg: '#1A1A1A', ink: '#FEFEFE', dim: '#8f8f8f', accent: '#95C12B', word: 'FOAMICO' },
-  vedasleep: { bg: '#F6F8F1', ink: '#2b2b2b', dim: '#8a8a8e', accent: '#c77d11', word: 'VEDASLEEP' },
+  vedasleep: { bg: '#F7F5F0', ink: '#2b2b2b', dim: '#8a8a8e', accent: '#c77d11', word: 'VEDASLEEP' },
 };
 
 /** Brand and product implied by a route, for chrome that renders before it. */

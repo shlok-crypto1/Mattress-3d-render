@@ -18,7 +18,7 @@ export const VEDASLEEP = {
   slug: 'vedasleep',
   name: 'VedaSleep',
   tagline: 'Premium Sleep Collection',
-  key: '#F6F8F1', // Paper
+  key: '#F7F5F0', // Paper
   accent: '#C77D11', // Veda Gold
   onKey: '#2b2b2b',
   muted: '#8a8a8e',
