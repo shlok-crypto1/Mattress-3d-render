@@ -129,10 +129,14 @@ export const foamicoProducts = [
   // Corrected by the product owner (2026-08-26): Luma's grades step 6" / 8" /
   // 10" and Classic is the 6". The earlier reading of the catalog had Classic
   // at 8" and put a 5" against Luxury, which is not a Luma thickness at all.
+  // Luxury alone carries the blue comfort band at layer 3. Everything else is
+  // shared: Classic and Premium hold the same bands as each other and differ
+  // only in how tall the spring unit is, and Luxury's spring unit matches
+  // Premium's exactly - see the ratio solved in layers/foamicoLayers.js.
   product('luma', 'Luma', 'Medium', '7-Year Warranty + 5-Year Full Replacement', [
     { variant: 'Luxury', height: 10 },
-    { variant: 'Classic', height: 6 },
-    { variant: 'Premium', height: 8 },
+    { variant: 'Classic', height: 6, omitLayers: ['foam-3'] },
+    { variant: 'Premium', height: 8, omitLayers: ['foam-3'] },
   ]),
   product('ultima', 'Ultima', 'Firm', '25-Year Warranty + 5-Year Full Replacement', [
     { variant: 'Luxury', height: 6.5 },

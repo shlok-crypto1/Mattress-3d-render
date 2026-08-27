@@ -109,14 +109,33 @@ export const sovaLayers = [
 // split of layer 5 against layer 3. As with Resto, Sova and Ultima the two keep
 // their combined 0.41 of the stack - cover, convoluted band, the two insulator
 // pads and the base are unchanged - and divide it 0.328 / 0.082.
+//
+// Luma is the only stack whose top grade carries a band the others do not: the
+// blue comfort foam at layer 3, present in LUMA LUXURY.png and absent from
+// LUMA CLASSIC.png and LUMA PREMIUM.png. Adding it is what shifted every band
+// below it down one number - the numbering follows position in the full stack,
+// the same as every other product, so the spring unit reads Layer 6 here.
+//
+// Its 0.235 is solved, not eyeballed. The product owner's rule is that Luxury's
+// spring unit is the same size as Premium's, and Premium omits this band: with
+// the other seven ratios summing to 0.94, 10 x 0.328 / (0.94 + b) = 8 x 0.328 /
+// 0.94 gives b = 0.235 exactly. It makes the blue band 2.00in and leaves every
+// other band in Luxury the identical thickness it has in Premium, so Luxury is
+// Premium plus this one layer - which is what the two renders show.
+//
+// Its colour is not a new value: sampled off the render, Luma's blue lands
+// within a few points of Resto's blue sampled the same way from the same set,
+// so it takes the albedo already established for that foam rather than
+// introducing a second near-identical blue.
 export const lumaLayers = [
   cover('#DCDEEC'),
   foam('comfort', 2, 'Convoluted comfort foam', 0.08, '#D6DC72', 'convoluted'),
-  foam('foam-3', 3, 'Comfort foam', 0.082, '#F0EFEC'),
-  foam('coil-top', 4, 'Coil insulator pad', 0.05, '#8C3A22'),
+  foam('foam-3', 3, 'Comfort foam', 0.2375, '#29B6DC'),
+  foam('foam-4', 4, 'Comfort foam', 0.082, '#F0EFEC'),
+  foam('coil-top', 5, 'Coil insulator pad', 0.05, '#8C3A22'),
   {
     id: 'coils',
-    name: 'Layer 5 — TBD',
+    name: 'Layer 6 — TBD',
     role: 'Pocketed spring unit',
     type: 'coil',
     thicknessRatio: 0.328,
@@ -124,7 +143,7 @@ export const lumaLayers = [
     description: TBD,
     nameTbd: true,
   },
-  foam('coil-bottom', 6, 'Coil insulator pad', 0.05, '#8C3A22'),
+  foam('coil-bottom', 7, 'Coil insulator pad', 0.05, '#8C3A22'),
   base('#616163', 0.14, '#F0921E', 0.13),
 ];
 
