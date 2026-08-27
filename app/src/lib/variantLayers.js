@@ -42,6 +42,18 @@ export function layersForVariant(product, variant) {
   const kept = all.filter((l) => !omit.includes(l.id));
   if (kept.length === all.length) return all;
 
+  // Without `holdUpholstery` the kept bands simply fill the grade's height in
+  // proportion to the ratios they already have - buildLayerStack normalises
+  // them, so there is nothing further to do here.
+  //
+  // Holding the upholstery is opt-in rather than the default because it only
+  // reads correctly over a narrow spread of grade heights. It is right for
+  // Resto, whose grades run 6" to 7". Applied to a product whose grades run 6"
+  // to 9" or 10" it makes the base absurd - Riva's would be 42% of an R1000,
+  // Luma's nearly half a Classic - because a base sized for the tallest grade
+  // is simply not the base a much thinner one is built on.
+  if (!product.holdUpholstery) return kept;
+
   // Baseline is the product's top grade - the one the full stack is specified
   // at - and it is always variants[0] (see the factory in foamicoProducts.js).
   const H0 = product.variants?.[0]?.height;

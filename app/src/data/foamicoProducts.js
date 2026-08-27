@@ -44,6 +44,11 @@ const product = (slug, name, feel, warranty, variants, extra = {}) => {
     name,
     ...(extra.quilt ? { quilt: extra.quilt } : null),
     ...(extra.sideBadge ? { sideBadge: extra.sideBadge } : null),
+    // Opt-in, per product: hold the cover and the bonded base at the real
+    // thickness they have at the baseline grade instead of letting them scale
+    // with the mattress. See src/lib/variantLayers.js for why this is a choice
+    // rather than the default.
+    ...(extra.holdUpholstery ? { holdUpholstery: true } : null),
     variants,
     specLine: {
       variant: baseline.variant,
@@ -110,12 +115,15 @@ export const foamicoProducts = [
     { variant: 'Luxury', height: 7 },
     { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
     { variant: 'Premium', height: 6.5, omitLayers: ['foam-3'] },
-  ]),
+  ], { holdUpholstery: true }),
+  // Both Classic heights drop the same two bands: the product owner gave one
+  // rule for "sova classic" and Sova presents two of them.
   product('sova', 'Sova', 'Firm', '15-Year Warranty + 5-Year Full Replacement', [
     { variant: 'Luxury', height: 7 },
-    { variant: 'Classic', height: 6 },
-    { variant: 'Classic', height: 5 },
-    { variant: 'Premium', height: 6.5 },
+    { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
+    { variant: 'Classic', height: 5, omitLayers: ['foam-3', 'foam-4'] },
+    { variant: 'Premium', height: 6.5, omitLayers: ['foam-3'] },
+    // Natural's composition is still to come; until then it shows every band.
     { variant: 'Natural', height: 6 },
   ]),
   // Corrected by the product owner (2026-08-26): Luma's grades step 6" / 8" /
@@ -128,11 +136,14 @@ export const foamicoProducts = [
   ]),
   product('ultima', 'Ultima', 'Firm', '25-Year Warranty + 5-Year Full Replacement', [
     { variant: 'Luxury', height: 6.5 },
-    { variant: 'Classic', height: 6 },
-    { variant: 'Classic', height: 5 },
-    { variant: 'Premium', height: 6 },
+    // Classic and Premium are both 6" here and are still different builds:
+    // Premium keeps layer 4, Classic does not. Same height, different stack.
+    { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
+    { variant: 'Classic', height: 5, omitLayers: ['foam-3', 'foam-4'] },
+    { variant: 'Premium', height: 6, omitLayers: ['foam-3'] },
     // Natural is 6" across all three products that offer it, per the product
     // owner; the catalog's 7" for Ultima was superseded on 2026-08-26.
+    // Its composition is still to come; until then it shows every band.
     { variant: 'Natural', height: 6 },
   ]),
   // Riva is the only product in either line whose border carries a woven badge.
@@ -148,8 +159,11 @@ export const foamicoProducts = [
   // the second Natural at 8": Natural is one 6" grade wherever it appears.
   product('riva', 'Riva', 'Medium', '30-Year Warranty + 5-Year Full Replacement', [
     { variant: 'R3000', height: 9 },
-    { variant: 'R1000', height: 6 },
-    { variant: 'R2000', height: 8 },
+    // Riva thins from the top of the comfort stack down, not from the middle:
+    // R2000 drops layer 2 and R1000 drops layers 2 and 3.
+    { variant: 'R1000', height: 6, omitLayers: ['foam-2', 'foam-3'] },
+    { variant: 'R2000', height: 8, omitLayers: ['foam-2'] },
+    // Natural's composition is still to come; until then it shows every band.
     { variant: 'Natural', height: 6 },
   ], {
     sideBadge: {

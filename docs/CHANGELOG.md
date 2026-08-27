@@ -14,6 +14,21 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-27 — Sova, Ultima and Riva build their grades from different stacks
+- **Changed:**
+  - **Sova** - Premium 6.5″ drops layer 3; Classic 6″ and Classic 5″ drop layers 3 and 4. The product owner gave one rule for "sova classic" and Sova presents two Classic heights, so both take it.
+  - **Ultima** - Premium 6″ drops layer 3; Classic 6″ and Classic 5″ drop layers 3 and 4. Classic 6″ and Premium 6″ are now the same height with different builds, which is intended.
+  - **Riva** - R2000 8″ drops layer 2; R1000 6″ drops layers 2 and 3. Riva thins from the top of the comfort stack downwards, the opposite of how the others thin.
+  - **`holdUpholstery` is now opt-in per product, and only Resto sets it.** Holding the cover and bonded base at their baseline thickness reads correctly across Resto's 6″-7″ spread and badly across wider ones - it would have made Riva's base 42% of an R1000. Every other product divides its grade's height in proportion to the ratios the bands already have, so their upholstery scales with the mattress exactly as it did before. This is a change in where the rule applies, not in what it does; Resto renders identically.
+  - **Luma is deliberately untouched** and still shows every band at every grade - see the open question recorded against it in `docs/PRODUCT_CATALOG.md`.
+  - **Natural is untouched** for all three products that offer it; its composition is still to come.
+- **Reason:** Product owner, 2026-08-27, extending to the rest of the line the per-grade construction already implemented for Resto.
+- **Files/areas:** `app/src/data/foamicoProducts.js`, `app/src/lib/variantLayers.js`, `docs/PRODUCT_CATALOG.md`.
+- **Impact:** Sova, Ultima and Riva now render fewer bands below their top grade. No product's upholstery proportions change. Luxury/R3000 and Natural grades are unchanged everywhere, as is Resto.
+- **Validation:** Band sets and thicknesses solved for every product and grade and checked to sum exactly to each declared height. Each rule cross-checked against the product owner's own renders - `SOVA CLASSIC.png` and `SOVA PREMIUM.png`, `ULTIMA CLASSIC.png`, `RIVA 2K.png` - all of which show exactly the band sets given. `oxlint` and `vite build` clean.
+
+---
+
 ### 2026-08-27 — The per-grade cutaway render set enters the repository
 - **Changed:** The product owner's 26 cutaway renders - one per product per grade - are committed at `Layers/`, at the repository root, because the set spans both brands and splitting it by brand would break the comparison that makes it useful. Names are as delivered. This supersedes the `Foamico mattresses/Natural/` folder added earlier the same day, whose three files were byte-identical duplicates of the Natural renders in the set; that folder is removed rather than left as a second copy.
 - **Reason:** It is the reference art the layer stacks are read from, and it was living outside the project. Having it in the repository is also what let the badge on `SOVA NATURAL.png` be settled on evidence.
