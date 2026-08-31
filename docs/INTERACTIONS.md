@@ -74,6 +74,24 @@ product owner's instruction. Every field in it was a placeholder, so the card
 promised a specification the project does not have yet. The exploded stack and
 its labels are the whole of what the layer view says.
 
+**Labels are spaced against each other, not only against their bands.** A label
+is anchored to its own band's projected corner - that is what makes it point at
+its layer - but the anchor says nothing about the label next to it, and six to
+eight bands over the height the stack is framed at put the pills closer together
+than a pill is tall. The list then reads as one block of text rather than as six
+to eight names. They are therefore pushed apart to a minimum pitch once every
+anchor for the frame is known, and the run is translated as a whole rather than
+each label being clamped individually, so the list stays centred on where the
+bands actually are and no label can cross its neighbour.
+
+Two things this must keep doing. It runs in the order the labels land in **on
+screen**, not in stack order: the camera can be orbited below the mattress, and
+from there the top band projects below the bottom one, so assuming stack order
+would drag every label to the wrong end of the frame for the whole of that view.
+And it never asks for more pitch than the stage can give - on a short viewport
+the pills close up a little instead of the list detaching from the stack to span
+a height the mattress does not occupy.
+
 ### Switching a photographed product's position
 Sofa cum Bed has no camera to orbit; its stage is a photographic plate and the
 control row switches between the three plates - Front, Side, Sitting - cross-

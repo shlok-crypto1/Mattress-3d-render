@@ -22,6 +22,7 @@ const EXPLODE_MS = MOTION.explode;
 const LAYER_STAGGER = MOTION.explodeStagger;
 const EXPLODE_DIST = 94; // where the button parks the camera to frame the stack
 const EXPLODE_SCALE = 0.55; // shrink the group so the taller stack stays framed
+const LABEL_PITCH_GAP = 15; // clear air between two layer-name pills
 const HOVER_LIFT = 1.15;
 const HOVER_SCALE = 0.02;
 const HOVER_GLOW = 0.5;
@@ -983,6 +984,12 @@ export default function MattressViewer({
     s.idle = performance.now();
 
     const projected = new THREE.Vector3();
+    // Reused across frames rather than reallocated: the spacing pass
+    // needs every anchor in hand before it can place any one of them.
+    const labelLayout = [];
+    // Draw order for the spacing pass, kept separate because it is the order
+    // the labels land in on screen, which is not the order of the stack.
+    const labelOrder = [];
     const updateLayers = (dt) => {
       // One clock for both timelines. The grade morph runs first because
       // everything below multiplies the fade it publishes.
@@ -1034,7 +1041,12 @@ export default function MattressViewer({
       // Dollying in makes the stack overflow the frame, so the group shrinks as
       // it separates - the mattress keeps its apparent size while gaining height.
       const eT = easeExplode(T);
-      const gs = 1 - (1 - EXPLODE_SCALE) * eT;
+      // The stack builds its bands oversize, so it also hands back how much
+      // further the group has to shrink to span what it always spanned. Every
+      // product therefore stays framed exactly as it was; the extra thickness
+      // is spent inside that frame rather than on a bigger stack.
+      const es = EXPLODE_SCALE * (stack?.explodeScale ?? 1);
+      const gs = 1 - (1 - es) * eT;
       group.scale.setScalar(gs);
       s.groupScale = gs;
       s.shadow.visible = T < 0.98;
@@ -1045,8 +1057,26 @@ export default function MattressViewer({
       // as they leave and back out as they arrive.
       const sp = s.morphSpread ?? 1;
 
+      // Bands are built at `LAYER_INFLATE` times the mattress's real thickness,
+      // so the closed stack has to be squashed back down to sit inside the
+      // solid mattress it cross-fades out of, and released to full size as it
+      // opens. Scaling every band and every rest offset by the same factor is a
+      // uniform scale of the whole stack about the origin, so the bands stay
+      // exactly contiguous at every point of the ramp - no seams open up.
+      //
+      // It rides `eT` rather than the cross-fade window on purpose: the stack is
+      // still near the product's real height through the moment the solid box
+      // is visible behind it, and reaches full thickness long after the box has
+      // gone. The exaggeration is never visible next to the thing it exaggerates.
+      const rs = stack?.restScale ?? 1;
+      const inflateT = rs + (1 - rs) * eT;
+
       const hoverStep = Math.min(1, dt / 150);
       const labelEls = labelsRef.current ? labelsRef.current.children : [];
+      // Truncated to this stack, not just overwritten: switching to a product
+      // with fewer bands would otherwise leave the previous one's tail in the
+      // array, pointing at elements React has already unmounted.
+      labelLayout.length = n;
       layers.forEach((l, i) => {
         const lt = Math.max(0, Math.min(1, (T - i * LAYER_STAGGER) / span));
         const e = easeExplode(lt);
@@ -1060,8 +1090,9 @@ export default function MattressViewer({
         if (l.hoverT !== prevHover) moving = true;
 
         l.object.visible = T > 0 && mf > 0.001;
-        l.object.position.y = l.restY + e * l.explodeDy * sp + l.hoverT * HOVER_LIFT;
-        l.object.scale.setScalar(1 + l.hoverT * HOVER_SCALE);
+        l.object.position.y = l.restY * inflateT + e * l.explodeDy * sp + l.hoverT * HOVER_LIFT;
+        const hs = 1 + l.hoverT * HOVER_SCALE;
+        l.object.scale.set(hs, hs * inflateT, hs);
         l.mats.forEach((m) => {
           m.opacity = reveal * mf;
           m.transparent = reveal < 1 || mf < 1;
@@ -1077,11 +1108,11 @@ export default function MattressViewer({
         if (l.drop) {
           const below = layers[i + 1];
           const belowTop =
-            below.restY +
+            below.restY * inflateT +
             easeExplode(Math.max(0, Math.min(1, (T - (i + 1) * LAYER_STAGGER) / span))) * below.explodeDy * sp +
             below.hoverT * HOVER_LIFT +
-            below.h / 2;
-          const sep = l.object.position.y - l.h / 2 - belowTop;
+            (below.h * inflateT) / 2;
+          const sep = l.object.position.y - (l.h * inflateT) / 2 - belowTop;
           l.drop.visible = T > 0.02 && sep > 0.2 && mf > 0.001;
           l.drop.position.y = belowTop + 0.06;
           const soft = Math.max(0.42, 1 - sep / ((stack?.gap ?? 9.5) * 2.4));
@@ -1100,13 +1131,17 @@ export default function MattressViewer({
           }
         }
 
-        // Labels ride the layer's rightmost screen-space corner.
+        // Labels ride the layer's rightmost screen-space corner. Where one
+        // finally sits is settled after the loop - a label's own band is not
+        // enough to place it, because how close its neighbours land is what
+        // decides whether it has room. Here we only solve the anchor it wants.
         const el2 = labelEls[i];
         if (el2) {
           const fade = Math.max(0, Math.min(1, (lt - 0.55) / 0.45)) * mf;
-          if (fade <= 0.001) {
+          if (T <= 0) {
             el2.style.opacity = '0';
             el2.style.visibility = 'hidden';
+            labelLayout[i] = null;
           } else {
             let bestX = -Infinity, bestY = 0, leftX = Infinity, leftY = 0;
             const hw = W / 2, hl = L / 2;
@@ -1116,16 +1151,17 @@ export default function MattressViewer({
               if (projected.x > bestX) { bestX = projected.x; bestY = projected.y; }
               if (projected.x < leftX) { leftX = projected.x; leftY = projected.y; }
             }
-            el2.style.visibility = 'visible';
-            el2.style.opacity = String(fade);
             // Labels ride the right corner by default, but a narrow viewport
             // ran them off the edge and clipped the layer names. Hang them off
             // the left corner instead when the right has no room, and clamp so
             // one never leaves the canvas.
             let lw = el2._mvWidth;
+            let lh = el2._mvHeight;
             if (lw === undefined || el2._mvWidthFor !== el2.textContent || el2._mvWidthEpoch !== labelEpoch) {
               lw = el2.offsetWidth;
+              lh = el2.offsetHeight;
               el2._mvWidth = lw;
+              el2._mvHeight = lh;
               el2._mvWidthFor = el2.textContent;
               el2._mvWidthEpoch = labelEpoch;
             }
@@ -1141,10 +1177,73 @@ export default function MattressViewer({
                 lx = Math.max(EDGE, stageW - EDGE - lw);
               }
             }
-            el2.style.transform = `translate(${lx}px, ${ly}px) translateY(-50%)`;
+            labelLayout[i] = { el: el2, fade, lx, ly, lh };
           }
         }
       });
+
+      // ---- label spacing --------------------------------------------------
+      //
+      // Anchoring a label to its own band's projected corner is what makes it
+      // point at its layer, but it says nothing about the label next to it.
+      // Six to eight bands over the height the stack is framed at put the pills
+      // closer together than a pill is tall, so the list read as one block of
+      // text rather than as six to eight names. They are pushed apart to a
+      // minimum pitch here, once every anchor is known.
+      //
+      // Spacing runs in the order the labels actually land in on screen, not in
+      // stack order. The camera can be orbited underneath the mattress - phi
+      // clamps at -1.45, well below the horizon - and from there the top band
+      // projects below the bottom one. Assuming stack order would drag every
+      // label to the wrong end of the frame for the whole of that view.
+      //
+      // Within that order the run is only ever translated as a whole once it
+      // has been spread, so a label can never cross its neighbour.
+      if (T > 0 && labelLayout.length) {
+        const EDGE = 8;
+        let lh = 0;
+        for (const it of labelLayout) if (it && it.lh > lh) lh = it.lh;
+        const top = EDGE + lh / 2;
+        const bottom = stageH - EDGE - lh / 2;
+        labelOrder.length = 0;
+        for (let k = 0; k < labelLayout.length; k++) if (labelLayout[k]) labelOrder.push(k);
+        labelOrder.sort((x, y) => labelLayout[x].ly - labelLayout[y].ly);
+        const nl = labelOrder.length;
+
+        // Never ask for more pitch than the stage can actually give. On a short
+        // viewport, or the eight-band product, the pills close up a little
+        // instead of the list detaching from the stack to span a height the
+        // mattress does not occupy.
+        const pitch = Math.min(lh + LABEL_PITCH_GAP, nl > 1 ? (bottom - top) / (nl - 1) : 0);
+
+        for (let k = 1; k < nl; k++) {
+          const prev = labelLayout[labelOrder[k - 1]];
+          const cur = labelLayout[labelOrder[k]];
+          if (cur.ly - prev.ly < pitch) cur.ly = prev.ly + pitch;
+        }
+        // Spread first, then move the run as one. Translating rather than
+        // re-clamping each label is what keeps the run centred on where the
+        // bands actually are instead of piling up against an edge.
+        if (nl) {
+          const over = labelLayout[labelOrder[nl - 1]].ly - bottom;
+          if (over > 0) for (const it of labelLayout) if (it) it.ly -= over;
+          const under = top - labelLayout[labelOrder[0]].ly;
+          if (under > 0) for (const it of labelLayout) if (it) it.ly += under;
+        }
+
+        for (const it of labelLayout) {
+          if (!it) continue;
+          if (it.fade <= 0.001) {
+            it.el.style.opacity = '0';
+            it.el.style.visibility = 'hidden';
+            continue;
+          }
+          it.el.style.visibility = 'visible';
+          it.el.style.opacity = String(it.fade);
+          const y = Math.max(top, Math.min(bottom, it.ly));
+          it.el.style.transform = `translate(${it.lx}px, ${y}px) translateY(-50%)`;
+        }
+      }
       return moving;
     };
 

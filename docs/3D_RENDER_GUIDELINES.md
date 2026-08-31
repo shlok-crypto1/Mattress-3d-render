@@ -16,8 +16,46 @@ If the experience exposes internal construction:
 - Layer labels must correspond to verified product data in `docs/PRODUCT_CATALOG.md`.
 - A product's grades may be built from different sets of bands, but only where `docs/PRODUCT_CATALOG.md` records the composition for each grade. A band a grade keeps holds its own identity and its own number across every grade of that product, so the numbering runs with gaps in it rather than being closed up - the gap is what shows which bands the grade leaves out.
 - Where a grade drops bands, the survivors fill that grade's declared height under the per-grade thickness rule recorded against the product; upholstery does not silently thicken because foam was removed from underneath it.
-- Exploded spacing should communicate construction without distorting the product.
+- Exploded spacing should communicate construction. It may distort the product's *thickness* — see "An exploded band is not to scale" below — but never its footprint, its layer order, or which bands a grade has.
 - Transitions should be reversible and predictable — general animation principles are owned by `docs/INTERACTIONS.md`; this file only adds the construction-specific requirement that exploding and collapsing layers must be symmetric (the reverse of an explode should retrace the same path, not a different one). **Symmetric in time as well as in path.** Easing a linear clock with a decelerating curve is right in one direction and backwards in the other: the bands left briskly and eased into their exploded positions, then drifted on the way back and covered the last 27% of their travel in the final 70ms, arriving at full speed. The curve is flat at both ends instead, so each direction is the other's mirror — and stays a pure function of the clock, so reversing part-way through cannot make a position jump.
+
+## An exploded band is not to scale
+
+Bands are built `LAYER_INFLATE` times thicker than the mattress they came out
+of (2.2x as of 2026-08-31), and the whole stack is squashed back to the
+product's real height while it is closed. The exaggeration therefore exists
+only in the open view.
+
+The reason is arithmetic: a true 6"-10" split over six to eight bands leaves
+each layer under an inch thick, and at the distance the exploded view is framed
+from that renders as a sheet of paper rather than a slab of foam - which is the
+one thing the layers view exists to show. The product owner asked for broader
+layers on 2026-08-31 and explicitly accepted the consequence.
+
+Three properties keep it honest, and a change here must preserve all three:
+
+- **The closed mattress is untouched.** It is a separate mesh and keeps its
+  declared thickness exactly. The thing that has to read as a real product
+  still does.
+- **The stack matches the mattress at rest.** The squash is undone gradually
+  across the explode rather than at the end of the cross-fade, so the stack is
+  still near the product's real height for as long as the solid box is visible
+  behind it. The exaggeration is never on screen next to the thing it
+  exaggerates.
+- **Geometry is built oversize and scaled down, never the reverse.** The bands
+  are at their native proportions exactly when they are being looked at, so the
+  wall grain and the sculpted relief are never stretched in the open view.
+
+What this costs: an exploded Classic and an exploded Luxury are no longer to
+scale against each other, and no dimension may be read off the exploded stack.
+Thickness as a product fact lives in `docs/PRODUCT_CATALOG.md` and nowhere else.
+
+The frame is held constant against the inflation rather than re-tuned per
+product. The stack returns the ratio of what it would have spanned uninflated
+to what it spans now, and the viewer multiplies its explode scale by it - so
+every product stays framed exactly as it was, with the extra thickness spent
+inside that frame instead of on a taller stack. A product with a different band
+count needs no new number.
 
 ## Rendering
 - Maintain consistent lighting between product states — see `docs/CAMERA_AND_LIGHTING.md` for the full lighting standard.
