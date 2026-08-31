@@ -24,7 +24,8 @@ const sumRatio = (defs) => defs.reduce((a, l) => a + (l.thicknessRatio ?? 1), 0)
  * The layer stack for one grade of a product.
  *
  * @param {object} product a product from src/data/*Products.js
- * @param {object|null} variant the selected entry from `product.variants`
+ * @param {object|null} variant the selected entry from `product.variants`;
+ *   may carry its own `layers`, which replace the product's for that grade
  * @returns {Array|null} layer defs ready for buildLayerStack, or null
  *
  * Returns `product.layers` itself - same array, same identity - whenever the
@@ -33,7 +34,13 @@ const sumRatio = (defs) => defs.reduce((a, l) => a + (l.thicknessRatio ?? 1), 0)
  * per-grade construction at all.
  */
 export function layersForVariant(product, variant) {
-  const all = product?.layers;
+  // A grade may carry its own stack outright, not merely a subset of the
+  // product's. Natural does: it is a different build, with a latex slab where
+  // the standard grade has comfort foam, so there is no set of `omitLayers`
+  // that could express it. Where a variant declares `layers` they replace the
+  // product's, and everything below - the omissions, the upholstery rule -
+  // applies to that set exactly as it would to the default one.
+  const all = variant?.layers ?? product?.layers;
   if (!all || !all.length) return all ?? null;
 
   const omit = variant?.omitLayers;

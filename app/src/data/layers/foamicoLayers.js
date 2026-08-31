@@ -185,6 +185,63 @@ export const rivaLayers = [
   base('#585559', 0.13, '#F0921E', 0.15),
 ];
 
+// ---- Natural grades -------------------------------------------------------
+//
+// Natural is not its product's stack with bands taken out - it is a different
+// build, with a perforated natural-latex slab where the standard grade carries
+// comfort foam. That is why these are whole arrays rather than an `omitLayers`
+// list, and why a variant may carry its own `layers` (see
+// src/lib/variantLayers.js).
+//
+// Shape - count, order, type and surface - is read from the reference renders
+// "Layers/<PRODUCT> NATURAL.png", and is the confirmed part, as it is for every
+// stack in this file. `thicknessRatio` is eyeballed from those same renders and
+// is a placeholder until the product owner gives Natural's foam split, exactly
+// as every other stack here began. Names below the cover are still to come.
+//
+// The renders are read by filename: two of the three carry a woven "ULTIMA
+// NATURAL" tag, including the one named for Sova, and the product owner's
+// instruction is to go by the filename and disregard the tag.
+//
+// Colour: one new albedo between the three of them, for the latex slab no other
+// grade has. Every other band reuses the value its own product already
+// established for that material, so switching to Natural never shifts a foam's
+// colour - the bands that carry over look like themselves.
+const NATURAL_LATEX = '#D9D5C0';
+
+// Ultima Natural - cover, convoluted, latex, rebonded chip core, support foam,
+// bonded base. Six bands against the standard grade's seven, and the blue and
+// purple comfort foams are gone rather than merely thinner.
+export const ultimaNaturalLayers = [
+  cover('AirKnit Fabric', '#EFEFEC'),
+  foam('comfort', 2, null, 'Convoluted comfort foam', 0.08, '#C9D14A', 'convoluted'),
+  foam('latex', 3, null, 'Perforated natural latex', 0.22, NATURAL_LATEX),
+  foam('core', 4, null, 'Rebonded support core', 0.19, '#E8E6E1', 'speckled'),
+  foam('foam-5', 5, null, 'Support foam', 0.15, '#B9B4AE'),
+  base('#464846', 0.13, '#F0921E', 0.14),
+];
+
+// Sova Natural - the latex sits under the purple comfort foam here, not above
+// it, and the chip core below is the multicoloured one its render shows.
+export const sovaNaturalLayers = [
+  cover('AirKnit Fabric', '#E4E4EC'),
+  foam('comfort', 2, null, 'Convoluted comfort foam', 0.09, '#D2D95E', 'convoluted'),
+  foam('foam-3', 3, null, 'Comfort foam', 0.13, '#C07CE0'),
+  foam('latex', 4, null, 'Perforated natural latex', 0.20, NATURAL_LATEX),
+  foam('core', 5, null, 'Rebonded support core', 0.21, '#D8D5CC', 'speckled'),
+  base('#565555', 0.13, '#F0921E', 0.15),
+];
+
+// Riva Natural - the shortest stack of any FOAMICO grade: four bands, and the
+// latex slab is over half the mattress. Riva's cover is Bio Weave, as it is at
+// every other grade.
+export const rivaNaturalLayers = [
+  cover('Bio Weave', '#E8E8E6'),
+  foam('comfort', 2, null, 'Convoluted comfort foam', 0.09, '#C9D14A', 'convoluted'),
+  foam('latex', 3, null, 'Perforated natural latex', 0.54, NATURAL_LATEX),
+  base('#585559', 0.13, '#F0921E', 0.15),
+];
+
 export const foamicoLayersBySlug = {
   resto: restoLayers,
   sova: sovaLayers,
