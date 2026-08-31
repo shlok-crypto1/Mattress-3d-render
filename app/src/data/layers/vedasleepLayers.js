@@ -2,27 +2,28 @@
 // src/data/layers/foamicoLayers.js - see that file's header for what is
 // placeholder and what is confirmed.
 //
-// Duro is the one product with real material names already signed off; every
-// other band here is a numbered placeholder.
+// Every band in this file carries the product owner's confirmed material name
+// (2026-08-31); nothing here is a numbered stand-in any more. `description` is
+// still filler, and the ratios and colours are unchanged.
 
 const TBD = 'Placeholder description - real material copy to follow.';
 
-const cover = (color, ratio = 0.13) => ({
+const cover = (name, color, ratio = 0.13) => ({
   id: 'cover',
-  name: 'Layer 1 — TBD',
+  name,
   role: 'Quilted knit cover',
   type: 'fabric-cover',
   thicknessRatio: ratio,
   color,
   description: TBD,
-  nameTbd: true,
 });
 
 // One layer, not two - see the header of foamicoLayers.js for why the
-// transition sheet and the base are inseparable and how `bonded` expresses it.
+// transition sheet and the base are inseparable, how `bonded` expresses it, and
+// why the Quilted Foam name is fixed here rather than passed in.
 const base = (color, ratio, sheetColor, sheetRatio) => ({
   id: 'base',
-  name: 'Base — TBD',
+  name: 'Quilted Foam',
   role: 'Transition foam bonded to a fabric-wrapped base',
   type: 'fabric-base',
   thicknessRatio: ratio + sheetRatio,
@@ -33,34 +34,31 @@ const base = (color, ratio, sheetColor, sheetRatio) => ({
     fraction: sheetRatio / (ratio + sheetRatio),
   },
   description: TBD,
-  nameTbd: true,
 });
 
-const foam = (id, index, role, ratio, color, surface) => ({
+const foam = (id, index, name, role, ratio, color, surface) => ({
   id,
-  name: `Layer ${index} — TBD`,
+  name: name ?? `Layer ${index} — TBD`,
   role,
   type: 'foam',
   thicknessRatio: ratio,
   color,
   description: TBD,
-  nameTbd: true,
+  ...(name ? null : { nameTbd: true }),
   ...(surface ? { surface } : null),
 });
 
 // Duro — the corrected stack. The reference photo shows a green foam slab
-// between AeroFlex and Ortho Bond; that layer is not in the real product and is
+// between layers 2 and 3; that layer is not in the real product and is
 // deliberately absent here - do not add it back.
+//
+// Duro's cover was the one band in either brand with signed-off material copy,
+// "Super Plush LuxeKnit Fabric". The product owner retired that name on
+// 2026-08-31 in favour of AirKnit Fabric, which every product except Riva now
+// shares - so the id below is `cover` like everywhere else rather than the old
+// `luxeknit`, and the material ids follow the same pattern as the other stacks.
 export const duroLayers = [
-  {
-    id: 'luxeknit',
-    name: 'Super Plush LuxeKnit Fabric',
-    role: 'Quilted knit cover',
-    type: 'fabric-cover',
-    thicknessRatio: 0.26,
-    color: '#F4F1E8',
-    description: 'Quilted knit cover over plush fibre fill.',
-  },
+  cover('AirKnit Fabric', '#F4F1E8', 0.26),
   {
     id: 'aeroflex',
     name: 'AeroFlex Foam',
@@ -73,7 +71,7 @@ export const duroLayers = [
   },
   {
     id: 'orthobond',
-    name: 'Ortho Bond Foam',
+    name: 'OrthoBond Foam',
     role: 'Rebonded support core',
     type: 'foam',
     surface: 'speckled',
@@ -93,15 +91,16 @@ export const duroLayers = [
 // out rather than built from a shared template - Maxa is now the only product
 // with this shape, and Magic's proportions are its own.
 export const maxaLayers = [
-  cover('#E9E4D6'),
-  foam('comfort', 2, 'Convoluted comfort foam', 0.09, '#E4E3A8', 'convoluted'),
-  foam('foam-3', 3, 'Comfort foam', 0.42, '#6BC163'),
+  cover('AirKnit Fabric', '#E9E4D6'),
+  foam('comfort', 2, 'AeroFlex Foam', 'Convoluted comfort foam', 0.09, '#E4E3A8', 'convoluted'),
+  foam('foam-3', 3, 'Float Sense Foam', 'Comfort foam', 0.42, '#6BC163'),
   base('#5D5C5C', 0.16, '#E8871E', 0.12),
 ];
 
 // SPEC CHANGE: Magic previously shipped as a single uniform 5" Float Sense Foam
 // core with no internal divisions. That is superseded - Magic is a multi-band
-// construction from here on.
+// construction from here on. Float Sense Foam survives the change as the name
+// of layer 3 alone, not of the whole mattress.
 //
 // Magic's proportions are its own. On a 5" mattress the cover and the base take
 // their real thicknesses first - they are upholstery and a bonded base, not
@@ -118,10 +117,10 @@ export const maxaLayers = [
 //   Layer 4 0.577125  ->  2.886"  support core  (75%)
 //   base    0.1200    ->  0.600"  bonded sheet + base
 export const magicLayers = [
-  cover('#E9E4D6', 0.07),
-  foam('comfort', 2, 'Convoluted comfort foam', 0.0405, '#E4E3A8', 'convoluted'),
-  foam('foam-3', 3, 'Comfort foam', 0.192375, '#6BC163'),
-  foam('core', 4, 'Rebonded support core', 0.577125, '#C9CE4E', 'speckled'),
+  cover('AirKnit Fabric', '#E9E4D6', 0.07),
+  foam('comfort', 2, 'AeroFlex Foam', 'Convoluted comfort foam', 0.0405, '#E4E3A8', 'convoluted'),
+  foam('foam-3', 3, 'Float Sense Foam', 'Comfort foam', 0.192375, '#6BC163'),
+  foam('core', 4, 'Core Bonded Foam', 'Rebonded support core', 0.577125, '#C9CE4E', 'speckled'),
   // Split kept at Magic's previous transition:base proportion (0.12 : 0.16).
   base('#5B5C5E', 0.0686, '#E8871E', 0.0514),
 ];
