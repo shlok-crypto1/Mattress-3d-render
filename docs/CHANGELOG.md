@@ -14,6 +14,16 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-31 — The exploded stack backs off enough to see the whole product
+- **Changed:** **`EXPLODE_SCALE` 0.62 -> 0.50.** The open stack was framed too close: on Ultima Luxury the bottom band came within a few pixels of the control row and the right edge of the mattress ran into its own labels. Every product now sits 1.01x-1.16x the framing that shipped before this week rather than 1.26x-1.44x.
+- **Reason:** Product owner, 2026-08-31, on a screenshot of Ultima Luxury: the proportions are right, but the view is too close to see the product entire.
+- **This closes the open clipping item** from the entry below, and it closes it with evidence rather than by guessing. Ultima at 1.33x was visibly the tightest a stack can get while still fitting, so anything at or under that fits; every product is now at most 1.16x, and Ultima itself is 1.07x - back to roughly the framing that shipped for weeks, but with bands two and a half times the air around them.
+- **Nothing else moved.** `GAP_FRACTION` stays at 0.4, so the band-to-gap ratio the owner approved is untouched - scale divides bands and gaps alike. No layer data, no camera change (`EXPLODE_DIST` still 94), no code beyond the one constant.
+- **Files/areas:** `app/src/components/MattressViewer.jsx`.
+- **Validation:** `npm run build` clean. Re-measured across all eight products: Duro 1.03x, Maxa 1.01x, Magic 1.03x, Resto 1.07x, Sova 1.07x, Ultima 1.07x, Riva 1.13x, Luma 1.16x; band-to-gap still exactly 2.5:1 and still no overlapping pairs anywhere.
+
+---
+
 ### 2026-08-31 — Bands dominate the gaps, and the stack sits larger
 - **Changed:**
   - **The exploded gap is now a fraction of average band thickness** (`GAP_FRACTION`, 0.4) rather than a separation solved on its own. Solved on its own it came out as large as the slabs or larger, and a stack whose air dominates its foam reads as a row of uniform floating cards whatever the real proportions are. Every product now shows a band-to-gap ratio of exactly 2.5:1.

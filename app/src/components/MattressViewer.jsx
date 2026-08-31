@@ -21,7 +21,7 @@ import {
 const EXPLODE_MS = MOTION.explode;
 const LAYER_STAGGER = MOTION.explodeStagger;
 const EXPLODE_DIST = 94; // where the button parks the camera to frame the stack
-const EXPLODE_SCALE = 0.62; // overall size of the open stack; ceiling is clipping
+const EXPLODE_SCALE = 0.5; // overall size of the open stack; ceiling is clipping
 const LABEL_PITCH_GAP = 15; // clear air between two layer-name pills
 const HOVER_LIFT = 1.15;
 const HOVER_SCALE = 0.02;
