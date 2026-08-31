@@ -27,6 +27,17 @@ import { makeShadowTexture, makeContactAOTexture } from './foamSurfaces';
 export const LAYER_INFLATE = 2.2;
 
 /**
+ * Exploded gap as a fraction of average band thickness.
+ *
+ * Lower means thicker-looking bands: at 0.4 a band is two and a half times the
+ * air above it, so the slabs dominate and their real proportions are legible.
+ * Useful range is about 0.3 to 0.5. This sets the band-to-gap ratio only -
+ * overall size in the viewport is `EXPLODE_SCALE` in MattressViewer, because
+ * the normalisation below cancels everything else out of the framing.
+ */
+export const GAP_FRACTION = 0.4;
+
+/**
  * Exploded separation between adjacent bands. Products range from five bands to
  * eight, so a fixed gap would either bunch Duro up or push Ultima out of frame;
  * the gap is solved for a roughly constant exploded height instead.
@@ -247,28 +258,47 @@ export async function buildLayerStack({
   });
 
   const n = built.length;
-  // Thicker bands eat into the space between them, so the gap carries the
-  // extra thickness on top of the separation it always had. Without this the
-  // slabs close up on each other and the stack stops reading as separate
-  // layers, which is the opposite of what inflating them is for.
-  const gap0 = computeExplodeGap(n, H);
-  const hAvg0 = H / n;
+  // The gap is a fraction of how thick a band actually is, rather than a
+  // separation solved on its own. Solved on its own it came out as large as the
+  // slabs or larger, and a stack whose air dominates its foam reads as a row of
+  // uniform floating cards - which is exactly the complaint. Tying it to `hAvg`
+  // makes the bands the dominant element, so a band that is genuinely 1.5x
+  // another one looks it.
+  const gap0 = computeExplodeGap(n, H); // now only sets the framing reference
   const hAvg = Hs / n;
-  const gap = gap0 + (hAvg - hAvg0);
+  const gap = GAP_FRACTION * hAvg;
 
-  // A taller exploded stack would simply overflow the frame, so the viewer
-  // shrinks the group by this much on top of its own explode scale. It is the
-  // ratio of what the stack would have spanned before inflation to what it
-  // spans now, which keeps every product framed exactly as it was: same
-  // on-screen extent, thicker slabs inside it. Solved rather than dialled in,
-  // so a product with a different band count needs no new number.
-  const spanBefore = (n - 1) * gap0 + hAvg0;
-  const spanAfter = (n - 1) * gap + hAvg;
-  const explodeScale = spanAfter > 0 ? spanBefore / spanAfter : 1;
+  // Sum of band heights is Hs by construction, so normalise the true exploded
+  // height - every band plus every gap - against a stable framing reference.
+  // A smaller gap must not simply let the stack grow until it overflows.
+  //
+  // Note what cancels: on screen the stack spans `trueHeight * explodeScale`,
+  // which is `target`, and `target` has no Hs in it. LAYER_INFLATE therefore
+  // drops out of the framing entirely - it sets how thick the bands are
+  // relative to the gaps, not how large the stack sits in the viewport. That is
+  // EXPLODE_SCALE's job, in MattressViewer.
+  const target = H + (n - 1) * gap0;
+  const trueHeight = Hs + (n - 1) * gap;
+  const explodeScale = trueHeight > 0 ? target / trueHeight : 1;
 
-  // Centre the exploded stack on the origin so it does not drift off-frame.
-  built.forEach((l, i) => {
-    l.explodeDy = ((n - 1) / 2 - i) * gap;
+  // Uniform clear air between every adjacent pair - which is exactly what
+  // `trueHeight` above measures, and the only reading of `gap` that makes that
+  // normalisation correct.
+  //
+  // A constant centre-to-centre spacing cannot express it once the gap is
+  // smaller than a band. At GAP_FRACTION 0.4 the spacing would be 0.4 of a
+  // band's own thickness, so every band would sit inside its neighbours and the
+  // stack would render as one solid blob instead of an exploded view. Walking
+  // the stack and offsetting each band by half its own thickness, half the
+  // previous one's, and the gap gives `gap` its literal meaning - the air you
+  // see between two slabs - and makes the band-to-gap ratio exact for every
+  // pair rather than true only on average.
+  //
+  // Centred on the origin so the stack does not drift off-frame.
+  let cursor = trueHeight / 2;
+  built.forEach((l) => {
+    l.explodeDy = cursor - l.h / 2 - l.restY;
+    cursor -= l.h + gap;
   });
 
   return {

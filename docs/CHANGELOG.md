@@ -14,6 +14,21 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-31 — Bands dominate the gaps, and the stack sits larger
+- **Changed:**
+  - **The exploded gap is now a fraction of average band thickness** (`GAP_FRACTION`, 0.4) rather than a separation solved on its own. Solved on its own it came out as large as the slabs or larger, and a stack whose air dominates its foam reads as a row of uniform floating cards whatever the real proportions are. Every product now shows a band-to-gap ratio of exactly 2.5:1.
+  - **`EXPLODE_SCALE` raised from 0.55 to 0.62**, which with the refit puts the open stack 1.26x-1.44x the size it was on screen. The camera is untouched: `EXPLODE_DIST` stays at 94.
+  - **The layer data was not touched.** No `thicknessRatio` changed. Bands whose real specs are close still look close, because they are - this makes true proportions legible rather than inventing differences.
+- **Deviation from the brief, and why it was necessary:** the brief said to keep `explodeDy = ((n-1)/2 - i) * gap` unchanged, which treats `gap` as centre-to-centre spacing, while its own `trueHeight = Hs + (n-1)*gap` treats `gap` as the clear air between bands. Those cannot both hold. Taken literally the layout breaks outright: at `GAP_FRACTION` 0.4 the centre-to-centre spacing is 0.88in on Resto against bands 1.41in to 4.40in thick, so **every band interpenetrates its neighbours** and the stack renders as a solid blob. The clear-air reading is the one the normalisation requires, so the bands are now laid out by walking the stack - each offset by half its own thickness, half the previous one's, and the gap. Verified: zero overlapping pairs across all eight products, and the band-to-gap ratio is exact for every pair rather than only on average.
+  - Taken literally the brief also **shrank** the stack to 0.40x-0.57x of its previous on-screen size rather than enlarging it, because `Hs + (n-1)*gap` over-counts the exploded span by every band but one. With the layout corrected, the same normalisation delivers the roughly 20% the brief predicted, and 0.62 takes it to 1.26x-1.44x.
+- **Knock-on fix:** `HOVER_LIFT` is 1.15in and used to lift a band into four or five inches of clear air. The air is now 0.88in on a seven-band product, so the same lift would push a hovered band up into the one above it. It is capped against the gap the stack actually has (`gap * 0.6`), so the lift still reads and cannot collide. Sizing change, but leaving it would have broken hover.
+- **Reason:** Product owner, 2026-08-31: bands should dominate the gaps so proportions read, and the whole exploded stack should sit larger in the viewport.
+- **Files/areas:** `app/src/lib/layerStack.js`, `app/src/components/MattressViewer.jsx`, `docs/3D_RENDER_GUIDELINES.md`. No layer data touched.
+- **Measured, per product** (gap, thinnest..thickest band, size vs the framing that shipped before this work): Duro 1.32in, 2.64-3.96in, 1.27x. Maxa 1.10in, 1.08-5.02in, 1.26x. Magic 0.88in, 0.45-6.35in, 1.28x. Resto 0.88in, 1.41-4.40in, 1.33x. Sova same as Resto. Ultima 0.88in, 1.28-4.33in, 1.33x. Riva 1.13in, 1.80-5.60in, 1.40x. Luma 1.10in, 0.93-6.08in, **1.44x - the tallest, and the first place to look for clipping**.
+- **Validation:** `npm run build` and `oxlint` clean. The exploded layout was replicated arithmetically for all eight products: no overlapping pairs, band-to-gap 2.5:1 everywhere. **Clipping is NOT verified** - it is a visual condition and there is no browser automation in this repo. Every product is larger than the framing that shipped before, so the fail condition the brief names is genuinely open. If anything clips, `EXPLODE_SCALE` is the single knob: 0.43 returns the worst case (Luma) to exactly the old framing, and about 0.50 caps every product at roughly 1.15x.
+
+---
+
 ### 2026-08-31 — Ultima's Luxury is 7 inches
 - **Changed:** **Ultima Luxury is 7″, not the 6.5″ this project has carried.** Corrected on the product owner's instruction against the variant menu on the live page. Ultima's Luxury is therefore the same height as Resto's and Sova's; the 6.5″ was the odd one out among the three seven-band FOAMICO products.
 - **Reason:** Product owner, 2026-08-31: "luxury variant here is 7 inches, please change that."
