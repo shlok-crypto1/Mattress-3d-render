@@ -132,7 +132,10 @@ cropped from the product photography clear of the binding and the rounded corner
 with the bump high-passed from the same crop so it is in register with the colour
 map. Colour is deliberately not touched in that pipeline - no white-balance, no
 auto-level - so the fabric keeps its true colour. **They are drop-in: do not
-re-crop, re-derive or re-compress them.** Resto and Magic keep their existing maps,
+re-crop, re-derive or re-compress them.** The supplied originals are kept in
+`image improvement/` at the repo root, byte-identical to what is in `textures/`,
+so a future change can be checked against what was handed over rather than
+against a copy that has already been through the build. Resto and Magic keep their existing maps,
 which are sharper than the references supplied for them.
 
 `top.png` is applied at UV 0..1 across the whole cap with no repeat, so the swatch
