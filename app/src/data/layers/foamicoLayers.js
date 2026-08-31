@@ -1,9 +1,8 @@
 // FOAMICO layer stacks, top band first.
 //
 // `name` is the product owner's confirmed material name (2026-08-31) for every
-// band except Riva's layers 2-6, which are still numbered stand-ins - Riva was
-// given layer 1 alone for now. `description` remains filler until the real
-// material copy arrives. `thicknessRatio` is a relative proportion eyeballed
+// band in this file; nothing here is a numbered stand-in any more.
+// `description` remains filler until the real material copy arrives. `thicknessRatio` is a relative proportion eyeballed
 // from the reference cutaway renders in "Layers/<PRODUCT>.png", not a measured
 // spec. `color` is sampled from those same renders and is a stand-in for real
 // layer photography.
@@ -172,16 +171,23 @@ export const ultimaLayers = [
 
 // Riva — foam only, explicitly no coil band.
 //
-// The product owner named layer 1 alone on 2026-08-31 and said the rest would
-// follow, so layers 2-6 keep their numbered stand-ins. Riva's cover is the one
-// cover in either brand that is not AirKnit Fabric.
+// Riva's cover is the one cover in either brand that is not AirKnit Fabric. The
+// rest were named on 2026-08-31, against a RIVA 3000 reference sheet: this is
+// the R-grade stack, so R3000 shows all six bands and R2000 and R1000 show it
+// less the ones they drop.
+//
+// These are the only names in either brand carrying a trademark symbol, which
+// is the product owner's decision and is why they look unlike their neighbours.
+// The reference sheet also names layer 1 "UltraLuxe Adaptive Knit Fabric"; the
+// owner's instruction is Bio Weave, which is what layer 1 has been called since
+// it was first named, so the sheet is not followed on that one line.
 export const rivaLayers = [
   cover('Bio Weave', '#E8E8E6'),
-  foam('foam-2', 2, null, 'Comfort foam', 0.1, '#D8D6BE'),
-  foam('foam-3', 3, null, 'Comfort foam', 0.1, '#EFEFEC'),
-  foam('foam-4', 4, null, 'Support foam', 0.11, '#C21E4E'),
-  foam('foam-5', 5, null, 'Support foam', 0.11, '#D3D2BC'),
-  foam('core', 6, null, 'Zoned support core', 0.2, '#A9A44E', 'channelled'),
+  foam('foam-2', 2, 'SetaComforto\u2122', 'Comfort foam', 0.1, '#D8D6BE'),
+  foam('foam-3', 3, 'LussoMorbido\u2122', 'Comfort foam', 0.1, '#EFEFEC'),
+  foam('foam-4', 4, 'NubeSoave\u2122', 'Support foam', 0.11, '#C21E4E'),
+  foam('foam-5', 5, 'Struttura Forte\u2122', 'Support foam', 0.11, '#D3D2BC'),
+  foam('core', 6, 'FondoCore Italia\u2122', 'Zoned support core', 0.2, '#A9A44E', 'channelled'),
   base('#585559', 0.13, '#F0921E', 0.15),
 ];
 

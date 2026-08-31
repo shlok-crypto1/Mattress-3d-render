@@ -48,9 +48,21 @@ const foam = (id, index, name, role, ratio, color, surface) => ({
   ...(surface ? { surface } : null),
 });
 
-// Duro — the corrected stack. The reference photo shows a green foam slab
-// between layers 2 and 3; that layer is not in the real product and is
-// deliberately absent here - do not add it back.
+// Duro — five bands, and Luxury drops one of them.
+//
+// SPEC CHANGE (2026-08-31). The green slab between AeroFlex and OrthoBond used
+// to be recorded as a render artefact that "must never be rendered", on the
+// reading that every Duro grade shares one stack and the renders disagreed with
+// each other. They do not disagree: they are different grades. Classic and
+// Premium carry the band and Luxury does not, which is exactly what
+// "DURO CLASSIC.png", "DURO PREMIUM.png" and "DURO LUXURY.png" show, and the
+// product owner has confirmed the band is real and is Float Sense Foam - the
+// same material Maxa and Magic carry, and it takes the same albedo here.
+//
+// Numbering follows position in the full stack, as everywhere else, so OrthoBond
+// is Layer 4 here rather than the Layer 3 it was while the green band was
+// considered not to exist. Nothing on screen changes from that: these bands
+// carry real names, so no label ever showed a number.
 //
 // Duro's cover was the one band in either brand with signed-off material copy,
 // "Super Plush LuxeKnit Fabric". The product owner retired that name on
@@ -68,6 +80,19 @@ export const duroLayers = [
     thicknessRatio: 0.2,
     color: '#E7DD8F',
     description: 'Convoluted airflow foam for ventilation and pressure relief.',
+  },
+  {
+    id: 'float-sense',
+    name: 'Float Sense Foam',
+    role: 'Comfort foam',
+    type: 'foam',
+    // Ratios are normalised at build time, so inserting a band re-divides the
+    // stack rather than needing the other four rewritten; each keeps the
+    // proportion against the others it already had. Luxury omits this one and
+    // renormalises back to exactly the stack it renders today.
+    thicknessRatio: 0.26,
+    color: '#6BC163',
+    description: TBD,
   },
   {
     id: 'orthobond',
