@@ -260,7 +260,7 @@ export function makeCoilRibNormal(ribs = 11) {
   });
 }
 
-/** Rebonded-foam chip speckle (Ortho Bond and the FOAMICO support cores). */
+/** Rebonded-foam chip speckle (OrthoBond and the FOAMICO support cores). */
 export function makeSpeckleTexture(base = '#DCD7CE', size = 256) {
   return memo(`speckle-${base}-${size}`, () => {
     const c = document.createElement('canvas');

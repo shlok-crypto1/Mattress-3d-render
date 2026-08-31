@@ -36,7 +36,8 @@ This file is the sole authority for product facts (names, layer construction, ma
 | Foam split | **Layer 6 30% / Layer 5 30% / Layer 4 20% / Layer 3 20%** of the product's foam. The cover, the convoluted top band and the bonded base are outside this split - they are upholstery and a base, not foam a percentage is quoted of - and keep the proportions they had, so the four foam bands divide their existing combined share. | Confirmed (product owner, 2026-08-26) |
 | Per-grade layer composition | Resto is the one product whose grades are built from **different stacks**, not one stack cut to different thicknesses. Luxury 7″ is the full seven-band build and the grades below it drop comfort foam. **Luxury 7″ — layers 1, 2, 3, 4, 5, 6 + base. Premium 6.5″ — layers 1, 2, 4, 5, 6 + base (drops layer 3). Classic 6″ — layers 1, 2, 5, 6 + base (drops layers 3 and 4).** The base is present in every grade. | Confirmed (product owner, 2026-08-27; independently corroborated by `RESTO CLASSIC.png` and `RESTO PREMIUM.png` in the per-grade render set, which show exactly these band sets) |
 | Per-grade thickness rule | The cover and the bonded base keep the real thickness they have at the baseline grade — they are the same components at every grade — and the surviving foam bands divide the rest of the declared height between them in proportion to the foam split above. A thinner Resto is therefore less foam rather than a puffier cover and a deeper base. This also governs Classic and Premium in the places where no band is dropped: their cover and base no longer scale down with the mattress the way they did before 2026-08-27. | Confirmed (product owner, 2026-08-27) |
-| Exact per-layer names/thicknesses | — | TBD |
+| Per-layer names | **1 AirKnit Fabric → 2 AeroFlex Foam → 3 Memorest Foam → 4 Cosmic Foam → 5 Pro Nexa Foam → 6 Enduro HR Foam → Base Quilted Foam** | Confirmed (product owner, 2026-08-31) |
+| Exact per-layer thicknesses | — | TBD |
 | Dimensions | — | TBD |
 
 ### Sova
@@ -49,7 +50,8 @@ This file is the sole authority for product facts (names, layer construction, ma
 | Variants | Classic 5″, Classic 6″, Premium 6.5″, Luxury 7″ | Confirmed |
 | Foam split | **Layer 6 30% / Layer 5 30% / Layer 4 20% / Layer 3 20%** of the product's foam. The cover, the convoluted top band and the bonded base are outside this split - they are upholstery and a base, not foam a percentage is quoted of - and keep the proportions they had, so the four foam bands divide their existing combined share. | Confirmed (product owner, 2026-08-26) |
 | Per-grade layer composition | **Luxury 7″ — all seven bands. Premium 6.5″ — layers 1, 2, 4, 5, 6 + base (drops layer 3). Classic 6″ and Classic 5″ — layers 1, 2, 5, 6 + base (drops layers 3 and 4).** The product owner gave one rule for "sova classic" and Sova presents two Classic heights; both take it. Natural's composition is still to come — until then it shows every band. | Confirmed (product owner, 2026-08-27; corroborated by `SOVA CLASSIC.png` and `SOVA PREMIUM.png`) |
-| Exact per-layer names/thicknesses | — | TBD |
+| Per-layer names | **1 AirKnit Fabric → 2 AeroFlex Foam → 3 Memorest Foam → 4 Cosmic Foam → 5 Plush Core Latex → 6 OrthoBond Foam → Base Quilted Foam** | Confirmed (product owner, 2026-08-31) |
+| Exact per-layer thicknesses | — | TBD |
 | Dimensions | — | TBD |
 
 ### Luma
@@ -64,7 +66,8 @@ This file is the sole authority for product facts (names, layer construction, ma
 | Spring unit footprint | The pocket unit fills the same footprint as the foam bands above and below it, less the 2% the slabs' rounded corners take. It used to be laid out at a fixed pitch from a fixed 3″ inset, which stopped it several inches short of the edge on every side and read as a smaller mattress inside the mattress. | Confirmed (product owner, 2026-08-26) |
 | Per-grade layer composition | **Luxury 10″ — all eight bands. Premium 8″ and Classic 6″ — the same seven bands as each other, dropping layer 3.** Layer 3 is the blue comfort foam, and it was genuinely missing from this repository's Luma stack until 2026-08-27; `LUMA LUXURY.png` shows it and `LUMA CLASSIC.png` / `LUMA PREMIUM.png` do not. Adding it renumbered every band below it, so **Luma's spring unit is Layer 6**, not Layer 5 — the numbering follows position in the full stack, as it does for every product. | Confirmed (product owner, 2026-08-27; corroborated by all three Luma renders) |
 | Per-grade thickness rule | **The spring unit is the same size in Luxury and Premium, and considerably smaller in Classic.** Solved rather than eyeballed: with the other seven ratios summing to 0.95, requiring Luxury's spring unit to equal Premium's fixes the blue band's ratio at 0.2375. That makes it 2.00″ and leaves every other band in Luxury the identical thickness it has in Premium — so Luxury is exactly Premium plus this one layer, which is what the two renders show. Classic's spring unit comes out 33% shorter than Premium's (2.07″ against 2.76″). Absolute thicknesses remain TBD; these are proportions. | Confirmed (product owner, 2026-08-27) |
-| Exact per-layer names/thicknesses | — | TBD |
+| Per-layer names | **1 AirKnit Fabric → 2 AeroFlex Foam → 3 Memorest Foam → 4 Pro Nexa Foam → 5 Guard Flex → 6 Hybrid Pocket Springs → 7 Guard Flex → Base Quilted Foam**. Layers 5 and 7 carry the same name because they are the pair of coil insulator pads either side of the spring unit — independent corroboration that the spring unit is Layer 6 | Confirmed (product owner, 2026-08-31) |
+| Exact per-layer thicknesses | — | TBD |
 | Dimensions | — | TBD |
 
 ### Ultima
@@ -77,7 +80,8 @@ This file is the sole authority for product facts (names, layer construction, ma
 | Variants | Classic 6″, Classic 5″, Premium 6″, Luxury 6.5″, Natural 6″ | Confirmed — **Natural corrected from 7″ to 6″ on 2026-08-26 by the product owner**; Natural is 6″ wherever it is offered |
 | Foam split | **Layer 6 30% / Layer 5 30% / Layer 4 20% / Layer 3 20%** of the product's foam. The cover, the convoluted top band and the bonded base are outside this split - they are upholstery and a base, not foam a percentage is quoted of - and keep the proportions they had, so the four foam bands divide their existing combined share. | Confirmed (product owner, 2026-08-26) |
 | Per-grade layer composition | **Luxury 6.5″ — all seven bands. Premium 6″ — layers 1, 2, 4, 5, 6 + base (drops layer 3). Classic 6″ and Classic 5″ — layers 1, 2, 5, 6 + base (drops layers 3 and 4).** Note Classic 6″ and Premium 6″ are the same height and different builds; that is intended. Natural's composition is still to come. | Confirmed (product owner, 2026-08-27; corroborated by `ULTIMA CLASSIC.png`) |
-| Exact per-layer names/thicknesses | — | TBD |
+| Per-layer names | **1 AirKnit Fabric → 2 AeroFlex Foam → 3 Memorest Foam → 4 Cosmic Foam → 5 Cloud Sense Foam → 6 Zero G Latex → Base Quilted Foam** | Confirmed (product owner, 2026-08-31) |
+| Exact per-layer thicknesses | — | TBD |
 | Dimensions | — | TBD |
 
 ### Riva
@@ -92,7 +96,9 @@ This file is the sole authority for product facts (names, layer construction, ma
 | Border badge | A woven "RIVA / SLEEP" oval badge on the dark base border. **It appears exactly twice on the product: once at the head and once at the foot. It must never repeat down the long sides.** | Confirmed |
 | Badge asset note | The supplied border crop was mirrored (the badge read as a reversed "AVIR / SLEEP") and the badge was baked into the tiling photo, so it repeated about six times around the perimeter. The crop is now un-mirrored and the badge painted out of it; the badge ships separately as `side-badge.png` and is placed on two faces. | Confirmed correction |
 | Per-grade layer composition | **R3000 9″ — all seven bands. R2000 8″ — drops layer 2. R1000 6″ — drops layers 2 and 3.** Riva thins from the top of the comfort stack downwards rather than from the middle, which is the opposite of how Sova, Ultima and Resto thin. Natural's composition is still to come. | Confirmed (product owner, 2026-08-27; corroborated by `RIVA 2K.png`) |
-| Exact per-layer names/thicknesses | — | TBD |
+| Per-layer names | **1 Bio Weave → Base Quilted Foam.** Riva's cover is the one cover in either brand that is not AirKnit Fabric. | Confirmed (product owner, 2026-08-31) |
+| Per-layer names, layers 2–6 | — | TBD — the product owner named layer 1 alone on 2026-08-31 and said the rest would follow |
+| Exact per-layer thicknesses | — | TBD |
 | Dimensions | — | TBD |
 
 ### Sofa cum Bed
@@ -130,12 +136,13 @@ Because every spec above is TBD, this product carries **no variant control** on 
 |---|---|---|
 | Product name | Duro | Confirmed |
 | Category | VedaSleep Classic | Confirmed |
-| Layer construction | Super Plush LuxeKnit Fabric (cover) → AeroFlex Foam → Ortho Bond Foam → base transition/fabric layer | Confirmed |
-| Excluded layer | A green foam layer appears between AeroFlex Foam and Ortho Bond Foam in one reference image (`DURO_PREMIUM.png`) — **this layer does not exist in the real product and must never be rendered.** The corrected reference is `DURO_LUXURY.png` (4 layers, no green). | Confirmed |
+| Layer construction | AirKnit Fabric (cover) → AeroFlex Foam → OrthoBond Foam → base transition/fabric layer | Confirmed — material names updated 2026-08-31; see Per-layer names below |
+| Excluded layer | A green foam layer appears between AeroFlex Foam and OrthoBond Foam in one reference image (`DURO_PREMIUM.png`) — **this layer does not exist in the real product and must never be rendered.** The corrected reference is `DURO_LUXURY.png` (4 layers, no green). | Confirmed |
 | Coil layer | None | Confirmed |
 | Variants | Classic 5″, Premium 6″, Luxury 6″ | Confirmed |
-| Foam split | **Ortho Bond is 100% of Duro's support foam.** AeroFlex stays as it is, above it - explicitly confirmed by the product owner (2026-08-26) when the split was given - so the stack is unchanged. | Confirmed |
-| Exact layer thicknesses | — | TBD |
+| Foam split | **OrthoBond is 100% of Duro's support foam.** AeroFlex stays as it is, above it - explicitly confirmed by the product owner (2026-08-26) when the split was given - so the stack is unchanged. | Confirmed |
+| Per-layer names | **1 AirKnit Fabric → 2 AeroFlex Foam → 3 OrthoBond Foam → Base Quilted Foam**. **This retires "Super Plush LuxeKnit Fabric"**, the name previously Confirmed for Duro's cover and the only signed-off material name this project carried before 2026-08-31; the product owner replaced it with the AirKnit Fabric that every product except Riva now shares. Layer 3's spelling also moves from Ortho Bond to OrthoBond; layer 2 keeps the AeroFlex it already had | Confirmed (product owner, 2026-08-31) |
+| Exact per-layer thicknesses | — | TBD |
 | Dimensions | — | TBD |
 | Note on old spec line | The live site previously showed "Classic · 5″ High-Density Foam" — this predates the multi-layer construction above and should be replaced, not treated as current. | Confirmed correction |
 
@@ -148,7 +155,8 @@ Because every spec above is TBD, this product carries **no variant control** on 
 | Coil layer | None | Confirmed |
 | Variants | Classic 5″ | Confirmed |
 | Foam split | **Layer 3 is 100% of Maxa's foam, and the rebonded support core that sat under it is removed** (product owner, 2026-08-26). Layer 3 takes the core's share as well as its own, so the cover, the convoluted band and the bonded base keep their proportions. The stack is four bands: cover → convoluted comfort foam → comfort foam → bonded base. This supersedes the 5-band construction recorded above. | Confirmed |
-| Exact per-layer names/thicknesses | — | TBD |
+| Per-layer names | **1 AirKnit Fabric → 2 AeroFlex Foam → 3 Float Sense Foam → Base Quilted Foam** | Confirmed (product owner, 2026-08-31) |
+| Exact per-layer thicknesses | — | TBD |
 | Dimensions | — | TBD |
 
 ### Magic
@@ -162,7 +170,8 @@ Because every spec above is TBD, this product carries **no variant control** on 
 | Thickness | **5″** | Confirmed — supersedes the 6″ previously carried in code, which was never a confirmed figure |
 | Layer proportions | Cover 0.35″ and the bonded base 0.60″ take their real thicknesses; the remaining 4.05″ is foam. The convoluted top band keeps **5%** of that foam (Layer 2, 0.20″), and what is under it splits **25% Layer 3 (0.96″) / 75% Layer 4 (2.89″)**. | Confirmed (product owner, 2026-08-26) — supersedes the earlier 80 / 15 / 5 split |
 | Proportion scope | These are Magic's alone; every product's proportions are now its own. | Confirmed |
-| Exact per-layer names | — | TBD |
+| Per-layer names | **1 AirKnit Fabric → 2 AeroFlex Foam → 3 Float Sense Foam → 4 Core Bonded Foam → Base Quilted Foam**. Float Sense Foam survives Magic's supersession as the name of layer 3 alone, not of the whole mattress | Confirmed (product owner, 2026-08-31) |
+| Exact per-layer thicknesses | — | TBD |
 | Dimensions (width/length) | — | TBD |
 | Fabric texture reference | Top/side/bottom textures already cropped from `Magic_texture.JPG`, `Magic_front_and_back.png`, and the angled/front reference photos (grey diamond-quilt top, dark ribbed side/bottom) | Confirmed |
 
@@ -190,11 +199,13 @@ Because every spec above is TBD, this product carries **no variant control** on 
 - **Four products were rendering a thickness this table does not confirm, and no longer do** (2026-08-26): Luma at 6″; Riva at 8″ when the R1000 it presents is 6″ (8″ is R2000); Maxa at 6″ when its one variant is 5″; Signature at 8″, a figure that appears nowhere in its entry. Each now renders its baseline. Two products were also labelling their category as their variant ("Comfort" for Maxa, "Memory Foam" for Magic); both are Classic. **Maxa's correction remains flagged for the product owner; Signature's went with the product when it was removed.** Luma's was resolved the same day and in the other direction - Classic is 6″, the figure the code originally had, and it is 6″ again; the 8″ in between came from this table's earlier Luma row, which the owner has since corrected.
 - **The grade a product is shown at is a choice on the page, not a line on the card.** Every product with more than one presented variant offers them in a menu on its product page; the grid card carries the product's name alone. The menu runs thinnest first and pins **Natural** to the end in its own colour - it is the premium grade of the products that offer it, and it does not belong in a size ladder. The variant already named on the pill is not repeated inside the menu.
 - **Foam splits are percentages of the foam, not of the mattress.** Where a product's entry above gives one, it divides only the bands named in it; the cover, any convoluted top band and the bonded base sit outside it and keep the proportions they already had, so the split changes how the foam divides and not how thick the upholstery is. A product with no split recorded keeps its eyeballed placeholder ratios - **do not carry another product's percentages across**, however similar the stacks look.
+- **Material names are now confirmed for every band of every product except Riva's layers 2-6** (product owner, 2026-08-31), and they are recorded per product in the Per-layer names row of each entry above. Two of them are shared rather than per-product, and a new product inherits both rather than inventing its own: the cover is **AirKnit Fabric** in all eight products that have one named — Riva alone differs, with **Bio Weave** — and the bonded transition-sheet-plus-base band is **Quilted Foam** in every product of both brands. Names follow one house format, approved by the product owner on 2026-08-31: **a closed compound takes an internal capital** — AirKnit, AeroFlex, OrthoBond — while names written as separate words stay separate (Pro Nexa, Guard Flex, Cloud Sense, Float Sense, Zero G, Bio Weave). In code the two shared names live in the `cover` and `base` factories in `app/src/data/layers/*Layers.js`; the base name is fixed inside its factory precisely because there is no per-product variation to express.
+- **A material name is copy, not construction.** Naming a band did not change its `type`, `surface`, thickness ratio or colour, and must not: how a band is built and how it looks are established by the reference cutaway renders and the confirmed stack shapes above. Sova's **Plush Core Latex** and Ultima's **Zero G Latex** are accordingly still rendered as `type: 'foam'` with the surfaces their renders show. **Whether those two bands are literally latex, and whether Ultima's Cloud Sense Foam is still correctly described as a rebonded chip core, is open** — the names suggest otherwise and the renders do not settle it. Flagged for the product owner; do not resolve it by changing the render.
 - **Layer order and coil/no-coil status are Confirmed per product above and must not be altered without an explicit new instruction from the product owner.**
 - **A grade may omit bands from its product's stack, but only where the product's entry above records the composition for that grade** (currently Resto alone; every other product shows every band at every grade). A band that survives keeps its own identity and its own number — Classic reads Layer 1, Layer 2, Layer 5, Layer 6, Base — and the gap in the numbering is the point: it is what shows which bands the grade leaves out. Do not renumber the survivors.
 - **A grade may omit bands wherever the product's entry above records it.** Resto, Sova, Luma, Ultima and Riva all do, confirmed by the product owner on 2026-08-27 and corroborated by the per-grade render set. Natural's composition is still to come for all three products that offer it, and every Natural grade shows its whole stack meanwhile.
 - **How the survivors fill the height is a per-product choice.** By default they simply divide the grade's height in proportion to the ratios they already have, so the cover and base scale with the mattress. Resto alone opts into holding the cover and bonded base at their baseline thickness (`holdUpholstery`), because that only reads correctly over a narrow spread of grade heights - Resto's grades run 6″ to 7″. Over Riva's 6″ to 9″ or Luma's 6″ to 10″ it makes the base absurd, up to 42% of the thinnest grade, because a base sized for the tallest grade is not the base a much thinner one is built on. Do not turn it on for a product without checking what it does to that product's thinnest grade.
-- Exact thickness values, material names beyond what's listed, dimensions, warranty terms (beyond Resto's stated line), and pricing are **TBD across every product** — do not invent them for copy, labels, or detail cards. Use a visible `TBD` placeholder in UI copy if a real value is required before the source is available.
+- Exact thickness values, dimensions, warranty terms (beyond Resto's stated line), and pricing are **TBD across every product** — do not invent them for copy, labels, or detail cards. Use a visible `TBD` placeholder in UI copy if a real value is required before the source is available.
 - If a reference image conflicts with an entry marked Confirmed in this table (as happened with Duro's green layer and Magic's original single-foam spec), the table wins unless the product owner explicitly states the table is being superseded — record any such override here immediately, in the same change, per `CLAUDE.md`'s documentation rule.
 
 ## Verification
