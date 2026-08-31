@@ -127,23 +127,6 @@ can reach; the folder is recoverable from git if the product ever returns. `bott
 the source of truth for that product's base-layer colour — see the base-layer rule
 in `docs/PRODUCT_CATALOG.md`.
 
-**Luma, Sova, Ultima and Riva carry supplied 1024x1024 quilt maps** (2026-08-31),
-cropped from the product photography clear of the binding and the rounded corner,
-with the bump high-passed from the same crop so it is in register with the colour
-map. Colour is deliberately not touched in that pipeline - no white-balance, no
-auto-level - so the fabric keeps its true colour. **They are drop-in: do not
-re-crop, re-derive or re-compress them.** Resto and Magic keep their existing maps,
-which are sharper than the references supplied for them.
-
-`top.png` is applied at UV 0..1 across the whole cap with no repeat, so the swatch
-is the sleeping surface: one crop stretched over the mattress, not a tile. That is
-why the crop's own scale is a design decision and not just a resolution one, and
-why none of these swatches needs to be seamless. Anything that changes the repeat
-has to change it on the colour map, the bump-derived normal, roughness and AO, and
-the puff field that `quiltDisplacer` samples - all four together, or the relief
-comes out of register with the pattern it belongs to - and needs a seamless swatch
-first, which these crops are not.
-
 `side-badge.png` appears under `textures/foamico/riva/` only: the woven badge,
 alpha-keyed out of the border photograph so it can be placed on two faces instead
 of repeating with the tile. See the branding rule in `docs/PRODUCT_CATALOG.md`.
