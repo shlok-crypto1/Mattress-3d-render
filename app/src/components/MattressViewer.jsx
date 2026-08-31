@@ -128,6 +128,8 @@ export default function MattressViewer({
 }) {
   const mountRef = useRef(null);
   const labelsRef = useRef(null);
+  const headRef = useRef(null);
+  const controlsRef = useRef(null);
   const variantRef = useRef(null);
   const variantButtonRef = useRef(null);
   const [view, setView] = useState(CORNER_VIEW.key);
@@ -971,6 +973,27 @@ export default function MattressViewer({
       renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+
+      // The canvas is full-bleed, so it is taller than the box the framing was
+      // tuned against by exactly the height of the chrome now floating over it.
+      // The camera's 32deg fov is VERTICAL: a taller canvas holds the same world
+      // height and proportionally LESS world width, which would push a wide
+      // mattress hard against the sides - about 50% wider in the frame on a
+      // desktop window, well into clipping.
+      //
+      // Pulling back by the ratio of the two heights cancels it exactly. World
+      // height scales by `fit` while the canvas grows by the same factor, so
+      // pixels-per-inch is unchanged and the product renders at precisely the
+      // size and position it did inside the box; the stage simply carries on
+      // behind the chrome. Measured rather than assumed a constant, so it stays
+      // correct as the control row rewraps across breakpoints.
+      const chromeH =
+        (headRef.current?.offsetHeight ?? 0) + (controlsRef.current?.offsetHeight ?? 0);
+      const framed = h - chromeH;
+      // Guard the degenerate case - chrome taller than the viewport - rather
+      // than let it solve for an absurd distance.
+      s.fit = framed > 0 ? Math.min(3, h / framed) : 1;
+
       const baseDist = w < 560 ? 195 : 150;
       // Remembered so the view presets can return to the size-appropriate framing.
       s.baseDist = baseDist;
@@ -1288,7 +1311,11 @@ export default function MattressViewer({
         s.phi += (s.tPhi - s.phi) * k;
         s.dist += (s.tDist - s.dist) * k;
         const cp = Math.cos(s.phi), sp = Math.sin(s.phi);
-        camera.position.set(s.dist * cp * Math.sin(s.theta), s.dist * sp, s.dist * cp * Math.cos(s.theta));
+        // One place applies the full-bleed fit, so every distance in the
+        // viewer - the view presets, the pinch clamps, the explode park - stays
+        // in the logical units it was tuned in.
+        const d = s.dist * (s.fit ?? 1);
+        camera.position.set(d * cp * Math.sin(s.theta), d * sp, d * cp * Math.cos(s.theta));
         camera.lookAt(0, 0, 0);
         s.shadow.material.opacity =
           Math.max(0, Math.min(1, sp + 0.15)) * (s.shadowFade ?? 1) * (s.morphFade ?? 1);
@@ -1515,7 +1542,7 @@ export default function MattressViewer({
 
   return (
     <div
-      className="mv-root"
+      className="mv-root mv-immersive"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -1561,7 +1588,7 @@ export default function MattressViewer({
       >
         &larr; {backTo === '/' ? 'Brands' : 'Catalog'}
       </Link>
-      <div className="mv-head">
+      <div className="mv-head" ref={headRef}>
         <img
           src={publicUrl(t.logo)}
           alt={t.logoAlt}
@@ -1635,7 +1662,7 @@ export default function MattressViewer({
         )}
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+      <div className="mv-stage">
         {/* Two pools, and they do different jobs. The ground is always on and
             is what gives a dark-bordered product a silhouette against a dark
             stage - see the note in src/data/brandThemes.js. The tint fades in
@@ -1706,6 +1733,7 @@ export default function MattressViewer({
 
       <div
         className="mv-controls"
+        ref={controlsRef}
         style={{ ...(animated ? enterStyle(revealed, 130) : null) }}
       >
         <div className="mv-btnrow">

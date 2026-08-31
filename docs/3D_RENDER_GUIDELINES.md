@@ -82,6 +82,40 @@ normalisation cancels is worth knowing: on screen the stack spans the reference,
 which contains no inflated term at all, so **`LAYER_INFLATE` drops out of the
 framing entirely**. It sets the band-to-gap ratio, not the size on screen.
 
+## The stage is full-bleed and the chrome floats on it
+
+The canvas fills the viewport. The title, the variant pill and the control row
+are positioned over it rather than taking layout space beside it.
+
+It used to be a box with the head above and the controls below, and those two
+boundaries were visible as a band of Key Black on FOAMICO and Stage Grey on
+VedaSleep. Worse, the box cropped the product: zooming in ran the mattress into
+a hard edge partway down the screen.
+
+Two things this requires, and a third it must not break:
+
+- **The camera has to be pulled back by the height of the chrome.** The 32
+  degree fov is *vertical*, so a taller canvas holds the same world height and
+  proportionally *less* world width - about 50% less on a desktop window, which
+  puts a wide mattress well into clipping at the sides. The viewer measures the
+  head and the control row and pulls back by the ratio of the full viewport to
+  what is left after them. That cancels exactly: world height scales by the same
+  factor the canvas grew, so pixels-per-inch is unchanged and the product
+  renders at precisely the size and position it had inside the box, with the
+  stage simply carrying on behind the chrome. **Measure it; do not hard-code a
+  reference aspect** - the control row rewraps at the phone breakpoints.
+- **The fit is applied in one place**, where the camera is positioned, so every
+  distance in the viewer stays in the logical units it was tuned in: the view
+  presets, the pinch clamps and the explode park all scale together.
+- **Floating chrome must not swallow drags meant for the model.** The bars are
+  `pointer-events: none` and only the controls inside them take the pointer
+  back. A bar that eats the pointer makes the bottom of the mattress
+  un-draggable, which is not obvious from looking at it.
+
+This is scoped to the mattress viewer (`.mv-immersive`). Sofa cum Bed wears the
+same chrome classes but is a photographic plate in normal flow, and still wants
+its head and controls to occupy space.
+
 ## Rendering
 - Maintain consistent lighting between product states — see `docs/CAMERA_AND_LIGHTING.md` for the full lighting standard.
 - Material realism (physically plausible response, avoiding flat colors, texture scale) is owned entirely by `docs/MATERIALS_AND_TEXTURES.md` — this file does not restate those rules.

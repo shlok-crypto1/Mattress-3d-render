@@ -227,6 +227,42 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
   inset: 0;
   pointer-events: none;
 }
+
+.mv-stage { position: relative; flex: 1; min-height: 0; }
+
+/* Full-bleed stage.
+ *
+ * The canvas used to be a box with the head above it and the controls below,
+ * and those two boundaries were visible as a band of Key Black on FOAMICO and
+ * Stage Grey on VedaSleep - and worse, they cropped the product, so zooming in
+ * ran the mattress into a hard edge. The canvas now fills the viewport and the
+ * chrome floats on top of it, so there is no edge to find.
+ *
+ * Scoped to the mattress viewer. Sofa cum Bed wears the same chrome classes but
+ * is a photographic plate in normal flow, and still wants its head and controls
+ * to take up space.
+ */
+.mv-immersive .mv-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.mv-immersive .mv-head,
+.mv-immersive .mv-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  /* Floating chrome must not swallow drags meant for the model, so the bars
+     themselves are transparent to the pointer and only the controls inside
+     them take it back. */
+  pointer-events: none;
+}
+.mv-immersive .mv-head { top: 0; }
+.mv-immersive .mv-controls { bottom: 0; }
+.mv-immersive .mv-variant-pill,
+.mv-immersive .mv-variant-menu,
+.mv-immersive .mv-view-btn { pointer-events: auto; }
 .mv-label { font-size: 10.5px; }
 .mv-controls {
   display: flex;
