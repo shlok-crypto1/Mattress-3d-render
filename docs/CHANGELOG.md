@@ -14,6 +14,19 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-31 — Full-bleed stage, floating chrome
+- **Changed:** **The canvas now fills the viewport and the chrome floats on it.** The title, variant pill and control row are positioned over the stage instead of taking layout space beside it. The stage box used to end above the controls and below the head, and those boundaries showed as a band of Key Black on FOAMICO and Stage Grey on VedaSleep - and cropped the product, so zooming in ran the mattress into a hard edge partway down the screen.
+- **The camera is pulled back to match, and this is the part that is easy to get wrong.** The 32 degree fov is *vertical*: a taller canvas holds the same world height and proportionally less world *width*, about 50% less on a desktop window, which would have put a wide mattress straight into clipping at the sides - the opposite of the intent. The viewer measures the head and control row and pulls back by the ratio of the full viewport to what is left after them. That cancels exactly, so pixels-per-inch is unchanged and **the product renders at precisely the size and position it had inside the box**; only the background extends. Measured rather than hard-coded against a reference aspect, so it stays correct as the control row rewraps at the phone breakpoints.
+- **The fit is applied once**, where the camera is positioned, so the view presets, the pinch clamps and the explode park all keep the logical units they were tuned in.
+- **The floating bars do not swallow drags.** They are `pointer-events: none` and only the controls inside them take the pointer back; otherwise the bottom of the mattress would have become un-draggable.
+- **Scoped to the mattress viewer** via `.mv-immersive`. Sofa cum Bed wears the same `.mv-head` / `.mv-controls` classes but is a photographic plate in normal flow and still wants them to occupy space - making the classes float globally would have broken that page.
+- **Reason:** Product owner, 2026-08-31: make the CTAs floating; the black edges on FOAMICO and grey edges on VedaSleep should not be visible, and zooming into the product should reveal no edges. The full-bleed scope - floating the title as well as the buttons - was put to the owner and chosen, because floating the buttons alone leaves the top boundary intact.
+- **Files/areas:** `app/src/components/MattressViewer.jsx`, `app/src/index.css`, `docs/3D_RENDER_GUIDELINES.md`.
+- **Known consequence:** the product now passes behind the title and the control row when zoomed in, which is inherent to full-bleed and was accepted when the scope was chosen. No scrim was added - that would be a visible design addition nobody asked for. If legibility suffers over a white quilt, a soft gradient behind the head and controls is the fix.
+- **Validation:** `npm run build` and `oxlint` clean. The camera fit was derived rather than tuned, and cancels algebraically: world height scales by `fit` while the canvas grows by the same factor. **Not verified on screen** - there is no browser automation in this repo.
+
+---
+
 ### 2026-08-31 — The exploded stack backs off enough to see the whole product
 - **Changed:** **`EXPLODE_SCALE` 0.62 -> 0.50.** The open stack was framed too close: on Ultima Luxury the bottom band came within a few pixels of the control row and the right edge of the mattress ran into its own labels. Every product now sits 1.01x-1.16x the framing that shipped before this week rather than 1.26x-1.44x.
 - **Reason:** Product owner, 2026-08-31, on a screenshot of Ultima Luxury: the proportions are right, but the view is too close to see the product entire.
