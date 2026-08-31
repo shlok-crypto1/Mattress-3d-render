@@ -84,6 +84,24 @@ anchor for the frame is known, and the run is translated as a whole rather than
 each label being clamped individually, so the list stays centred on where the
 bands actually are and no label can cross its neighbour.
 
+**A leader line joins each label to its own band**, and the two features are one
+design: the spacing pass is what separates a pill from the band it names, so
+without a line the connection is guesswork. The line is the printed-callout
+shape - a diagonal run from the band's own projected corner to an elbow, then a
+short horizontal into the pill - because the bend is what makes it read as
+pointing at something rather than as a stray diagonal.
+
+**The pills line up in one column where there is room for one.** Parked
+individually beside their own band, each pill sits a few pixels from its anchor
+and the leader is a stub: it reads as a tick on the mattress rather than as a
+line joining two things. Aligning the left edges puts the pills clear of the
+product and gives every leader a length of its own, which is what makes the set
+read as a callout diagram rather than as scattered tags. The column is only used
+when it genuinely clears the widest anchor; on a narrow viewport each pill falls
+back to sitting beside its own band, which is what it did before there were
+leaders. The lines are decorative - the pill is the hit target - so they are
+`aria-hidden` and transparent to the pointer.
+
 Two things this must keep doing. It runs in the order the labels land in **on
 screen**, not in stack order: the camera can be orbited below the mattress, and
 from there the top band projects below the bottom one, so assuming stack order

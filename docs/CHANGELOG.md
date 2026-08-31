@@ -14,6 +14,20 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-31 — Leader lines, and the Natural layers get their names
+- **Changed:**
+  - **Every layer label is joined to its band by a leader line.** The printed-callout shape: a diagonal run from the band's own projected corner to an elbow, then a short horizontal into the pill. The bend is what makes it read as pointing at something rather than as a stray diagonal.
+  - **The pills line up in one column** where there is room for one. This is the part that makes the feature work: parked individually beside their own band each pill sits a few pixels from its anchor and the leader is a stub, reading as a tick on the mattress rather than as a line joining two things. Drawn and looked at before shipping - the stub version was the first implementation and was visibly wrong. The column is used only when it clears the widest anchor; a narrow viewport falls back to a pill beside its own band.
+  - **The Natural layers are named** on all three products: Sova Natural is AirKnit Fabric / AeroFlex Foam / Cosmic Byte Foam / Pincore Latex / OrthoBond Foam / Quilted Foam; Ultima Natural is AirKnit Fabric / AeroFlex Foam / Pincore Latex / Cloud Sense Foam / Zero G Latex / Quilted Foam; Riva Natural is Bio Weave / AeroFlex Foam / 7 Zone Latex / Quilted Foam. No `nameTbd` is left anywhere in a Natural stack.
+- **The names corroborate the stacks, which is worth recording.** They arrived after the stacks had been read off the renders, and each list came out **exactly as long as the band count read from its own render**. Every material that also appears in the product's standard grade kept the same name there - Cloud Sense and Zero G on Ultima, OrthoBond on Sova - and `Pincore Latex` names the pin-perforations the renders show. Two independent sources agreeing is the strongest confirmation this project has for any Natural grade.
+- **Flagged, not reconciled:** `Cosmic Byte Foam` is Sova Natural's layer 3, and the same purple comfort foam is `Cosmic Foam` in Sova's standard grade. Either a second material or a slip for the established name. Recorded exactly as given and flagged in the catalog; this needs the product owner rather than a quiet fix.
+- **Reason:** Product owner, 2026-08-31, with a reference image of an exploded socket callout: lines connecting the foam layers to the mattress, plus the Natural layer names.
+- **Files/areas:** `app/src/components/MattressViewer.jsx`, `app/src/index.css`, `app/src/data/layers/foamicoLayers.js`, `docs/INTERACTIONS.md`, `docs/PRODUCT_CATALOG.md`.
+- **Also raised the label gap** from 14px to 24px. A leader needs a run to be read as a line, and the pill no longer needs to sit against the mattress now that something joins the two.
+- **Validation:** `npm run build` and `oxlint` clean. All three Natural stacks confirmed to carry real names with no `nameTbd` remaining. The spacing pass and leader geometry were replicated exactly in a standalone script and rendered to an image, at seven and eight bands, which is how the stub problem was caught before shipping rather than after. **The live page is still not verified on screen** - there is no browser automation in this repo.
+
+---
+
 ### 2026-08-31 — Natural gets its own stack, on all three products that offer it
 - **Changed:** **Sova, Ultima and Riva Natural are built from `Layers/<PRODUCT> NATURAL.png`.** Natural is not its product's stack with bands removed - every Natural carries a perforated natural-latex slab no other grade has, in place of comfort foam - so there is no `omitLayers` list that could describe it.
   - **Ultima Natural, six bands:** cover → convoluted → latex → rebonded chip core → support foam → bonded base. The standard grade's blue and purple comfort foams are gone, not thinner.

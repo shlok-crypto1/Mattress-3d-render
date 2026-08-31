@@ -23,6 +23,7 @@ const LAYER_STAGGER = MOTION.explodeStagger;
 const EXPLODE_DIST = 94; // where the button parks the camera to frame the stack
 const EXPLODE_SCALE = 0.5; // overall size of the open stack; ceiling is clipping
 const LABEL_PITCH_GAP = 15; // clear air between two layer-name pills
+const LEADER_ELBOW = 13; // horizontal run where a leader meets its pill
 const HOVER_LIFT = 1.15;
 const HOVER_SCALE = 0.02;
 const HOVER_GLOW = 0.5;
@@ -128,6 +129,7 @@ export default function MattressViewer({
 }) {
   const mountRef = useRef(null);
   const labelsRef = useRef(null);
+  const leadersRef = useRef(null);
   const headRef = useRef(null);
   const controlsRef = useRef(null);
   const variantRef = useRef(null);
@@ -1104,6 +1106,7 @@ export default function MattressViewer({
 
       const hoverStep = Math.min(1, dt / 150);
       const labelEls = labelsRef.current ? labelsRef.current.children : [];
+      const leaderEls = leadersRef.current ? leadersRef.current.children : [];
       // Truncated to this stack, not just overwritten: switching to a product
       // with fewer bands would otherwise leave the previous one's tail in the
       // array, pointing at elements React has already unmounted.
@@ -1172,6 +1175,7 @@ export default function MattressViewer({
           if (T <= 0) {
             el2.style.opacity = '0';
             el2.style.visibility = 'hidden';
+            if (leaderEls[i]) leaderEls[i].setAttribute('opacity', '0');
             labelLayout[i] = null;
           } else {
             let bestX = -Infinity, bestY = 0, leftX = Infinity, leftY = 0;
@@ -1196,19 +1200,31 @@ export default function MattressViewer({
               el2._mvWidthFor = el2.textContent;
               el2._mvWidthEpoch = labelEpoch;
             }
-            const GAP = 14, EDGE = 8;
-            let lx = ((bestX + 1) / 2) * stageW + GAP;
-            let ly = ((1 - bestY) / 2) * stageH;
+            // Wider than it was: the leader needs a run to be read as a line
+            // rather than as a tick, and the pill no longer sits against the
+            // mattress now that there is something joining the two.
+            const GAP = 24, EDGE = 8;
+            // The anchor is the point on the band the leader is drawn from, and
+            // it has to be kept: the spacing pass below moves the pill away
+            // from its own band, which is exactly why the line is needed.
+            let ax = ((bestX + 1) / 2) * stageW;
+            let ay = ((1 - bestY) / 2) * stageH;
+            let side = 1; // pill sits to the right of the anchor
+            let lx = ax + GAP;
+            let ly = ay;
             if (lx + lw > stageW - EDGE) {
               const flipped = ((leftX + 1) / 2) * stageW - GAP - lw;
               if (flipped >= EDGE) {
+                ax = ((leftX + 1) / 2) * stageW;
+                ay = ((1 - leftY) / 2) * stageH;
                 lx = flipped;
-                ly = ((1 - leftY) / 2) * stageH;
+                ly = ay;
+                side = -1;
               } else {
                 lx = Math.max(EDGE, stageW - EDGE - lw);
               }
             }
-            labelLayout[i] = { el: el2, fade, lx, ly, lh };
+            labelLayout[i] = { i, el: el2, fade, lx, ly, lh, lw, ax, ay, side };
           }
         }
       });
@@ -1241,6 +1257,29 @@ export default function MattressViewer({
         labelOrder.sort((x, y) => labelLayout[x].ly - labelLayout[y].ly);
         const nl = labelOrder.length;
 
+        // Line the pills up in one column, where there is room for one.
+        //
+        // Parked individually at their own band's corner, each pill sits a few
+        // pixels from its anchor and the leader is a stub - it reads as a tick
+        // on the mattress, not as a line joining two things. Aligning the left
+        // edges puts the pills in a column clear of the product, and every
+        // leader becomes a diagonal of its own length: that is what makes the
+        // set read as a callout diagram rather than as scattered tags.
+        //
+        // Only when the column genuinely clears the widest anchor. On a narrow
+        // viewport it does not, and each pill falls back to sitting beside its
+        // own band, which is what it did before there were leaders at all.
+        let widest = 0, rightmost = 0;
+        for (const it of labelLayout) {
+          if (!it) continue;
+          if (it.lw > widest) widest = it.lw;
+          if (it.side > 0 && it.ax > rightmost) rightmost = it.ax;
+        }
+        const column = stageW - EDGE - widest;
+        if (column > rightmost + LEADER_ELBOW + 10) {
+          for (const it of labelLayout) if (it && it.side > 0) it.lx = column;
+        }
+
         // Never ask for more pitch than the stage can actually give. On a short
         // viewport, or the eight-band product, the pills close up a little
         // instead of the list detaching from the stack to span a height the
@@ -1264,15 +1303,29 @@ export default function MattressViewer({
 
         for (const it of labelLayout) {
           if (!it) continue;
+          const leader = leaderEls[it.i];
           if (it.fade <= 0.001) {
             it.el.style.opacity = '0';
             it.el.style.visibility = 'hidden';
+            if (leader) leader.setAttribute('opacity', '0');
             continue;
           }
           it.el.style.visibility = 'visible';
           it.el.style.opacity = String(it.fade);
           const y = Math.max(top, Math.min(bottom, it.ly));
           it.el.style.transform = `translate(${it.lx}px, ${y}px) translateY(-50%)`;
+
+          // The leader is the printed-callout shape: a diagonal run from the
+          // band's own corner to an elbow, then a short horizontal into the
+          // pill. The bend is what makes it read as pointing at something
+          // rather than as a stray diagonal, and the horizontal segment gives
+          // the pill something to sit on.
+          if (leader) {
+            const tip = it.side > 0 ? it.lx - 4 : it.lx + it.lw + 4;
+            const elbow = tip - it.side * LEADER_ELBOW;
+            leader.setAttribute('points', `${it.ax},${it.ay} ${elbow},${y} ${tip},${y}`);
+            leader.setAttribute('opacity', String(it.fade));
+          }
         }
       }
       return moving;
@@ -1698,6 +1751,20 @@ export default function MattressViewer({
                 : `opacity ${MOTION.fast}ms linear`,
           }}
         />
+
+        {hasLayers && (
+          <svg ref={leadersRef} className="mv-leaders" aria-hidden="true" focusable="false">
+            {layerDefs.map((l, i) => (
+              <polyline
+                key={l.id}
+                fill="none"
+                opacity="0"
+                strokeWidth={hoveredLayer === i ? 1.5 : 1}
+                stroke={hoveredLayer === i ? t.accent : t.accentBorder}
+              />
+            ))}
+          </svg>
+        )}
 
         {hasLayers && (
           <div ref={labelsRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
