@@ -6,7 +6,12 @@
 // best version of the product it can show, and every product does the same, so
 // which grade that is is a data question rather than a per-product decision.
 
-import { foamicoLayersBySlug } from './layers/foamicoLayers';
+import {
+  foamicoLayersBySlug,
+  ultimaNaturalLayers,
+  sovaNaturalLayers,
+  rivaNaturalLayers,
+} from './layers/foamicoLayers';
 
 const tex = (slug) => ({
   top: `/textures/foamico/${slug}/top.png`,
@@ -123,8 +128,10 @@ export const foamicoProducts = [
     { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
     { variant: 'Classic', height: 5, omitLayers: ['foam-3', 'foam-4'] },
     { variant: 'Premium', height: 6.5, omitLayers: ['foam-3'] },
-    // Natural's composition is still to come; until then it shows every band.
-    { variant: 'Natural', height: 6 },
+    // Natural is a different build, not this stack thinned: a perforated latex
+    // slab sits under the purple comfort foam where the standard grade carries
+    // the blue one. Read from "Layers/SOVA NATURAL.png".
+    { variant: 'Natural', height: 6, layers: sovaNaturalLayers },
   ]),
   // Corrected by the product owner (2026-08-26): Luma's grades step 6" / 8" /
   // 10" and Classic is the 6". The earlier reading of the catalog had Classic
@@ -148,9 +155,11 @@ export const foamicoProducts = [
     { variant: 'Classic', height: 5, omitLayers: ['foam-3', 'foam-4'] },
     { variant: 'Premium', height: 6, omitLayers: ['foam-3'] },
     // Natural is 6" across all three products that offer it, per the product
-    // owner; the catalog's 7" for Ultima was superseded on 2026-08-26.
-    // Its composition is still to come; until then it shows every band.
-    { variant: 'Natural', height: 6 },
+    // owner; the catalog's 7" for Ultima was superseded on 2026-08-26. Its
+    // composition is a different build rather than this stack thinned - a
+    // perforated latex slab in place of the blue and purple comfort foams.
+    // Read from "Layers/ULTIMA NATURAL.png".
+    { variant: 'Natural', height: 6, layers: ultimaNaturalLayers },
   ]),
   // Riva is the only product in either line whose border carries a woven badge.
   // 21.2in x 4.0in is the badge's real size: its 208x85 crop divided by the
@@ -169,8 +178,9 @@ export const foamicoProducts = [
     // R2000 drops layer 2 and R1000 drops layers 2 and 3.
     { variant: 'R1000', height: 6, omitLayers: ['foam-2', 'foam-3'] },
     { variant: 'R2000', height: 8, omitLayers: ['foam-2'] },
-    // Natural's composition is still to come; until then it shows every band.
-    { variant: 'Natural', height: 6 },
+    // Natural is the shortest stack of any FOAMICO grade - four bands, with the
+    // latex slab over half the mattress. Read from "Layers/RIVA NATURAL.png".
+    { variant: 'Natural', height: 6, layers: rivaNaturalLayers },
   ], {
     sideBadge: {
       src: '/textures/foamico/riva/side-badge.png',
