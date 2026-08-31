@@ -42,7 +42,10 @@ const catalog = [
     },
     placeholder: false,
     variants: [
-      { variant: 'Luxury', height: 6 },
+      // Luxury is the one Duro grade without the Float Sense band: four bands
+      // against Classic's and Premium's five. Confirmed by the product owner on
+      // 2026-08-31 and shown by all three renders in Layers/.
+      { variant: 'Luxury', height: 6, omitLayers: ['float-sense'] },
       { variant: 'Classic', height: 5 },
       { variant: 'Premium', height: 6 },
     ],
