@@ -14,6 +14,15 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-31 — Ultima's Luxury is 7 inches
+- **Changed:** **Ultima Luxury is 7″, not the 6.5″ this project has carried.** Corrected on the product owner's instruction against the variant menu on the live page. Ultima's Luxury is therefore the same height as Resto's and Sova's; the 6.5″ was the odd one out among the three seven-band FOAMICO products.
+- **Reason:** Product owner, 2026-08-31: "luxury variant here is 7 inches, please change that."
+- **Files/areas:** `app/src/data/foamicoProducts.js`, `docs/PRODUCT_CATALOG.md`.
+- **Impact:** Luxury is Ultima's baseline grade — first in its `variants` list — so this is the height the product page opens on and renders at, not only a line in the menu. Band membership per grade is untouched: Luxury still carries all seven bands, and Premium and Classic still drop what they dropped. The other grades' heights are unchanged, which widens Ultima's ladder from 5″–6.5″ to 5″–7″; nothing in the layer stack is sensitive to that spread, because Ultima does not opt into `holdUpholstery`.
+- **Validation:** `npm run build` clean. Grepped the tree for other copies of the 6.5″ figure: the only remaining ones are Resto's and Sova's Premium grades, which are genuinely 6.5″ and unrelated.
+
+---
+
 ### 2026-08-31 — Broader bands, and labels that are spaced against each other
 - **Changed:**
   - **Bands are built 2.2x thicker than the mattress they came out of.** A true 6"-10" split over six to eight layers leaves each band under an inch thick, and at the distance the exploded view is framed from that renders as a sheet of paper rather than a slab of foam - which is the one thing the layers view exists to show. The whole stack is squashed back to the product's real height while it is closed, so the exaggeration exists only in the open view.

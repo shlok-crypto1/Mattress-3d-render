@@ -139,7 +139,9 @@ export const foamicoProducts = [
     { variant: 'Premium', height: 8, omitLayers: ['foam-3'] },
   ]),
   product('ultima', 'Ultima', 'Firm', '25-Year Warranty + 5-Year Full Replacement', [
-    { variant: 'Luxury', height: 6.5 },
+    // 7", not the 6.5" carried here until 2026-08-31. Ultima's Luxury is the
+    // same height as Resto's and Sova's; the 6.5" was the odd one out.
+    { variant: 'Luxury', height: 7 },
     // Classic and Premium are both 6" here and are still different builds:
     // Premium keeps layer 4, Classic does not. Same height, different stack.
     { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
