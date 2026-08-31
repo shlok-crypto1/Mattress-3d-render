@@ -21,7 +21,7 @@ import {
 const EXPLODE_MS = MOTION.explode;
 const LAYER_STAGGER = MOTION.explodeStagger;
 const EXPLODE_DIST = 94; // where the button parks the camera to frame the stack
-const EXPLODE_SCALE = 0.55; // shrink the group so the taller stack stays framed
+const EXPLODE_SCALE = 0.62; // overall size of the open stack; ceiling is clipping
 const LABEL_PITCH_GAP = 15; // clear air between two layer-name pills
 const HOVER_LIFT = 1.15;
 const HOVER_SCALE = 0.02;
@@ -1041,10 +1041,11 @@ export default function MattressViewer({
       // Dollying in makes the stack overflow the frame, so the group shrinks as
       // it separates - the mattress keeps its apparent size while gaining height.
       const eT = easeExplode(T);
-      // The stack builds its bands oversize, so it also hands back how much
-      // further the group has to shrink to span what it always spanned. Every
-      // product therefore stays framed exactly as it was; the extra thickness
-      // is spent inside that frame rather than on a bigger stack.
+      // The stack normalises its own true exploded height against a framing
+      // reference and hands back the scalar for it, so a product with more
+      // bands or a thicker build does not simply grow until it overflows.
+      // EXPLODE_SCALE is then the one knob for how large the open stack sits in
+      // the viewport, and its ceiling is clipping, not taste.
       const es = EXPLODE_SCALE * (stack?.explodeScale ?? 1);
       const gs = 1 - (1 - es) * eT;
       group.scale.setScalar(gs);
@@ -1071,6 +1072,13 @@ export default function MattressViewer({
       const rs = stack?.restScale ?? 1;
       const inflateT = rs + (1 - rs) * eT;
 
+      // Hover used to lift a band 1.15in into four or five inches of clear air.
+      // The air is now a fraction of a band's thickness - 0.88in on a
+      // seven-band product - so the same lift would push a hovered band up into
+      // the one above it. Capped against the gap the stack actually has, so the
+      // lift still reads as a lift and can never collide.
+      const hoverLift = Math.min(HOVER_LIFT, (stack?.gap ?? HOVER_LIFT) * 0.6);
+
       const hoverStep = Math.min(1, dt / 150);
       const labelEls = labelsRef.current ? labelsRef.current.children : [];
       // Truncated to this stack, not just overwritten: switching to a product
@@ -1090,7 +1098,7 @@ export default function MattressViewer({
         if (l.hoverT !== prevHover) moving = true;
 
         l.object.visible = T > 0 && mf > 0.001;
-        l.object.position.y = l.restY * inflateT + e * l.explodeDy * sp + l.hoverT * HOVER_LIFT;
+        l.object.position.y = l.restY * inflateT + e * l.explodeDy * sp + l.hoverT * hoverLift;
         const hs = 1 + l.hoverT * HOVER_SCALE;
         l.object.scale.set(hs, hs * inflateT, hs);
         l.mats.forEach((m) => {
@@ -1110,7 +1118,7 @@ export default function MattressViewer({
           const belowTop =
             below.restY * inflateT +
             easeExplode(Math.max(0, Math.min(1, (T - (i + 1) * LAYER_STAGGER) / span))) * below.explodeDy * sp +
-            below.hoverT * HOVER_LIFT +
+            below.hoverT * hoverLift +
             (below.h * inflateT) / 2;
           const sep = l.object.position.y - (l.h * inflateT) / 2 - belowTop;
           l.drop.visible = T > 0.02 && sep > 0.2 && mf > 0.001;

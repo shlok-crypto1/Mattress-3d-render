@@ -50,12 +50,37 @@ What this costs: an exploded Classic and an exploded Luxury are no longer to
 scale against each other, and no dimension may be read off the exploded stack.
 Thickness as a product fact lives in `docs/PRODUCT_CATALOG.md` and nowhere else.
 
-The frame is held constant against the inflation rather than re-tuned per
-product. The stack returns the ratio of what it would have spanned uninflated
-to what it spans now, and the viewer multiplies its explode scale by it - so
-every product stays framed exactly as it was, with the extra thickness spent
-inside that frame instead of on a taller stack. A product with a different band
-count needs no new number.
+## Bands dominate the gaps
+
+The exploded gap is a fraction of average band thickness - `GAP_FRACTION`, 0.4
+as of 2026-08-31 - and not a separation solved on its own. Solved on its own it
+came out as large as the slabs or larger, and a stack whose air dominates its
+foam reads as a row of uniform floating cards whatever the real proportions are.
+At 0.4 a band is two and a half times the air above it, so a band that is
+genuinely 1.5x another one looks it.
+
+**`gap` means clear air, not centre-to-centre spacing**, and the two are not
+interchangeable here. Once the gap is smaller than a band, spacing band centres
+by it puts every band inside its neighbours and the stack renders as one solid
+blob. The bands are therefore laid out by walking the stack - each offset by
+half its own thickness, half the previous one's, and the gap - which also makes
+the band-to-gap ratio exact for every pair rather than true only on average.
+
+Two knobs, and they are independent:
+
+- **`GAP_FRACTION`** (`layerStack.js`, useful range 0.3-0.5) sets how much the
+  bands dominate. Lower means thicker-looking bands.
+- **`EXPLODE_SCALE`** (`MattressViewer.jsx`) sets how large the open stack sits
+  in the viewport. **Its ceiling is clipping, not taste**: the tallest-framed
+  stack must stay fully in frame at full explode, and Luma Luxury at eight bands
+  is the one to check first. Do not dolly the camera instead - `EXPLODE_DIST`
+  stays where it is.
+
+The stack normalises its own true exploded height against a framing reference so
+that a smaller gap cannot simply let it grow until it overflows. What that
+normalisation cancels is worth knowing: on screen the stack spans the reference,
+which contains no inflated term at all, so **`LAYER_INFLATE` drops out of the
+framing entirely**. It sets the band-to-gap ratio, not the size on screen.
 
 ## Rendering
 - Maintain consistent lighting between product states — see `docs/CAMERA_AND_LIGHTING.md` for the full lighting standard.
