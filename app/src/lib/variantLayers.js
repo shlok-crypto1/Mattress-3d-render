@@ -55,8 +55,8 @@ export function layersForVariant(product, variant) {
   //
   // Holding the upholstery is opt-in rather than the default because it only
   // reads correctly over a narrow spread of grade heights. It is right for
-  // Resto, whose grades run 6" to 7". Applied to a product whose grades run 6"
-  // to 9" or 10" it makes the base absurd - Riva's would be 42% of an R1000,
+  // Resto, whose grades run 6" to 7". Applied to a product whose grades span
+  // several inches it makes the base absurd - Riva's would be 35% of an R1000,
   // Luma's nearly half a Classic - because a base sized for the tallest grade
   // is simply not the base a much thinner one is built on.
   if (!product.holdUpholstery) return kept;
