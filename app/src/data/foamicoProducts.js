@@ -173,11 +173,17 @@ export const foamicoProducts = [
   // rows the catalog also lists for Riva are not offered here, and neither is
   // the second Natural at 8": Natural is one 6" grade wherever it appears.
   product('riva', 'Riva', 'Medium', '30-Year Warranty + 5-Year Full Replacement', [
-    { variant: 'R3000', height: 9 },
+    // The R ladder is 8" / 9" / 10", corrected by the product owner on
+    // 2026-08-31 from the 6" / 8" / 9" recorded before. All three grades moved,
+    // so this is a new ladder rather than an adjustment to one rung of it, and
+    // R3000 at 10" makes Riva the tallest product in the experience, level with
+    // Luma's Luxury. Which bands each grade carries is unchanged - heights and
+    // band membership are separate facts and only the heights were corrected.
+    { variant: 'R3000', height: 10 },
     // Riva thins from the top of the comfort stack down, not from the middle:
     // R2000 drops layer 2 and R1000 drops layers 2 and 3.
-    { variant: 'R1000', height: 6, omitLayers: ['foam-2', 'foam-3'] },
-    { variant: 'R2000', height: 8, omitLayers: ['foam-2'] },
+    { variant: 'R1000', height: 8, omitLayers: ['foam-2', 'foam-3'] },
+    { variant: 'R2000', height: 9, omitLayers: ['foam-2'] },
     // Natural is the shortest stack of any FOAMICO grade - four bands, with the
     // latex slab over half the mattress. Read from "Layers/RIVA NATURAL.png".
     { variant: 'Natural', height: 6, layers: rivaNaturalLayers },

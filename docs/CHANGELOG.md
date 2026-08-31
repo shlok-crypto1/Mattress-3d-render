@@ -14,6 +14,17 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-31 — Riva's R ladder is 8″ / 9″ / 10″
+- **Changed:** **R1000 6″ → 8″, R2000 8″ → 9″, R3000 9″ → 10″.** All three rungs moved, so this replaces the ladder rather than adjusting one grade of it. Riva Natural stays at 6″ — the product owner gave the R grades only, and Natural is a separate build rather than a rung of this ladder.
+- **What this changes on screen, and what it does not.** R3000 is the baseline, so **Riva's page now opens an inch taller** and its pill reads 10″; every grade's pill reads its new height. **Which bands each grade carries is untouched** — heights and band membership are separate facts and only the heights were corrected, so R2000 still drops layer 2 and R1000 still drops layers 2 and 3. Riva divides its height in proportion to the ratios its bands already have (`holdUpholstery` is off for it, as for everything but Resto), so the stack simply scales: no band changes its share and no render changes shape.
+- **Two things worth noting.** R3000 at 10″ makes **Riva the tallest product in the experience**, level with Luma's Luxury, where it used to sit an inch below it. And **Riva's presented spread narrows from 3″ to 2″** (6″–9″ becomes 8″–10″), which weakens the worked example in `variantLayers.js` for why `holdUpholstery` is opt-in — a held base would now be 35% of an R1000 rather than 42%. Still the wrong look, so the decision stands; the figure in that comment is corrected rather than the rule.
+- **Reason:** Product owner, 2026-08-31. This supersedes a Confirmed catalog row; the previous ladder is recorded as superseded rather than deleted, per the same rule applied to Ultima's Luxury and Duro's green band.
+- **Files/areas:** `app/src/data/foamicoProducts.js`, `app/src/lib/variantLayers.js`, `docs/PRODUCT_CATALOG.md`.
+- **Impact:** Riva's four grade pills and its rendered thickness. No other product touched, no layer data touched, no geometry or texture work involved.
+- **Validation:** `npm run build` and `oxlint` clean of new findings. Heights read back out of the built variant list to confirm the ladder is 8/9/10 with Natural at 6, and band membership per grade confirmed unchanged against the pre-change stacks. **Not verified on screen** — there is no browser automation in this repo.
+
+---
+
 ### 2026-08-31 — Duro's green band is real, and Riva's R stack is named
 - **Changed:**
   - **Duro gains a fifth band, and its top grade is the one without it.** `Float Sense Foam` sits between AeroFlex and OrthoBond in **Classic 5″ and Premium 6″**; **Luxury 6″ omits it** and renders exactly the four-band stack it renders today. Duro is now the one product whose top grade carries *fewer* bands than the grades below it, which is what all three renders in `Layers/` show.
