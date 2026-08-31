@@ -231,7 +231,7 @@ export const ultimaNaturalLayers = [
 export const sovaNaturalLayers = [
   cover('AirKnit Fabric', '#E4E4EC'),
   foam('comfort', 2, 'AeroFlex Foam', 'Convoluted comfort foam', 0.09, '#D2D95E', 'convoluted'),
-  foam('foam-3', 3, 'Cosmic Byte Foam', 'Comfort foam', 0.13, '#C07CE0'),
+  foam('foam-3', 3, 'Cosmic Foam', 'Comfort foam', 0.13, '#C07CE0'),
   foam('latex', 4, 'Pincore Latex', 'Pin-perforated natural latex', 0.20, NATURAL_LATEX),
   foam('core', 5, 'OrthoBond Foam', 'Rebonded support core', 0.21, '#D8D5CC', 'speckled'),
   base('#565555', 0.13, '#F0921E', 0.15),

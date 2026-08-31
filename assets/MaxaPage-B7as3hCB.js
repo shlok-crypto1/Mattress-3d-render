@@ -1,1 +1,0 @@
-import{l as e}from"./index-BsX4V1Xa.js";import{t}from"./ProductPage-DMwp2N76.js";import{t as n}from"./products-D48gfQGK.js";var r=e();function i(){return(0,r.jsx)(t,{product:n(`maxa`),backTo:`/vedasleep`,transitionId:`product-vedasleep-maxa`})}export{i as default};

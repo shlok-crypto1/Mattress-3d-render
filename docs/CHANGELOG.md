@@ -14,6 +14,16 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-08-31 — Cosmic Foam, and the perforation gap is accepted
+- **Changed:** **Sova Natural's layer 3 is `Cosmic Foam`, not `Cosmic Byte Foam`.** It was supplied as "Cosmic Byte Foam" and flagged in the entry below rather than reconciled, because the same purple comfort foam is `Cosmic Foam` in Sova's standard grade and a silent fix to a material name is exactly the kind of invention this project does not allow. The product owner confirmed it is Cosmic Foam. Sova Natural now reads AirKnit Fabric / AeroFlex Foam / Cosmic Foam / Pincore Latex / OrthoBond Foam / Quilted Foam, and the same name means the same material at both grades.
+- **Closed, not outstanding:** the pin-perforations of `Pincore Latex` and `7 Zone Latex` are **deliberately not rendered**. The renderer's surface vocabulary has no perforated option; the product owner accepted the gap rather than have one added. Recorded in `docs/PRODUCT_CATALOG.md` as a decision so it is not picked up later as a bug - those latex bands draw plain on purpose.
+- **Reason:** Product owner, 2026-08-31, answering both flags raised with the previous change.
+- **Files/areas:** `app/src/data/layers/foamicoLayers.js`, `docs/PRODUCT_CATALOG.md`.
+- **Note on the record:** "Cosmic Byte Foam" survives in the two changelog entries below as what was superseded. Those are history and stay as written; the catalog is the source of truth and says Cosmic Foam.
+- **Validation:** `npm run build` clean, and Sova Natural confirmed to resolve with the corrected name.
+
+---
+
 ### 2026-08-31 — Leader lines, and the Natural layers get their names
 - **Changed:**
   - **Every layer label is joined to its band by a leader line.** The printed-callout shape: a diagonal run from the band's own projected corner to an elbow, then a short horizontal into the pill. The bend is what makes it read as pointing at something rather than as a stray diagonal.
