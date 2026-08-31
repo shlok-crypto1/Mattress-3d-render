@@ -14,18 +14,6 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
-### 2026-08-31 — Sharper quilt maps for Luma, Sova, Ultima and Riva
-- **Changed:** **All eight supplied maps placed at 1024x1024, up from 600x600** - `top.png` and `top-bump.png` for Luma, Sova, Ultima and Riva, in `app/public/textures/foamico/<slug>/` and the published copy at `textures/foamico/<slug>/`. Dropped in exactly as supplied: not re-cropped, not re-derived, not re-compressed. Resto and Magic untouched, whose current maps are sharper than the references supplied for them.
-- **Reason:** Product owner, 2026-08-31, supplying the assets with the pipeline that produced them and the instruction to use them as-is.
-- **Kept at 1:1 - the cell-scale question, decided:** the owner's note said to try 1:1 first and offered repeats of ~2.5-3 (Luma, Ultima), ~1.5-2 (Sova) and ~1 (Riva) if the cells came out too large. **1:1 is right for all four.** The top map is applied at UV 0..1 across the whole cap, so the swatch *is* the sleeping surface and the preview of a tiled cap is an exact preview of the render - lighting changes neither scale nor seams. Simulated that way, the new crops at 1:1 land close to the density that is shipping today, slightly coarser for Luma and Ultima; at 2.75 they overshoot it badly, breaking the motif into a busy noise that reads as fabric texture rather than as quilting. The measured motif ratio between the new crops and the current ones is about 1.5-2x, not the 2.5-3x the hint assumed.
-- **Second reason not to tile:** these are plain interior crops and are not seamless, and the owner's own note requires a seamless swatch before tiling. Any repeat above 1 would put a hard discontinuity across the sleeping surface. Staying at 1:1 keeps the question closed rather than answered with an edit to supplied pixels.
-- **Files/areas:** `app/public/textures/foamico/{luma,sova,ultima,riva}/top.png` and `top-bump.png`, the published `textures/` copies, `docs/ASSET_MANAGEMENT.md`. **No code change** - 1:1 is what the viewer already does.
-- **Impact:** The sleeping surface of four products gets its real resolution. The bump maps matter more than the colour maps here: Riva's previous bump was very nearly featureless, which is why its quilt barely read at all, and Ultima's was faint. `puffFromStitching` thresholds by percentile rather than by level, so the stronger contrast in the new maps feeds the puff correctly without a config change.
-- **Payload:** these eight files go from 3.13 MB to 6.61 MB. A visitor does not pay that total - the maps are fetched per product, so it is roughly +0.4 to +0.9 MB on one product page, on the texture that is the whole sleeping surface. Worth it here and not a precedent for every map.
-- **Validation:** All eight confirmed 1024x1024 in place, and Resto (600x600) and Magic (490x810) confirmed untouched. `npm run build` clean. Every map was inspected as an image before placing, and the cap was simulated at 1:1 and at the suggested repeats to decide the scale question. Riva's supplied `top.png` is a 4-bit palette (16 colours) from the pngquant step - fine for a near-white quilt, and left exactly as supplied.
-
----
-
 ### 2026-08-31 — Ultima's Luxury is 7 inches
 - **Changed:** **Ultima Luxury is 7″, not the 6.5″ this project has carried.** Corrected on the product owner's instruction against the variant menu on the live page. Ultima's Luxury is therefore the same height as Resto's and Sova's; the 6.5″ was the odd one out among the three seven-band FOAMICO products.
 - **Reason:** Product owner, 2026-08-31: "luxury variant here is 7 inches, please change that."
