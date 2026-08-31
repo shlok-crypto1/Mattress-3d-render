@@ -263,6 +263,18 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
 .mv-immersive .mv-variant-pill,
 .mv-immersive .mv-variant-menu,
 .mv-immersive .mv-view-btn { pointer-events: auto; }
+/* Leader lines. Purely decorative and never interactive - the pill is the
+   hit target - so they are hidden from assistive tech and transparent to the
+   pointer. `overflow: visible` because a leader may reach a hair outside the
+   stage box before its label is clamped back inside. */
+.mv-leaders {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
 .mv-label { font-size: 10.5px; }
 .mv-controls {
   display: flex;

@@ -197,7 +197,12 @@ export const rivaLayers = [
 // "Layers/<PRODUCT> NATURAL.png", and is the confirmed part, as it is for every
 // stack in this file. `thicknessRatio` is eyeballed from those same renders and
 // is a placeholder until the product owner gives Natural's foam split, exactly
-// as every other stack here began. Names below the cover are still to come.
+// as every other stack here began. Names are the owner's, given 2026-08-31, and
+// they corroborate these stacks from an independent direction: each Natural's
+// name list is exactly as long as the band count read off its render, and every
+// material that also appears in the product's standard grade kept the same name
+// there - Cloud Sense and Zero G on Ultima, OrthoBond on Sova. `Pincore Latex`
+// names the perforations the renders show, which is what the latex slab is.
 //
 // The renders are read by filename: two of the three carry a woven "ULTIMA
 // NATURAL" tag, including the one named for Sova, and the product owner's
@@ -214,10 +219,10 @@ const NATURAL_LATEX = '#D9D5C0';
 // purple comfort foams are gone rather than merely thinner.
 export const ultimaNaturalLayers = [
   cover('AirKnit Fabric', '#EFEFEC'),
-  foam('comfort', 2, null, 'Convoluted comfort foam', 0.08, '#C9D14A', 'convoluted'),
-  foam('latex', 3, null, 'Perforated natural latex', 0.22, NATURAL_LATEX),
-  foam('core', 4, null, 'Rebonded support core', 0.19, '#E8E6E1', 'speckled'),
-  foam('foam-5', 5, null, 'Support foam', 0.15, '#B9B4AE'),
+  foam('comfort', 2, 'AeroFlex Foam', 'Convoluted comfort foam', 0.08, '#C9D14A', 'convoluted'),
+  foam('latex', 3, 'Pincore Latex', 'Pin-perforated natural latex', 0.22, NATURAL_LATEX),
+  foam('core', 4, 'Cloud Sense Foam', 'Rebonded support core', 0.19, '#E8E6E1', 'speckled'),
+  foam('foam-5', 5, 'Zero G Latex', 'Support foam', 0.15, '#B9B4AE'),
   base('#464846', 0.13, '#F0921E', 0.14),
 ];
 
@@ -225,10 +230,10 @@ export const ultimaNaturalLayers = [
 // it, and the chip core below is the multicoloured one its render shows.
 export const sovaNaturalLayers = [
   cover('AirKnit Fabric', '#E4E4EC'),
-  foam('comfort', 2, null, 'Convoluted comfort foam', 0.09, '#D2D95E', 'convoluted'),
-  foam('foam-3', 3, null, 'Comfort foam', 0.13, '#C07CE0'),
-  foam('latex', 4, null, 'Perforated natural latex', 0.20, NATURAL_LATEX),
-  foam('core', 5, null, 'Rebonded support core', 0.21, '#D8D5CC', 'speckled'),
+  foam('comfort', 2, 'AeroFlex Foam', 'Convoluted comfort foam', 0.09, '#D2D95E', 'convoluted'),
+  foam('foam-3', 3, 'Cosmic Byte Foam', 'Comfort foam', 0.13, '#C07CE0'),
+  foam('latex', 4, 'Pincore Latex', 'Pin-perforated natural latex', 0.20, NATURAL_LATEX),
+  foam('core', 5, 'OrthoBond Foam', 'Rebonded support core', 0.21, '#D8D5CC', 'speckled'),
   base('#565555', 0.13, '#F0921E', 0.15),
 ];
 
@@ -237,8 +242,8 @@ export const sovaNaturalLayers = [
 // every other grade.
 export const rivaNaturalLayers = [
   cover('Bio Weave', '#E8E8E6'),
-  foam('comfort', 2, null, 'Convoluted comfort foam', 0.09, '#C9D14A', 'convoluted'),
-  foam('latex', 3, null, 'Perforated natural latex', 0.54, NATURAL_LATEX),
+  foam('comfort', 2, 'AeroFlex Foam', 'Convoluted comfort foam', 0.09, '#C9D14A', 'convoluted'),
+  foam('latex', 3, '7 Zone Latex', 'Zoned natural latex', 0.54, NATURAL_LATEX),
   base('#585559', 0.13, '#F0921E', 0.15),
 ];
 
