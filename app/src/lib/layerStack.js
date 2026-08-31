@@ -9,6 +9,24 @@ import { makeShadowTexture, makeContactAOTexture } from './foamSurfaces';
 // data change, not a code change.
 
 /**
+ * How much thicker each band is built than the mattress it came out of.
+ *
+ * At a true 6"-10" over six to eight bands a layer is under an inch thick, and
+ * at the distance the exploded view is framed from that renders as a sheet of
+ * paper rather than a slab of foam - which is the one thing the layers view
+ * exists to show. The bands are therefore built oversize and the stack is
+ * squashed back to the product's real height while it is closed (see
+ * `restScale`), so the exaggeration only ever exists in the exploded view.
+ *
+ * This deliberately breaks the tie between what the stack measures and what the
+ * variant pill says: an exploded Classic and an exploded Luxury are no longer
+ * to scale against each other, which the product owner accepted when asking for
+ * broader layers. The closed mattress - the one that has to read as a real
+ * product - is a separate mesh and keeps its declared thickness exactly.
+ */
+export const LAYER_INFLATE = 2.2;
+
+/**
  * Exploded separation between adjacent bands. Products range from five bands to
  * eight, so a fixed gap would either bunch Duro up or push Ultima out of frame;
  * the gap is solved for a roughly constant exploded height instead.
@@ -19,7 +37,8 @@ export function computeExplodeGap(n, H) {
 }
 
 /**
- * @returns {Promise<{layers: Array, gap: number, dispose: Function}>}
+ * @returns {Promise<{layers: Array, gap: number, explodeScale: number,
+ *   restScale: number, dispose: Function}>}
  */
 export async function buildLayerStack({
   layerDefs,
@@ -35,9 +54,18 @@ export async function buildLayerStack({
   productTop,
   productBottomMap,
   maxAnisotropy = 1,
+  inflate = LAYER_INFLATE,
 }) {
   const disposables = [];
   const built = [];
+
+  // Bands are built against the inflated height and the viewer squashes the
+  // whole stack back to `H` while it is closed. Building oversize and scaling
+  // down is the right way round: the geometry is at its native proportions
+  // exactly when it is being looked at, so the wall grain and the sculpted
+  // relief are never stretched in the open view. The squash lands on the
+  // closed stack instead, which is hidden behind the solid mattress.
+  const Hs = H * inflate;
 
   const totalRatio = layerDefs.reduce((a, l) => a + (l.thicknessRatio ?? 1), 0) || 1;
   const shadowTex = makeShadowTexture();
@@ -47,9 +75,9 @@ export async function buildLayerStack({
   const needsCoil = layerDefs.some((l) => l.type === 'coil');
   const coilMod = needsCoil ? await import('./coilLayer') : null;
 
-  let yCursor = H / 2; // walk down from the top face
+  let yCursor = Hs / 2; // walk down from the top face
   layerDefs.forEach((def, i) => {
-    const h = (H * (def.thicknessRatio ?? 1)) / totalRatio;
+    const h = (Hs * (def.thicknessRatio ?? 1)) / totalRatio;
     const yCenter = yCursor - h / 2;
     yCursor -= h;
 
@@ -219,7 +247,25 @@ export async function buildLayerStack({
   });
 
   const n = built.length;
-  const gap = computeExplodeGap(n, H);
+  // Thicker bands eat into the space between them, so the gap carries the
+  // extra thickness on top of the separation it always had. Without this the
+  // slabs close up on each other and the stack stops reading as separate
+  // layers, which is the opposite of what inflating them is for.
+  const gap0 = computeExplodeGap(n, H);
+  const hAvg0 = H / n;
+  const hAvg = Hs / n;
+  const gap = gap0 + (hAvg - hAvg0);
+
+  // A taller exploded stack would simply overflow the frame, so the viewer
+  // shrinks the group by this much on top of its own explode scale. It is the
+  // ratio of what the stack would have spanned before inflation to what it
+  // spans now, which keeps every product framed exactly as it was: same
+  // on-screen extent, thicker slabs inside it. Solved rather than dialled in,
+  // so a product with a different band count needs no new number.
+  const spanBefore = (n - 1) * gap0 + hAvg0;
+  const spanAfter = (n - 1) * gap + hAvg;
+  const explodeScale = spanAfter > 0 ? spanBefore / spanAfter : 1;
+
   // Centre the exploded stack on the origin so it does not drift off-frame.
   built.forEach((l, i) => {
     l.explodeDy = ((n - 1) / 2 - i) * gap;
@@ -228,6 +274,10 @@ export async function buildLayerStack({
   return {
     layers: built,
     gap,
+    explodeScale,
+    // What the viewer squashes the closed stack by so it matches the solid
+    // mattress it cross-fades out of. Undoing exactly the inflation above.
+    restScale: 1 / inflate,
     dispose() {
       built.forEach((l) => {
         // Off the scene as well as out of GPU memory. A stack is disposed both
