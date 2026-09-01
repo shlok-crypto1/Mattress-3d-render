@@ -108,7 +108,8 @@ Layer counts and colours read off these renders are **not** confirmed constructi
 |---|---|---|
 | `foamico-logo.png` | FOAMICO lockup for light surfaces | `brand/foamico-logo.png` |
 | `foamico-logo-light.png` | FOAMICO lockup for dark surfaces | `brand/foamico-logo-light.png` |
-| `vedasleep-logo.png` | VedaSleep lotus + wordmark lockup, 1156×449 RGBA | `company logos/veda sleep/VEDASLEEP - LOGO.jpg.jpeg` |
+| `vedasleep-logo.png` | VedaSleep lotus + wordmark lockup for light surfaces, 1156×449 RGBA | `company logos/veda sleep/VEDASLEEP - LOGO.jpg.jpeg` |
+| `vedasleep-logo-light.png` | The same lockup for dark surfaces. Derived from `vedasleep-logo.png` on 2026-09-01, when the VedaSleep stage went to Veda Green-Black and the near-black "VEDA" stopped being visible. **Not a re-export from the source JPEG** — it is the PNG above with its alpha channel untouched and only the dark-neutral ink moved to Paper `#F7F5F0`, scaled by pixel darkness so anti-aliased glyph edges survive. The green wordmark and gold lotus are left exactly as they are, both carrying enough hue to be excluded by the neutral test. Same method as `foamico-logo-light.png`, which was diffed against its own original to confirm it before this was built. | `brand/vedasleep-logo.png` |
 
 The VedaSleep mark is supplied as a **JPEG on solid white**, so it cannot be used
 as-is: dropped onto either brand surface it shows as a white block. It is cropped

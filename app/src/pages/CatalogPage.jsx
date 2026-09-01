@@ -16,6 +16,18 @@ import { preloadAllIn } from '../routePreload';
 
 const ACCENT = '#c77d11'; // Veda Gold
 
+// ProductCard defaults to a white card, which was right while this grid stood
+// on Paper. On Veda Green-Black a white card punches a hole through the page,
+// so the grid passes its own - the same thing the FOAMICO grid does, in the
+// same shape, one step up from the stage rather than a slab of white on it.
+const CARD = {
+  background: '#26332A',
+  border: '#3A4A3E',
+  name: '#F7F5F0',
+  badge: ACCENT,
+  badgeBg: 'rgba(24,32,26,0.78)',
+};
+
 export default function CatalogPage() {
   // Source when a card is clicked; destination when arriving from the brand
   // selector, where the lotus mark is the shared element landing in the header.
@@ -35,10 +47,11 @@ export default function CatalogPage() {
       style={{
         position: 'relative',
         minHeight: '100dvh',
-        // Stage grey, matching the product pages this grid opens into - see
-        // the note in src/data/brandThemes.js.
+        // Veda Green-Black, matching the product pages this grid opens into -
+        // see the note in src/data/brandThemes.js for why the stage is dark
+        // rather than a darker grey.
         background:
-          'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(199,125,17,0.06) 0%, rgba(199,125,17,0) 60%), #D3D3D3',
+          'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 60%), #1F2A22',
         padding: '48px 24px 64px',
         ...recede,
       }}
@@ -54,9 +67,9 @@ export default function CatalogPage() {
           fontSize: 12,
           fontWeight: 500,
           letterSpacing: '0.03em',
-          color: '#8a8a8e',
+          color: '#93A197',
           textDecoration: 'none',
-          background: 'rgba(255,255,255,0.7)',
+          background: 'rgba(38,51,42,0.72)',
           padding: '6px 12px',
           borderRadius: 100,
           ...enterStyle(revealed, REVEAL.back),
@@ -77,14 +90,14 @@ export default function CatalogPage() {
         >
           <img
             ref={logoRef}
-            src={publicUrl('/brand/vedasleep-logo.png')}
+            src={publicUrl('/brand/vedasleep-logo-light.png')}
             alt="Veda Sleep"
             style={{ height: 62, width: 'auto', ...enterStyle(revealed, REVEAL.mark) }}
           />
           <div
             style={{
               fontSize: 13,
-              color: '#8a8a8e',
+              color: '#93A197',
               letterSpacing: '0.03em',
               ...enterStyle(revealed, REVEAL.meta),
             }}
@@ -106,6 +119,7 @@ export default function CatalogPage() {
               <ProductCard
                 product={product}
                 basePath="/vedasleep"
+                theme={CARD}
                 accent={ACCENT}
                 hovered={hovered}
                 onHover={setHovered}

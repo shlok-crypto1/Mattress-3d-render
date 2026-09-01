@@ -1,0 +1,1 @@
+import{l as e}from"./index-CD37wCy6.js";import{t}from"./ProductPage-CXs46Ghd.js";import{t as n}from"./products-BMW_Cw0w.js";var r=e();function i(){return(0,r.jsx)(t,{product:n(`magic`),backTo:`/vedasleep`,transitionId:`product-vedasleep-magic`})}export{i as default};
