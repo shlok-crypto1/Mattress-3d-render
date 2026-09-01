@@ -1,5 +1,5 @@
 // FOAMICO line. Renders are built from the reference photos in
-// "Foamico mattresses/<Name>/" through the same pipeline as the VedaSleep set.
+// "source/Foamico mattresses/<Name>/" through the same pipeline as the VedaSleep set.
 //
 // Each product lists the variants docs/PRODUCT_CATALOG.md confirms for it,
 // baseline first. The baseline is the product's top grade: a page opens on the
@@ -130,7 +130,7 @@ export const foamicoProducts = [
     { variant: 'Premium', height: 6.5, omitLayers: ['foam-3'] },
     // Natural is a different build, not this stack thinned: a perforated latex
     // slab sits under the purple comfort foam where the standard grade carries
-    // the blue one. Read from "Layers/SOVA NATURAL.png".
+    // the blue one. Read from "source/Layers/SOVA NATURAL.png".
     { variant: 'Natural', height: 6, layers: sovaNaturalLayers },
   ]),
   // Corrected by the product owner (2026-08-26): Luma's grades step 6" / 8" /
@@ -158,7 +158,7 @@ export const foamicoProducts = [
     // owner; the catalog's 7" for Ultima was superseded on 2026-08-26. Its
     // composition is a different build rather than this stack thinned - a
     // perforated latex slab in place of the blue and purple comfort foams.
-    // Read from "Layers/ULTIMA NATURAL.png".
+    // Read from "source/Layers/ULTIMA NATURAL.png".
     { variant: 'Natural', height: 6, layers: ultimaNaturalLayers },
   ]),
   // Riva is the only product in either line whose border carries a woven badge.
@@ -185,7 +185,7 @@ export const foamicoProducts = [
     { variant: 'R1000', height: 8, omitLayers: ['foam-2', 'foam-3'] },
     { variant: 'R2000', height: 9, omitLayers: ['foam-2'] },
     // Natural is the shortest stack of any FOAMICO grade - four bands, with the
-    // latex slab over half the mattress. Read from "Layers/RIVA NATURAL.png".
+    // latex slab over half the mattress. Read from "source/Layers/RIVA NATURAL.png".
     { variant: 'Natural', height: 6, layers: rivaNaturalLayers },
   ], {
     sideBadge: {

@@ -10,7 +10,7 @@ import { makeWovenNormal } from './foamSurfaces';
 // builds the seat position, which is what the two front-on product shots show.
 //
 // PROPORTIONS, NOT DIMENSIONS. Every number below is read off the photographs
-// in "Foamico mattresses/Sofa cum Bed/", by measuring the seat's front face
+// in "source/Foamico mattresses/Sofa cum Bed/", by measuring the seat's front face
 // against the panel thickness in the straight-on shot: the face is about 5.4x
 // as wide as one panel is thick, and the back panel about 3x as tall. Real
 // dimensions are TBD in docs/PRODUCT_CATALOG.md and must not be read out of

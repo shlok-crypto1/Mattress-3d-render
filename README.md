@@ -5,6 +5,32 @@ Interactive product presentation experience for mattress visualization.
 ## Project goal
 The project presents mattress products through a visual, interactive 3D-oriented experience. The documentation separates product facts, visual rules, interaction behaviour, technical constraints, and AI-agent instructions so the project can be maintained consistently.
 
+## Repository layout
+
+The root holds three different kinds of thing, and two of them look alike. Read
+this before deleting anything.
+
+```
+index.html  assets/  brand/  textures/  products/  .nojekyll
+                    the PUBLISHED SITE - GitHub Pages deploys from the
+                    repository root, so this is the live deployment. It is
+                    app/dist/ copied up a level. Do not hand-edit; rebuild.
+app/        Source code. app/public/ is what the build copies into the set
+            above, which is why brand/ and textures/ appear in both places.
+source/     Source material, never shipped: reference photography, the
+            per-grade cutaway renders, supplied logos. Nothing here is
+            served or read at runtime.
+docs/       What the project is and what has been decided.
+guidelines/ Rules the work has to follow.
+```
+
+**`brand/` and `textures/` at the root are the deployment, not source material.**
+They are byte-identical to their `app/public/` counterparts because they are
+those folders, copied up by the publish step. `docs/ASSET_MANAGEMENT.md` used to
+describe them as source, which is the kind of mistake that gets a live site
+deleted by someone tidying up; `source/` was created on 2026-09-01 so that the
+name says which is which.
+
 ## Documentation map
 
 - `CLAUDE.md` — AI coding-agent operating rules. Read this first, always.
