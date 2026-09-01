@@ -12,7 +12,7 @@ import {
   REVEAL,
   REVEAL_STEP,
 } from '../transition/ProductTransition';
-import { preloadAllIn } from '../routePreload';
+import { preloadAllIn, preloadImage } from '../routePreload';
 
 const ACCENT = '#c77d11'; // Veda Gold
 
@@ -57,6 +57,16 @@ export default function CatalogPage() {
     toImageUrl: publicUrl('/brand/vedasleep-logo.png'),
   });
   const [hovered, setHovered] = useState(null);
+
+  // The dark mark, for the flight back to the Paper selector. That swap is
+  // instant by design (see ProductTransition.jsx), which only works if the
+  // artwork is already there - an unloaded image at opacity 1 shows nothing,
+  // and the mark would vanish rather than merely be the wrong variant. Landing
+  // here from the selector means it is cached already; landing here from a
+  // direct link or a reload does not, and that is the case this covers.
+  useEffect(() => {
+    preloadImage(publicUrl('/brand/vedasleep-logo.png'));
+  }, []);
 
   useEffect(() => {
     preloadAllIn('/vedasleep');
