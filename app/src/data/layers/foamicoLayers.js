@@ -3,7 +3,7 @@
 // `name` is the product owner's confirmed material name (2026-08-31) for every
 // band in this file; nothing here is a numbered stand-in any more.
 // `description` remains filler until the real material copy arrives. `thicknessRatio` is a relative proportion eyeballed
-// from the reference cutaway renders in "Layers/<PRODUCT>.png", not a measured
+// from the reference cutaway renders in "source/Layers/<PRODUCT>.png", not a measured
 // spec. `color` is sampled from those same renders and is a stand-in for real
 // layer photography.
 //
@@ -200,7 +200,7 @@ export const rivaLayers = [
 // src/lib/variantLayers.js).
 //
 // Shape - count, order, type and surface - is read from the reference renders
-// "Layers/<PRODUCT> NATURAL.png", and is the confirmed part, as it is for every
+// "source/Layers/<PRODUCT> NATURAL.png", and is the confirmed part, as it is for every
 // stack in this file. `thicknessRatio` is eyeballed from those same renders and
 // is a placeholder until the product owner gives Natural's foam split, exactly
 // as every other stack here began. Names are the owner's, given 2026-08-31, and
