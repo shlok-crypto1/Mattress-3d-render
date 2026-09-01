@@ -23,6 +23,20 @@ export function preloadRoute(basePath, slug) {
   loaders[key(basePath, slug)]?.();
 }
 
+/**
+ * Warm an image the same way, and for the same reason: a shared element that
+ * cross-fades between two pieces of artwork needs the second one already in
+ * cache, or the fade has nothing to fade to and the mark thins out mid-flight.
+ * Only the VedaSleep mark needs this - it is the one whose variant differs
+ * between the page it leaves and the page it lands on.
+ */
+export function preloadImage(src) {
+  if (typeof window === 'undefined' || !src) return;
+  const run = () => { const img = new Image(); img.src = src; };
+  if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 1500 });
+  else setTimeout(run, 400);
+}
+
 /** Warm every product chunk under a brand once the grid is idle. */
 export function preloadAllIn(basePath) {
   const prefix = `${basePath.replace(/^\//, '')}/`;

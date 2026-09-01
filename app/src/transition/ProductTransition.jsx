@@ -154,7 +154,7 @@ export function TransitionProvider({ children }) {
   }, [active?.phase, active?.canvasReady]);
 
   const startTransition = useCallback(
-    ({ id, imageUrl, rect, radius, toPath, variant, fromPath = location.pathname, alreadyAtDestination = false }) => {
+    ({ id, imageUrl, toImageUrl, rect, radius, toPath, variant, fromPath = location.pathname, alreadyAtDestination = false }) => {
       if (prefersReducedMotion()) {
         if (!alreadyAtDestination) navigate(toPath);
         return;
@@ -163,6 +163,7 @@ export function TransitionProvider({ children }) {
       const next = {
         id,
         imageUrl,
+        toImageUrl,
         variant,
         from: { ...rect, radius },
         to: null,
@@ -229,8 +230,19 @@ function useTransition() {
  * Lifts an element into the transition overlay on click.
  * variant 'card'  - a div painted with background-image (product cards)
  * variant 'logo'  - an <img> (brand logos), kept uncropped and unshadowed
+ *
+ * `toImageUrl` is the artwork the DESTINATION shows, when that differs from the
+ * source's. Only one thing in the site needs it, and it needs it badly: the
+ * VedaSleep mark has a light and a dark variant, and the two ends of this
+ * flight disagree about which is right. The selector panel is Paper, so it
+ * shows the dark mark; the catalog is Veda Green-Black, so it shows the light
+ * one. Flying either variant the whole way lands it on a ground it cannot be
+ * read against - the dark mark spends the flight over the dark page, where
+ * "VEDA" is set in near-black and simply is not there. Given both, the overlay
+ * cross-fades one into the other across the flight, so the mark is always the
+ * right variant for whatever is behind it at that moment.
  */
-export function useSharedSource({ id, toPath, variant = 'card' }) {
+export function useSharedSource({ id, toPath, variant = 'card', toImageUrl }) {
   const ctx = useTransition();
   const ref = useRef(null);
 
@@ -251,13 +263,14 @@ export function useSharedSource({ id, toPath, variant = 'card' }) {
       ctx.startTransition({
         id,
         imageUrl,
+        toImageUrl: toImageUrl ? `url("${toImageUrl}")` : undefined,
         variant,
         rect: { top: r.top, left: r.left, width: r.width, height: r.height },
         radius: parseFloat(cs.borderTopLeftRadius) || 0,
         toPath,
       });
     },
-    [ctx, id, toPath, variant]
+    [ctx, id, toImageUrl, toPath, variant]
   );
 
   return { ref, onClick };
@@ -268,7 +281,7 @@ export function useSharedSource({ id, toPath, variant = 'card' }) {
  * `snapshot` is also used by the hashchange listener, which is what makes the
  * browser Back button indistinguishable from clicking the in-app back link.
  */
-export function useSharedBackSource({ id, toPath, variant = 'card', elRef, getRect, imageUrl, radius = 0 }) {
+export function useSharedBackSource({ id, toPath, variant = 'card', elRef, getRect, imageUrl, toImageUrl, radius = 0 }) {
   const ctx = useTransition();
   const location = useLocation();
 
@@ -283,10 +296,11 @@ export function useSharedBackSource({ id, toPath, variant = 'card', elRef, getRe
       id,
       variant,
       imageUrl: resolvedImage,
+      toImageUrl: toImageUrl ? `url("${toImageUrl}")` : undefined,
       rect: { top: rect.top, left: rect.left, width: rect.width, height: rect.height },
       radius: radius || parseFloat(cs?.borderTopLeftRadius) || 0,
     };
-  }, [elRef, getRect, id, imageUrl, radius, variant]);
+  }, [elRef, getRect, id, imageUrl, radius, toImageUrl, variant]);
 
   useEffect(() => {
     if (!ctx) return undefined;
@@ -434,6 +448,9 @@ function TransitionOverlay() {
   const ctx = useTransition();
   const active = ctx?.active;
   const elRef = useRef(null);
+  // The destination's own artwork, stacked on top and faded in during the
+  // flight. Its own ref because it is animated in the same frame as the FLIP.
+  const morphRef = useRef(null);
   const playedRef = useRef(false);
 
   useEffect(() => {
@@ -468,6 +485,18 @@ function TransitionOverlay() {
         node.style.transition = `transform ${FLIP_MS}ms ${EASE_ENTER}, border-radius ${FLIP_MS}ms ${EASE_ENTER}`;
         node.style.transform = 'translate(0px, 0px) scale(1, 1)';
         node.style.borderRadius = `${endRadius}px`;
+        // Cross-fade to the destination's variant. CROSSFADE_MS, not FLIP_MS:
+        // this fade starts at the moment the route swaps, so the ground behind
+        // the mark is already the destination's. Spending the whole 820ms
+        // flight on it would leave the wrong variant legible over the new page
+        // for a good part of the way, which is the bug being fixed. At 200ms
+        // the mark is right almost as soon as the page under it is, and the
+        // flight carries on for its full length.
+        const morph = morphRef.current;
+        if (morph) {
+          morph.style.transition = `opacity ${CROSSFADE_MS}ms ${EASE_ENTER}`;
+          morph.style.opacity = '1';
+        }
       });
     });
     return undefined;
@@ -502,6 +531,21 @@ function TransitionOverlay() {
         willChange: 'transform, opacity',
         boxShadow: isLogo ? 'none' : '0 30px 70px rgba(0,0,0,0.24)',
       }}
-    />
+    >
+      {active.toImageUrl ? (
+        <div
+          ref={morphRef}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: active.toImageUrl,
+            backgroundSize: isLogo ? 'contain' : 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            opacity: 0,
+          }}
+        />
+      ) : null}
+    </div>
   );
 }
