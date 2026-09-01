@@ -84,6 +84,17 @@ anchor for the frame is known, and the run is translated as a whole rather than
 each label being clamped individually, so the list stays centred on where the
 bands actually are and no label can cross its neighbour.
 
+**The Bottom view names the underside.** Selecting Bottom puts a single callout
+on screen reading `ANTI SKID FABRIC` - the same pill and the same bent leader
+the layer labels use, anchored to the underside's own projected corner and
+flipping to the other side when a narrow viewport leaves no room. It is the one
+view besides Layers that names anything, and the two never appear together: the
+callout hides the moment the stack opens, because the Layers view already names
+every band and does not want a stray ninth pill among them. **Riva shows no
+callout at all** - the product owner excluded it and gave no name, which
+`docs/PRODUCT_CATALOG.md` records. Everything below about how a label is drawn
+applies to it too.
+
 **A leader line joins each label to its own band**, and the two features are one
 design: the spacing pass is what separates a pill from the band it names, so
 without a line the connection is guesswork. The line is the printed-callout
