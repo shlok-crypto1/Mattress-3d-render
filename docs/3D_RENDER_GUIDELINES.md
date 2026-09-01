@@ -88,7 +88,8 @@ The canvas fills the viewport. The title, the variant pill and the control row
 are positioned over it rather than taking layout space beside it.
 
 It used to be a box with the head above and the controls below, and those two
-boundaries were visible as a band of Key Black on FOAMICO and Stage Grey on
+boundaries were visible as a band of Key Black on FOAMICO and Stage Grey (the
+VedaSleep stage of the time, superseded by Veda Green-Black on 2026-09-01) on
 VedaSleep. Worse, the box cropped the product: zooming in ran the mattress into
 a hard edge partway down the screen.
 
