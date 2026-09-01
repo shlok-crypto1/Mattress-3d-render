@@ -14,6 +14,19 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-09-01 — The mark swaps variant at the route boundary, it does not fade across it
+- **Changed:** the shared-element overlay now switches to the destination's artwork **instantly** at the route boundary. It was cross-fading over 200ms, added earlier the same day.
+- **Why the fade was wrong, not merely slow.** The ground under the mark does not fade - it changes in one frame, when the route swaps. Any fade across an instant change buys a window in which the mark is a blend of two variants and neither is right for what is behind it. 200ms made that window short instead of removing it, and **going back it was still long enough to photograph**: the light mark over Paper, "VEDA" set in white on cream. That is the same defect as the original glitch, mirrored - fixing the forward direction by shortening the window could only ever have made the reverse direction briefer, never correct.
+- **Nothing is lost by not animating it.** Both variants are the same artwork at the same size, differing in the colour of one word. There is nothing for a tween to interpolate that a reader would perceive as motion; the only visible effect is the word becoming readable, which is the point. The flight itself still runs its full 820ms - only the variant switch is instantaneous.
+- **The swap lands where the ground lands.** `to` is set by the destination's own entrance target, so it fires once the new page is mounted and painting. The brand selector is eagerly imported rather than lazy, so there is no Suspense screen between the two grounds for the mark to be wrong against.
+- **The dark mark is now warmed from the catalog, symmetrically with the light one from the selector.** An instant swap has a failure mode a fade does not: an image that has not loaded, shown at opacity 1, is nothing at all, and the mark would vanish rather than be the wrong colour. Arriving at the catalog from the selector leaves it cached; arriving by direct link or reload does not, and that is the case this covers.
+- **Reason:** Product owner, 2026-09-01, with a screenshot of the reverse navigation.
+- **Files/areas:** `app/src/transition/ProductTransition.jsx`, `app/src/pages/CatalogPage.jsx`.
+- **Impact:** Both directions of the VedaSleep brand-selector flight. FOAMICO passes no second variant and is untouched, as are all card transitions.
+- **Validation:** `npm run build` clean; `oxlint` at 28 findings, the unchanged baseline. Both directions traced against the phase machine - pinned holds the source variant over the source ground, the swap fires with the route, and the reveal fades an already-correct mark into the destination's own. **Not verified on screen** - no browser automation here, and this is a single-frame behaviour, which is exactly what wants a real look.
+
+---
+
 ### 2026-09-01 — The Bottom view names the underside
 - **Changed:** selecting **Bottom** on a product page now shows a callout reading **ANTI SKID FABRIC**, drawn exactly as a layer label is - same pill, same bent leader, anchored to the underside's own projected corner, flipping sides when a narrow viewport leaves no room on the right. **Riva shows no callout**: the product owner excluded it on 2026-09-01 and gave no replacement name, so it shows nothing rather than a guess.
 - **It is not a layer, and the two never share the screen.** The Layers view names the bottom *band* Quilted Foam - transition foam bonded to a fabric-wrapped base, merged into one band - and this names the cloth wrapping that base's underside. Both are true of the same slab seen from different sides, so neither supersedes the other. The callout hides the moment the stack opens, because the Layers view already names every band and does not want a stray ninth pill among them.

@@ -485,16 +485,24 @@ function TransitionOverlay() {
         node.style.transition = `transform ${FLIP_MS}ms ${EASE_ENTER}, border-radius ${FLIP_MS}ms ${EASE_ENTER}`;
         node.style.transform = 'translate(0px, 0px) scale(1, 1)';
         node.style.borderRadius = `${endRadius}px`;
-        // Cross-fade to the destination's variant. CROSSFADE_MS, not FLIP_MS:
-        // this fade starts at the moment the route swaps, so the ground behind
-        // the mark is already the destination's. Spending the whole 820ms
-        // flight on it would leave the wrong variant legible over the new page
-        // for a good part of the way, which is the bug being fixed. At 200ms
-        // the mark is right almost as soon as the page under it is, and the
-        // flight carries on for its full length.
+        // Swap to the destination's variant, and swap rather than fade.
+        //
+        // This runs at the route boundary: `to` is set by the destination's own
+        // entrance target, so by here the new page is mounted and its ground is
+        // already the one the mark will be seen against. That ground changed
+        // instantly, and any fade across an instant change buys a window in
+        // which neither variant is right for what is behind it - which is the
+        // whole bug. A 200ms fade made that window short instead of removing
+        // it, and going back it was still long enough to photograph: the light
+        // mark over Paper, "VEDA" set in white on cream.
+        //
+        // So there is no transition here on purpose. Both variants are the same
+        // artwork at the same size and differ only in the colour of one word,
+        // so the swap has nothing to animate - it is invisible except for the
+        // word becoming readable, which is the point.
         const morph = morphRef.current;
         if (morph) {
-          morph.style.transition = `opacity ${CROSSFADE_MS}ms ${EASE_ENTER}`;
+          morph.style.transition = 'none';
           morph.style.opacity = '1';
         }
       });
