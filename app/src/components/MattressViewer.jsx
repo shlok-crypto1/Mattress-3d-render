@@ -9,6 +9,7 @@ import { MOTION, EASE, REVEAL } from '../lib/motion';
 import { buildLayerStack } from '../lib/layerStack';
 import { layersForVariant } from '../lib/variantLayers';
 import { BRAND_THEMES } from '../data/brandThemes';
+import { bottomFabricFor } from '../data/bottomFabric';
 import {
   useProductEntranceTarget,
   enterStyle,
@@ -130,6 +131,11 @@ export default function MattressViewer({
   const mountRef = useRef(null);
   const labelsRef = useRef(null);
   const leadersRef = useRef(null);
+  // The Bottom view's own callout. Its own elements rather than an extra entry
+  // in the layer arrays above: those are indexed by band, and this names the
+  // cloth on the underside, which is not one.
+  const bottomLabelRef = useRef(null);
+  const bottomLeaderRef = useRef(null);
   const headRef = useRef(null);
   const controlsRef = useRef(null);
   const variantRef = useRef(null);
@@ -140,6 +146,8 @@ export default function MattressViewer({
   // the product rather than off the selected grade's bands: whether there is a
   // stack to open at all is not a per-grade question.
   const hasLayers = Array.isArray(product.layers) && product.layers.length > 0;
+  // Null for Riva, which the product owner excluded - see src/data/bottomFabric.js.
+  const bottomFabric = bottomFabricFor(product.slug);
   const [exploded, setExploded] = useState(false);
   const [hoveredLayer, setHoveredLayer] = useState(null);
   // Variant selection. `variants` is the product's confirmed variant list,
@@ -1328,6 +1336,64 @@ export default function MattressViewer({
           }
         }
       }
+      // ---- the Bottom view's callout --------------------------------------
+      //
+      // Same shape as a layer's: a pill parked clear of the product with a
+      // leader bent into it, so it reads as naming the thing it points at. It
+      // needs none of the spacing pass above, because there is only ever one of
+      // it and nothing for it to collide with.
+      //
+      // The anchor is the underside's own projected corner, taken the same way
+      // a band takes its own - rightmost on screen, flipping to the left when a
+      // narrow viewport leaves no room on the right.
+      {
+        const el3 = bottomLabelRef.current;
+        const lead = bottomLeaderRef.current;
+        if (el3 && lead) {
+          if (!s.bottomLabelOn || T > 0 || !stageW || !stageH) {
+            el3.style.opacity = '0';
+            el3.style.visibility = 'hidden';
+            lead.setAttribute('opacity', '0');
+          } else {
+            const g3 = s.groupScale ?? 1;
+            const yb = (box.geometry.userData.baseWall?.yBottom ?? 0) * g3;
+            const hw = W / 2, hl = L / 2;
+            let bestX = -Infinity, bestY = 0, leftX = Infinity, leftY = 0;
+            for (const [cx, cz] of [[hw, hl], [hw, -hl], [-hw, hl], [-hw, -hl]]) {
+              projected.set(cx * g3, yb, cz * g3).project(camera);
+              if (projected.x > bestX) { bestX = projected.x; bestY = projected.y; }
+              if (projected.x < leftX) { leftX = projected.x; leftY = projected.y; }
+            }
+            const lw = el3.offsetWidth;
+            const lh = el3.offsetHeight;
+            const GAP = 24, EDGE = 8;
+            let ax = ((bestX + 1) / 2) * stageW;
+            let ay = ((1 - bestY) / 2) * stageH;
+            let side = 1;
+            let lx = ax + GAP;
+            if (lx + lw > stageW - EDGE) {
+              const flipped = ((leftX + 1) / 2) * stageW - GAP - lw;
+              if (flipped >= EDGE) {
+                ax = ((leftX + 1) / 2) * stageW;
+                ay = ((1 - leftY) / 2) * stageH;
+                lx = flipped;
+                side = -1;
+              } else {
+                lx = Math.max(EDGE, stageW - EDGE - lw);
+              }
+            }
+            const y = Math.max(EDGE + lh / 2, Math.min(stageH - EDGE - lh / 2, ay));
+            el3.style.visibility = 'visible';
+            el3.style.opacity = '1';
+            el3.style.transform = `translate(${lx}px, ${y}px) translateY(-50%)`;
+            const tip = side > 0 ? lx - 4 : lx + lw + 4;
+            const elbow = tip - side * LEADER_ELBOW;
+            lead.setAttribute('points', `${ax},${ay} ${elbow},${y} ${tip},${y}`);
+            lead.setAttribute('opacity', '1');
+          }
+        }
+      }
+
       return moving;
     };
 
@@ -1562,6 +1628,14 @@ export default function MattressViewer({
     s.setExplodeState?.(next);
   };
 
+  // The callout is positioned inside the render loop, which cannot read React
+  // state; `s` is the mutable object that loop already reads for everything
+  // else. Bottom view only, and only while the product is solid - the Layers
+  // view names every band and does not want a ninth pill among them.
+  useEffect(() => {
+    s.bottomLabelOn = view === 'bottom' && !exploded && Boolean(bottomFabric);
+  }, [bottomFabric, exploded, s, view]);
+
   const { name } = product;
   const t = theme;
 
@@ -1769,6 +1843,45 @@ export default function MattressViewer({
               />
             ))}
           </svg>
+        )}
+
+        {bottomFabric && (
+          <>
+            <svg className="mv-leaders" aria-hidden="true" focusable="false">
+              <polyline
+                ref={bottomLeaderRef}
+                fill="none"
+                opacity="0"
+                strokeWidth={1}
+                stroke={t.accentBorder}
+              />
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+              <div
+                ref={bottomLabelRef}
+                className="mv-label"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  visibility: 'hidden',
+                  opacity: 0,
+                  whiteSpace: 'nowrap',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: t.labelColor,
+                  background: t.labelBg,
+                  border: `1px solid ${t.accentBorder}`,
+                  borderRadius: 100,
+                  padding: '4px 11px',
+                  transition: 'opacity 0.2s linear',
+                }}
+              >
+                <span style={{ color: t.accent, marginRight: 7 }}>&#9679;</span>
+                {bottomFabric}
+              </div>
+            </div>
+          </>
         )}
 
         {hasLayers && (
