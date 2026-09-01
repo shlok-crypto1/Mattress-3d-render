@@ -65,7 +65,12 @@ export default function SofaPhotoViewer({ product, brand = 'foamico', transition
           letterSpacing: '0.03em',
           color: t.muted,
           textDecoration: 'none',
-          background: brand === 'foamico' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.7)',
+          // One wash for both brands: since VedaSleep's stage went to Veda
+          // Green-Black on 2026-09-01 there is no light stage left to special-
+          // case. The old ternary put a 70% white pill here for VedaSleep,
+          // which on this ground composites to #BBBFBC and left its own label
+          // at 1.45 - a bright blob with unreadable text.
+          background: 'rgba(255,255,255,0.08)',
           ...enterStyle(shown, 235),
         }}
       >

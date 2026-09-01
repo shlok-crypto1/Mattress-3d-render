@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MOTION, EASE, REVEAL_STEP } from '../lib/motion';
 import { FOAMICO, VEDASLEEP } from '../data/brands';
 import { publicUrl } from '../lib/publicUrl';
+import { preloadImage } from '../routePreload';
 import {
   useSharedSource,
   useSourceRecede,
@@ -65,8 +66,27 @@ export default function BrandSelectPage() {
     setHoverCapable(canHover() && !prefersReducedMotion());
   }, []);
 
+  // The light VedaSleep mark is 81KB and is not otherwise fetched on this page,
+  // so on a first visit the cross-fade below would have nothing to fade into
+  // and the mark would thin out in mid-flight. Warmed at idle rather than on
+  // hover, so a touch device - which never hovers - gets it too.
+  useEffect(() => {
+    preloadImage(publicUrl('/brand/vedasleep-logo-light.png'));
+  }, []);
+
   const foamico = useSharedSource({ id: 'logo-foamico', toPath: '/foamico', variant: 'logo' });
-  const veda = useSharedSource({ id: 'logo-vedasleep', toPath: '/vedasleep', variant: 'logo' });
+  // The VedaSleep mark is the one shared element whose artwork differs at the
+  // two ends: this panel is Paper and shows the dark mark, the catalog is Veda
+  // Green-Black and shows the light one. Handing the flight both lets it
+  // cross-fade, instead of carrying near-black "VEDA" across a dark page.
+  // FOAMICO needs nothing here - its panel and its catalog are both dark, so
+  // the same light mark is correct at both ends.
+  const veda = useSharedSource({
+    id: 'logo-vedasleep',
+    toPath: '/vedasleep',
+    variant: 'logo',
+    toImageUrl: publicUrl('/brand/vedasleep-logo-light.png'),
+  });
   useElementEntranceTarget('logo-foamico', foamico.ref);
   useElementEntranceTarget('logo-vedasleep', veda.ref);
   const revealed = useRouteEntranceRevealed();

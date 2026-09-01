@@ -46,7 +46,16 @@ export default function CatalogPage() {
   const logoRef = useRef(null);
   useElementEntranceTarget('logo-vedasleep', logoRef);
   const revealed = useRouteEntranceRevealed();
-  const back = useSharedBackSource({ id: 'logo-vedasleep', toPath: '/', variant: 'logo', elRef: logoRef });
+  // Going back reverses it: this page shows the light mark, the selector it
+  // returns to is Paper and shows the dark one. See the note in
+  // BrandSelectPage.jsx.
+  const back = useSharedBackSource({
+    id: 'logo-vedasleep',
+    toPath: '/',
+    variant: 'logo',
+    elRef: logoRef,
+    toImageUrl: publicUrl('/brand/vedasleep-logo.png'),
+  });
   const [hovered, setHovered] = useState(null);
 
   useEffect(() => {
