@@ -21,8 +21,19 @@ const ACCENT = '#c77d11'; // Veda Gold
 // so the grid passes its own - the same thing the FOAMICO grid does, in the
 // same shape, one step up from the stage rather than a slab of white on it.
 const CARD = {
-  background: '#26332A',
-  border: '#3A4A3E',
+  // One step up from the stage was not enough: at #26332A the card measured
+  // 1.13 against Veda Green-Black and read as a rectangle of the page rather
+  // than an object on it (product owner, 2026-09-01). #3A4F3F measures 1.68,
+  // and the rim above it 2.33, which is what makes the card look raised.
+  //
+  // It cannot simply keep going: the fill has to stay clearly darker than the
+  // tickings it frames or it starts competing with the photograph. The binding
+  // one is Magic, the only mid-grey ticking, and this holds it at 3.22.
+  //
+  // The gold badge is unaffected by any of this - it sits on badgeBg, its own
+  // chip, so it never touches the fill.
+  background: '#3A4F3F',
+  border: '#4C6552',
   name: '#F7F5F0',
   badge: ACCENT,
   badgeBg: 'rgba(24,32,26,0.78)',

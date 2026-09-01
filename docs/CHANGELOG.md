@@ -14,6 +14,17 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-09-01 — The VedaSleep cards lift off the stage
+- **Changed:** the VedaSleep card fill moves from `#26332A` to **`#3A4F3F`**, and its border from `#3A4A3E` to **`#4C6552`**. The variant menu on the product pages takes the same pair, since it shares the token and had the same problem.
+- **Reason:** Product owner, 2026-09-01 — the cards were merging with the background. They were: at `#26332A` the fill measured **1.13** against Veda Green-Black, which is no edge, and the card read as a rectangle of the page rather than an object on it. This was the tightest number in the palette check when the dark stage shipped hours earlier and it was recorded as merely passing; it was not passing. **A fill one step off its ground is not separation** - the eye needs roughly 1.5 before it accepts an edge.
+- **What bounds it in the other direction.** The fill cannot simply keep lightening: it has to stay clearly darker than the tickings it frames, or it competes with the photograph it exists to present. The binding product is Magic, the only mid-grey ticking. `#3A4F3F` sits at 1.68 against the stage, 2.33 for the rim, and still 3.22 below Magic - separation without competition.
+- **The gold badge was never the constraint**, though a first pass treated it as one. It sits on `badgeBg`, its own chip composited over the card, so it never touches the fill; on the new fill it still measures 4.49.
+- **Files/areas:** `app/src/pages/CatalogPage.jsx`, `app/src/data/brandThemes.js`.
+- **Impact:** The VedaSleep card grid and the variant menu. Nothing else moves - stage, chrome, wordmark and FOAMICO are all untouched.
+- **Validation:** `npm run build` and `oxlint` clean of new findings. Candidates measured against stage, border, name, badge chip and every ticking, then the card strip was drawn on the real stage with the real art at both the old and new fill and **looked at** side by side before shipping. **Not verified on screen** - no browser automation in this repo.
+
+---
+
 ### 2026-09-01 — VedaSleep's stage goes to Veda Green-Black
 - **Changed:** the ground of the two VedaSleep pages that show product — the card grid and the product pages, plus the route-loading holding screen that stands in for them — moves from **Stage Grey `#D3D3D3` to Veda Green-Black `#1F2A22`**. The chrome inverts with it (Paper text, gold accent unchanged), the card grid passes its own dark card instead of ProductCard's white default, and the VedaSleep wordmark gains a light variant. Paper `#F7F5F0` is untouched everywhere it was already the ground, including the brand selector.
 - **Why not simply a darker grey, which is what was asked.** Because it would have made the complaint worse, and the measurement is the only reason we know that. VedaSleep's tickings are not all pale: Duro and Maxa photograph at `#E2DDDA` and `#ECE5E4`, but **Magic is itself a mid-grey at `#9D9BA1`**. A stage between them separates neither, and `#D3D3D3` sat exactly there — Duro measured **1.11** against it, Maxa **1.21**, which is no edge at all. Nudge the stage down and it passes straight through Magic's own tone: at `#9A9A9A` Magic measures **1.02 and disappears entirely**. The only stage that separates all three is one below all of them.
