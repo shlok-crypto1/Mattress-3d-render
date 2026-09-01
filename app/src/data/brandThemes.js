@@ -65,8 +65,12 @@ export const BRAND_THEMES = {
     // far below the level a pale ticking would notice.
     stageGround:
       'radial-gradient(ellipse 68% 60% at 50% 54%, rgba(247,245,240,0.06) 0%, rgba(247,245,240,0) 72%)',
-    cardBg: '#26332A',
-    cardBorder: '#3A4A3E',
+    // The variant menu. Same fill as the grid card and lifted for the same
+    // reason - at #26332A it measured 1.13 against the stage and merged into
+    // it. This is a popover standing in front of the product, so it has to
+    // read as a surface in front of something, not a hole in it.
+    cardBg: '#3A4F3F',
+    cardBorder: '#4C6552',
     cardShadow: '0 10px 34px rgba(0,0,0,0.45)',
   },
   foamico: {
