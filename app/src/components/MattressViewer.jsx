@@ -25,6 +25,30 @@ const EXPLODE_DIST = 94; // where the button parks the camera to frame the stack
 const EXPLODE_SCALE = 0.5; // overall size of the open stack; ceiling is clipping
 const LABEL_PITCH_GAP = 15; // clear air between two layer-name pills
 const LEADER_ELBOW = 13; // horizontal run where a leader meets its pill
+
+/**
+ * A callout pill, as worn by both the layer labels and the Bottom view's
+ * underside label. Layout lives in `.mv-label`; everything here is theme-driven
+ * and so cannot, which is why it is a function of the theme rather than more
+ * CSS. `hot` is the hover state - only the layer labels are hoverable, and the
+ * Bottom callout passes it false.
+ */
+const pillStyle = (t, hot) => ({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  visibility: 'hidden',
+  opacity: 0,
+  whiteSpace: 'nowrap',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: hot ? t.accent : t.labelColor,
+  background: t.labelBg,
+  border: `1px solid ${hot ? t.accent : t.accentBorder}`,
+  borderRadius: 100,
+  padding: '4px 11px',
+  transition: 'opacity 0.2s linear, color 0.2s linear, border-color 0.2s linear',
+});
 const HOVER_LIFT = 1.15;
 const HOVER_SCALE = 0.02;
 const HOVER_GLOW = 0.5;
@@ -1016,6 +1040,30 @@ export default function MattressViewer({
     resize();
     s.idle = performance.now();
 
+    // Measure a pill once and reuse it.
+    //
+    // Reading offsetWidth after writing a style forces the browser to lay the
+    // page out then and there, and it cannot batch the work. Doing it per frame
+    // is the defect docs/PERFORMANCE.md names outright, and this loop is where
+    // the rule was learned: the layer labels measured once per band per frame,
+    // eight forced layouts a frame through every explode, which is what made
+    // the explode rough while the orbit stayed smooth.
+    //
+    // Text and viewport are the only two things that can change a pill's size,
+    // so the cache is keyed on both - the epoch is bumped by resize().
+    const measurePill = (el) => {
+      if (
+        el._mvWidth === undefined ||
+        el._mvWidthFor !== el.textContent ||
+        el._mvWidthEpoch !== labelEpoch
+      ) {
+        el._mvWidth = el.offsetWidth;
+        el._mvHeight = el.offsetHeight;
+        el._mvWidthFor = el.textContent;
+        el._mvWidthEpoch = labelEpoch;
+      }
+    };
+
     const projected = new THREE.Vector3();
     // Reused across frames rather than reallocated: the spacing pass
     // needs every anchor in hand before it can place any one of them.
@@ -1198,16 +1246,9 @@ export default function MattressViewer({
             // ran them off the edge and clipped the layer names. Hang them off
             // the left corner instead when the right has no room, and clamp so
             // one never leaves the canvas.
-            let lw = el2._mvWidth;
-            let lh = el2._mvHeight;
-            if (lw === undefined || el2._mvWidthFor !== el2.textContent || el2._mvWidthEpoch !== labelEpoch) {
-              lw = el2.offsetWidth;
-              lh = el2.offsetHeight;
-              el2._mvWidth = lw;
-              el2._mvHeight = lh;
-              el2._mvWidthFor = el2.textContent;
-              el2._mvWidthEpoch = labelEpoch;
-            }
+            measurePill(el2);
+            const lw = el2._mvWidth;
+            const lh = el2._mvHeight;
             // Wider than it was: the leader needs a run to be read as a line
             // rather than as a tick, and the pill no longer sits against the
             // mattress now that there is something joining the two.
@@ -1364,8 +1405,9 @@ export default function MattressViewer({
               if (projected.x > bestX) { bestX = projected.x; bestY = projected.y; }
               if (projected.x < leftX) { leftX = projected.x; leftY = projected.y; }
             }
-            const lw = el3.offsetWidth;
-            const lh = el3.offsetHeight;
+            measurePill(el3);
+            const lw = el3._mvWidth;
+            const lh = el3._mvHeight;
             const GAP = 24, EDGE = 8;
             let ax = ((bestX + 1) / 2) * stageW;
             let ay = ((1 - bestY) / 2) * stageH;
@@ -1461,9 +1503,22 @@ export default function MattressViewer({
     tick();
 
     // TEMP-SCREENSHOT-HOOK
+    //
+    // Debug scaffolding for driving the page from a headless browser. Inert
+    // without `explode` in the query string, and it has never been reached by a
+    // real visit. Left in place rather than removed, because the screenshots it
+    // exists for are how several rendering decisions in docs/CHANGELOG.md were
+    // checked - but it is marked TEMP for a reason and should go once there is
+    // a better harness.
+    //
+    // The two timers below guard on `disposed` themselves; this interval could
+    // not, having no handle to clear, so it outlived the component and went on
+    // waking a torn-down scene every 60ms for the life of the tab. Found in the
+    // 2026-09-01 review.
+    let dbgInterval = null;
     if (hasLayers && typeof window !== 'undefined' && window.location.search.includes('explode')) {
       const q = new URLSearchParams(window.location.search);
-      window.setInterval(() => { s.dirty = true; }, 60);
+      dbgInterval = window.setInterval(() => { s.dirty = true; }, 60);
       window.setTimeout(() => {
         if (disposed) return;
         const twoPi = Math.PI * 2;
@@ -1511,6 +1566,7 @@ export default function MattressViewer({
       s.applyHeight = null;
       cancelAnimationFrame(s.raf);
       window.clearTimeout(touchHoverTimer);
+      if (dbgInterval !== null) window.clearInterval(dbgInterval);
       if (s.warmHandle) {
         if ('cancelIdleCallback' in window) window.cancelIdleCallback(s.warmHandle);
         window.clearTimeout(s.warmHandle);
@@ -1860,22 +1916,7 @@ export default function MattressViewer({
               <div
                 ref={bottomLabelRef}
                 className="mv-label"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  visibility: 'hidden',
-                  opacity: 0,
-                  whiteSpace: 'nowrap',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  color: t.labelColor,
-                  background: t.labelBg,
-                  border: `1px solid ${t.accentBorder}`,
-                  borderRadius: 100,
-                  padding: '4px 11px',
-                  transition: 'opacity 0.2s linear',
-                }}
+                style={pillStyle(t, false)}
               >
                 <span style={{ color: t.accent, marginRight: 7 }}>&#9679;</span>
                 {bottomFabric}
@@ -1890,22 +1931,7 @@ export default function MattressViewer({
               <div
                 key={l.id}
                 className="mv-label"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  visibility: 'hidden',
-                  opacity: 0,
-                  whiteSpace: 'nowrap',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  color: hoveredLayer === i ? t.accent : t.labelColor,
-                  background: t.labelBg,
-                  border: `1px solid ${hoveredLayer === i ? t.accent : t.accentBorder}`,
-                  borderRadius: 100,
-                  padding: '4px 11px',
-                  transition: 'opacity 0.2s linear, color 0.2s linear, border-color 0.2s linear',
-                }}
+                style={pillStyle(t, hoveredLayer === i)}
               >
                 <span style={{ color: t.accent, marginRight: 7 }}>&#9679;</span>
                 {l.name}

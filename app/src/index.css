@@ -234,8 +234,8 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
  *
  * The canvas used to be a box with the head above it and the controls below,
  * and those two boundaries were visible as a band of Key Black on FOAMICO and
- * Stage Grey on VedaSleep - and worse, they cropped the product, so zooming in
- * ran the mattress into a hard edge. The canvas now fills the viewport and the
+ * Stage Grey on VedaSleep, the stage of the time - and worse, they cropped the
+ * product, so zooming in ran the mattress into a hard edge. The canvas now fills the viewport and the
  * chrome floats on top of it, so there is no edge to find.
  *
  * Scoped to the mattress viewer. Sofa cum Bed wears the same chrome classes but
