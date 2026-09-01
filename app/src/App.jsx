@@ -32,9 +32,11 @@ const SofaCumBedPage = lazy(() => import('./pages/foamico/SofaCumBedPage'));
 const CHROME = {
   foamico: { bg: '#1A1A1A', ink: '#FEFEFE', dim: '#8f8f8f', accent: '#95C12B', word: 'FOAMICO' },
   // Every VedaSleep route that reaches this fallback is either the card grid
-  // or a product page, and both of those are stage grey - so the holding
-  // screen is too, or each navigation flashes cream before settling.
-  vedasleep: { bg: '#D3D3D3', ink: '#2b2b2b', dim: '#8a8a8e', accent: '#c77d11', word: 'VEDASLEEP' },
+  // or a product page, and both of those are Veda Green-Black - so the holding
+  // screen is too, or each navigation flashes cream before settling. These four
+  // values are a deliberate copy of the vedasleep entry in BRAND_THEMES (see
+  // the note above on why this table exists); if the stage moves, move both.
+  vedasleep: { bg: '#1F2A22', ink: '#F7F5F0', dim: '#93A197', accent: '#c77d11', word: 'VEDASLEEP' },
 };
 
 /** Brand and product implied by a route, for chrome that renders before it. */

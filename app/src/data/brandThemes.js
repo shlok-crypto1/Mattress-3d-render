@@ -7,40 +7,67 @@
 // Values are unchanged from where they lived before.
 export const BRAND_THEMES = {
   vedasleep: {
-    logo: '/brand/vedasleep-logo.png',
+    // The light variant: the mark sets "VEDA" in near-black, which is invisible
+    // on this stage. Same file, same alpha, only the black ink moved to Paper -
+    // exactly what foamico-logo-light.png does. The brand selector keeps the
+    // original, because its VedaSleep panel is still Paper.
+    logo: '/brand/vedasleep-logo-light.png',
     logoAlt: 'Veda Sleep',
     logoHeight: 32,
-    // Stage grey. Paper (#F7F5F0) still grounds the brand selector and the
-    // body; the two pages that show product - this viewer and the card grid -
-    // sit on #D3D3D3 at the product owner's instruction (2026-08-27), because a
-    // near-white ticking photographed on a white sweep has no ground to read
-    // against on cream. The gold radial in front of it is unchanged.
+    // Veda Green-Black. Paper (#F7F5F0) still grounds the brand selector and
+    // the body; the two pages that show product - this viewer and the card grid
+    // - sit on #1F2A22 at the product owner's instruction (2026-09-01).
+    //
+    // This replaces the #D3D3D3 stage grey that stood here from 2026-08-27, and
+    // the reason it had to go dark rather than merely darker is worth keeping,
+    // because the intuitive answer is wrong. The three VedaSleep tickings are
+    // not all pale: Duro and Maxa photograph at #E2DDDA and #ECE5E4, but Magic
+    // is itself a mid-grey at #9D9BA1. A stage between them cannot separate
+    // them both, and #D3D3D3 sat exactly there - Duro read at 1.11 against it
+    // and Maxa at 1.21, which is no edge at all.
+    //
+    // Nudging the stage down makes Magic worse, not better, because the stage
+    // passes through Magic's own tone on the way: at #9A9A9A Magic measures
+    // 1.02 and disappears completely. The only stage that separates all three
+    // is one below all of them. Here the worst face on any product measures
+    // 2.14 and Magic's top 5.40, and Veda Gold clears AA on the stage at 4.51 -
+    // which no lighter dark managed, so the accent stays usable for small text.
     surface:
-      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 62%), #D3D3D3',
-    text: '#2b2b2b',
-    muted: '#8a8a8e',
-    faint: '#b0b0b4',
-    btnBg: '#f4f4f5',
-    btnColor: '#6e6e73',
-    btnActiveBg: '#1d1d1f',
-    btnActiveColor: '#fff',
-    // Layer explode chrome. Veda Gold.
+      'radial-gradient(ellipse 70% 60% at 50% 58%, rgba(199,125,17,0.10) 0%, rgba(199,125,17,0) 62%), #1F2A22',
+    text: '#F7F5F0',
+    muted: '#93A197',
+    faint: '#6B7A70',
+    btnBg: '#2A382E',
+    btnColor: '#B7C4BB',
+    btnActiveBg: '#c77d11',
+    btnActiveColor: '#1F2A22',
+    // Layer explode chrome. Veda Gold, unchanged - the brand accent does not
+    // move with the stage. Its two washes step up to the strengths FOAMICO
+    // uses, because a 10% wash that read on near-white does not read on this.
     accent: '#c77d11',
-    accentSoft: 'rgba(199,125,17,0.10)',
-    accentBorder: 'rgba(199,125,17,0.35)',
-    labelBg: 'rgba(254,254,254,0.92)',
-    labelColor: '#2b2b2b',
-    // Soft pool behind the exploded stack. On this near-white stage a white
-    // cover has no silhouette to read against; a touch of shade under the
-    // model gives it an edge without darkening the page.
-    stageTint:
-      'radial-gradient(ellipse 68% 60% at 50% 54%, rgba(31,33,28,0.13) 0%, rgba(31,33,28,0) 72%)',
-    // Paper-side products are all pale on a light stage and separate on their
-    // own; nothing to lift.
-    stageGround: null,
-    cardBg: '#FEFEFE',
-    cardBorder: '#e4e0d4',
-    cardShadow: '0 10px 34px rgba(0,0,0,0.10)',
+    accentSoft: 'rgba(199,125,17,0.14)',
+    accentBorder: 'rgba(199,125,17,0.38)',
+    labelBg: 'rgba(31,42,34,0.88)',
+    labelColor: '#F7F5F0',
+    // Both of these swap sides with the stage, and they are not interchangeable
+    // - stageGround is always on, stageTint only while the stack is open.
+    //
+    // The old dark pool existed to give a white cover a silhouette on a
+    // near-white stage. That problem is gone: every VedaSleep ticking is now
+    // lighter than its ground. Shading the centre would only close the gap
+    // again, so the tint goes.
+    stageTint: null,
+    // What remains is the mirror of FOAMICO's problem. Magic's border
+    // photographs at #8B878E and its bottom darker still, so on a dark stage
+    // the one product that is not pale needs the ground lifted under it. Paper
+    // at 6% raises the centre and falls to Green-Black at the edges - a tint of
+    // one existing token over another, the same construction FOAMICO uses, and
+    // far below the level a pale ticking would notice.
+    stageGround:
+      'radial-gradient(ellipse 68% 60% at 50% 54%, rgba(247,245,240,0.06) 0%, rgba(247,245,240,0) 72%)',
+    cardBg: '#26332A',
+    cardBorder: '#3A4A3E',
+    cardShadow: '0 10px 34px rgba(0,0,0,0.45)',
   },
   foamico: {
     logo: '/brand/foamico-logo-light.png',

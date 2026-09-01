@@ -5,7 +5,10 @@ import { useSharedSource, useElementEntranceTarget, prefersReducedMotion } from 
 import { MOTION, EASE } from '../lib/motion';
 import { preloadRoute } from '../routePreload';
 
-// Defaults reproduce the VedaSleep card exactly; FOAMICO passes its own theme.
+// The light card. Both grids now pass their own theme - VedaSleep's went dark
+// with its stage on 2026-09-01 - so this is the fallback for a caller that
+// names none, not a live brand's styling. Keep it: it is also the only card
+// defined against Paper, which is what the brand selector still stands on.
 export const LIGHT_CARD = {
   background: '#fff',
   border: '#e4e0d4',
