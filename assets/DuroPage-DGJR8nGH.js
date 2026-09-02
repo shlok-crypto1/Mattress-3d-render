@@ -1,1 +1,0 @@
-import{l as e}from"./index-BfkSbb56.js";import{t}from"./ProductPage-PRZ64One.js";import{t as n}from"./products-BMW_Cw0w.js";var r=e();function i(){return(0,r.jsx)(t,{product:n(`duro`),backTo:`/vedasleep`,transitionId:`product-vedasleep-duro`})}export{i as default};
