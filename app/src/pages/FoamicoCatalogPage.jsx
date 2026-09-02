@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { foamicoProducts } from '../data/foamicoProducts';
-import ProductCard from '../components/ProductCard';
+import ProductLineup from '../components/ProductLineup';
 import { FOAMICO } from '../data/brands';
 import { publicUrl } from '../lib/publicUrl';
 import {
@@ -11,7 +11,6 @@ import {
   useRouteEntranceRevealed,
   enterStyle,
   REVEAL,
-  REVEAL_STEP,
 } from '../transition/ProductTransition';
 import { preloadAllIn } from '../routePreload';
 
@@ -33,6 +32,9 @@ const SURFACES = {
       badge: FOAMICO.accent,
       badgeBg: 'rgba(18,18,18,0.78)',
     },
+    // Sand, held well back: on a phone the position marks sit under the row
+    // and should read as a measure of it, not as a control beside it.
+    dotIdle: 'rgba(157,158,158,0.32)',
   },
   paper: {
     page: `radial-gradient(ellipse 70% 50% at 50% 20%, rgba(149,193,43,0.09) 0%, rgba(149,193,43,0) 60%), #F6F8F1`,
@@ -44,6 +46,7 @@ const SURFACES = {
       badge: '#5f7d1b', // Kiwi Green darkened to hold contrast on a light chip
       badgeBg: 'rgba(255,255,255,0.9)',
     },
+    dotIdle: 'rgba(43,43,43,0.22)',
   },
 };
 
@@ -58,7 +61,6 @@ export default function FoamicoCatalogPage() {
   useElementEntranceTarget('logo-foamico', logoRef);
   const revealed = useRouteEntranceRevealed();
   const back = useSharedBackSource({ id: 'logo-foamico', toPath: '/', variant: 'logo', elRef: logoRef });
-  const [hovered, setHovered] = useState(null);
 
   useEffect(() => {
     preloadAllIn('/foamico');
@@ -70,6 +72,9 @@ export default function FoamicoCatalogPage() {
         position: 'relative',
         minHeight: '100dvh',
         background: surface.page,
+        // The 24px is also what the phone lineup aligns its first card to and
+        // bleeds past - see --lineup-gutter in src/index.css. Change one and
+        // the other has to follow.
         padding: '48px 24px 64px',
         ...recede,
       }}
@@ -124,27 +129,16 @@ export default function FoamicoCatalogPage() {
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(168px, 1fr))',
-            gap: 20,
-            alignItems: 'stretch',
-          }}
-        >
-          {foamicoProducts.map((product, i) => (
-            <div key={product.slug} style={{ display: 'flex', ...enterStyle(revealed, REVEAL.controls + i * REVEAL_STEP) }}>
-              <ProductCard
-                product={product}
-                basePath="/foamico"
-                theme={surface.card}
-                accent={FOAMICO.accent}
-                hovered={hovered}
-                onHover={setHovered}
-              />
-            </div>
-          ))}
-        </div>
+        <ProductLineup
+          products={foamicoProducts}
+          basePath="/foamico"
+          theme={surface.card}
+          accent={FOAMICO.accent}
+          dotIdle={surface.dotIdle}
+          minCardWidth={168}
+          revealed={revealed}
+          label="FOAMICO products"
+        />
       </div>
     </div>
   );
