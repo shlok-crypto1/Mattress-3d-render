@@ -393,12 +393,90 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
  */
 .product-lineup {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--lineup-min, 200px), 1fr));
-  gap: 20px;
+  /* Three across, the count the lineup is composed for: FOAMICO's six read as
+     two rows of three and VedaSleep's three as one row, and at the container's
+     full width a plate lands at about the 560px the cards were specified at.
+     A column count rather than an auto-fit minimum, because "three" is the
+     composition - auto-fit would put five across a wide screen and turn the
+     lineup back into a table of thumbnails. */
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 32px;
+  /* Wider than the column gap: two rows of cards need to read as two rows, and
+     the name and tagline under each plate already occupy the space below it. */
+  row-gap: 56px;
   align-items: stretch;
 }
 .product-lineup-item {
   display: flex;
+}
+
+/* The card. Sizing lives here rather than inline for the reason the whole file
+   does - an inline style outranks every media query - and the colours stay
+   inline, where the brand theme can reach them. */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.product-card__plate {
+  /* Near-square, a touch wider than tall. The plate is the card's whole
+     picture area and the shape the shared-element flight starts from. */
+  aspect-ratio: 1 / 0.95;
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.product-card__badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 100px;
+}
+.product-card__name {
+  margin-top: 22px;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  /* 30px where there is room. The floor is what the longest name - SOFA CUM
+     BED, set in caps at this tracking - fits on one line inside a phone card. */
+  font-size: clamp(26px, 2.2vw, 30px);
+  letter-spacing: 0.14em;
+  text-indent: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.product-card__tagline {
+  margin: 10px auto 0;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.55;
+  /* Two lines is the shape this copy was written to. The measure is what makes
+     it break as two rather than as one long line and one short one; the clamp
+     is the guard for a longer line arriving later. */
+  max-width: 34ch;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Tablet. Three plates this size across 700-1000px are thumbnails again. */
+@media (max-width: 1023px) {
+  .product-lineup {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 24px;
+    row-gap: 44px;
+  }
 }
 .product-lineup-dots {
   display: none;

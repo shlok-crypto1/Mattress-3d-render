@@ -23,8 +23,6 @@ export default function ProductLineup({
   accent,
   /** Colour of an inactive position mark. The active one takes `accent`. */
   dotIdle,
-  /** Narrowest a card may be before the grid drops a column. */
-  minCardWidth = 200,
   /** Route-entrance gate, from useRouteEntranceRevealed() in the page. */
   revealed,
   label = 'Products',
@@ -71,7 +69,6 @@ export default function ProductLineup({
       <div
         ref={scrollerRef}
         className="product-lineup"
-        style={{ '--lineup-min': `${minCardWidth}px` }}
         role="group"
         aria-label={label}
       >

@@ -1,0 +1,1 @@
+import{l as e}from"./index-CRn0sZEy.js";import{t}from"./ProductPage-D4e3z-0A.js";import{t as n}from"./products-BMW_Cw0w.js";var r=e();function i(){return(0,r.jsx)(t,{product:n(`maxa`),backTo:`/vedasleep`,transitionId:`product-vedasleep-maxa`})}export{i as default};

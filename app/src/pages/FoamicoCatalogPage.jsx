@@ -29,6 +29,9 @@ const SURFACES = {
       background: '#141414',
       border: '#2c2c2c',
       name: FOAMICO.onKey,
+      // Sand, the brand's secondary ink on dark - the tagline is a second
+      // voice under the name, not a second heading.
+      tagline: '#9D9E9E',
       badge: FOAMICO.accent,
       badgeBg: 'rgba(18,18,18,0.78)',
     },
@@ -43,6 +46,7 @@ const SURFACES = {
       background: '#fff',
       border: '#e2e4dc',
       name: '#2b2b2b',
+      tagline: '#6B6B6B', // Slate Grey, the light-ground counterpart of Sand
       badge: '#5f7d1b', // Kiwi Green darkened to hold contrast on a light chip
       badgeBg: 'rgba(255,255,255,0.9)',
     },
@@ -100,7 +104,10 @@ export default function FoamicoCatalogPage() {
       >
         &larr; Brands
       </Link>
-      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+      {/* Three plates at the size the lineup is composed for, plus their two
+          gutters. Narrower than this and the cards never reach it; wider and
+          they grow past the shape they were specified at. */}
+      <div style={{ maxWidth: 1744, margin: '0 auto' }}>
         <div
           style={{
             display: 'flex',
@@ -135,7 +142,6 @@ export default function FoamicoCatalogPage() {
           theme={surface.card}
           accent={FOAMICO.accent}
           dotIdle={surface.dotIdle}
-          minCardWidth={168}
           revealed={revealed}
           label="FOAMICO products"
         />

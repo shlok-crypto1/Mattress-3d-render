@@ -3,6 +3,13 @@
 ## Product content
 All product claims must come from approved source material. The rule for what to do when a fact isn't available (never invent, use `TBD`) lives in `guidelines/DO_NOT_CHANGE.md` — this file does not restate it.
 
+## Product copy on screen
+Per-product copy that makes a claim — currently the card taglines on the two
+brand grids — is a product fact, not styling. Each line is recorded in
+`docs/PRODUCT_CATALOG.md` beside the construction it describes, with its source
+and with the claims it makes that the construction does not corroborate called
+out. That table is where such copy is added or changed; nothing here restates it.
+
 ## Copy principles
 - Be concise.
 - Use consistent terminology.

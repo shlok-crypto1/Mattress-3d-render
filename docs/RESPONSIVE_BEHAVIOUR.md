@@ -20,6 +20,38 @@ The 3D experience must remain usable across desktop, tablet and mobile widths.
 - Keep text legible without excessive zoom.
 - Prevent horizontal overflow.
 
+### The lineup is three across, and the card is a plate with words under it
+The count is the composition, not a fit: **three columns from 1024px, two below
+it, and the swipe row below 620px.** A column count rather than an auto-fitting
+minimum, because auto-fit puts five plates across a wide screen and turns a
+lineup back into a table of thumbnails. Six FOAMICO products read as two rows of
+three and VedaSleep's three as one row of three, so a card is the same object in
+both lines.
+
+The card itself is a picture plate with the name and tagline centred underneath
+it, on the page rather than inside a box:
+
+- **The plate is 1:0.95** — near-square, a touch wider than tall — with a 24px
+  radius, at every width. It carries the picture, the "Coming soon" chip and the
+  hover lift, and it is also the shared element the 3D flight starts from, so
+  its ratio is the shape that transition begins in.
+- **560px is where it lands at full container width.** Three plates plus their
+  two 32px gutters is what sets the grids' 1744px maximum; the plate reaches
+  560px at roughly 1800px of viewport and scales down with the column below
+  that (443px at 1440, 304px at 1024).
+- **The name is 30px where there is room and 26px where there is not.** The
+  floor is what SOFA CUM BED, the longest name, fits on one line inside a phone
+  card at this tracking. Montserrat 800 in caps either way - the type is the
+  brand's, only its size is responsive.
+- **The tagline is 18px, two lines, on a 34ch measure.** The measure is what
+  makes 7-10 words break as two balanced lines rather than one long and one
+  short; the line clamp is the guard for longer copy arriving later. What it
+  says is a product fact - see `docs/PRODUCT_CATALOG.md`.
+- **There is no swatch row.** Apple's dots are colours; these products vary by
+  grade and thickness, which a dot cannot state, and on a phone they would have
+  sat directly above the carousel's own position marks. The slot is closed
+  rather than filled - product owner's decision, 2026-09-02.
+
 ### The page ground is the route's, not the document's
 A phone browser paints more than the page. iOS Safari tints its status bar and
 its bottom toolbar from the page's colour, and a rubber-band overscroll uncovers
@@ -47,10 +79,9 @@ cream band above and below a Key Black page, which is what
 ### The brand grid becomes one card at a time
 At 620px and below, the row of product cards on a brand grid stops being a grid
 and becomes a horizontally scrolled row: one card is the subject, and a fixed
-24px sliver of the next one stays on screen. Above that width it is the
-auto-fitting grid it has always been, unchanged. Both layouts are the same
-class - `.product-lineup` in `app/src/index.css` - so a card is never rebuilt
-between them, and the card component itself knows nothing about either.
+24px sliver of the next one stays on screen. Both layouts are the same class -
+`.product-lineup` in `app/src/index.css` - so a card is never rebuilt between
+them, and the card component itself knows nothing about either.
 
 What the sizing is solved for, in order:
 - **The card is 80-84% of the screen** at every width from 320px up. It is
