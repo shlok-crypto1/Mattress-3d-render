@@ -13,6 +13,7 @@ export const LIGHT_CARD = {
   background: '#fff',
   border: '#e4e0d4',
   name: 'inherit',
+  tagline: '#6B6B6B',
   badge: '#c77d11',
   badgeBg: 'rgba(199,125,17,0.12)',
 };
@@ -66,80 +67,74 @@ export default function ProductCard({
       onBlur={() => onHover(null)}
       className="product-card"
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        flex: 1,
         textDecoration: 'none',
         color: 'inherit',
-        borderRadius: 16,
-        overflow: 'hidden',
-        border: `1px solid ${lifted ? accent : theme.border}`,
-        background: theme.background,
         opacity: dimmed ? 0.88 : 1,
-        transform: lifted ? 'translateY(-4px) scale(1.035)' : 'none',
-        boxShadow: lifted
-          ? `0 18px 38px rgba(0,0,0,0.18), 0 0 0 1px ${accent}55`
-          : '0 0 0 0 rgba(0,0,0,0)',
+        transform: lifted ? 'translateY(-4px)' : 'none',
         transition: reduced
           ? 'none'
-          : `transform ${MOTION.fast}ms ${EASE.enter}, box-shadow ${MOTION.fast}ms ease, opacity ${MOTION.fast}ms ease, border-color ${MOTION.fast}ms ease`,
+          : `transform ${MOTION.fast}ms ${EASE.enter}, opacity ${MOTION.fast}ms ease`,
         willChange: lifted ? 'transform' : 'auto',
       }}
     >
+      {/* The plate. The card used to be one bordered box with the picture at
+          the top of it; the picture is now the object and the words stand on
+          the page underneath, which is what makes a row of these read as a
+          lineup rather than as a table of tiles.
+
+          It stays the shared element: this node, and the crop it wears, is what
+          flies into the 3D page - see the ref below - so the plate's ratio is
+          also the shape that transition starts from. */}
       <div
         ref={ref}
+        className="product-card__plate"
         style={{
-          aspectRatio: '4 / 3',
-          // Mattresses show their own quilt photo, which is also the texture the
-          // 3D top face wears - that shared image is what the shared-element
-          // transition flies into the canvas. A photo-only product (Sofa cum
-          // Bed) has no 3D maps at all and supplies `cardImage` instead.
-          backgroundImage: `url(${publicUrl(product.cardImage ?? product.textures.top)})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          position: 'relative',
+          // The fill shows wherever the picture does not - a product shot with
+          // its own ground rather than a full-bleed ticking crop.
+          backgroundColor: theme.background,
+          // Two layers, picture underneath: a soft wash that deepens toward the
+          // foot of the plate, so the crop settles into the page instead of
+          // stopping at a hard edge above the name.
+          backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0) 62%, rgba(0,0,0,0.30) 100%), url(${publicUrl(product.cardImage ?? product.textures.top)})`,
+          border: `1px solid ${lifted ? accent : theme.border}`,
+          // The lift is the plate's, not the whole card's: growing the words
+          // along with the picture reads as a zoom rather than as an object
+          // coming forward.
+          transform: lifted ? 'scale(1.02)' : 'none',
+          boxShadow: lifted
+            ? `0 18px 38px rgba(0,0,0,0.18), 0 0 0 1px ${accent}55`
+            : '0 0 0 0 rgba(0,0,0,0)',
+          transition: reduced
+            ? 'none'
+            : `transform ${MOTION.fast}ms ${EASE.enter}, box-shadow ${MOTION.fast}ms ease, border-color ${MOTION.fast}ms ease`,
         }}
       >
         {product.placeholder && (
           <span
+            className="product-card__badge"
             style={{
-              position: 'absolute',
-              top: 10,
-              right: 10,
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
               color: theme.badge,
               background: theme.badgeBg,
-              padding: '4px 8px',
-              borderRadius: 100,
             }}
           >
             Coming soon
           </span>
         )}
       </div>
-      {/* Name only. The card used to carry a "Classic · 6″ Firm" subline under
-          it; the grade and thickness are a choice the product page now offers
-          rather than one fact to quote here, so the grid states what a product
-          is called and the page states what it can be. `specLine` stays in the
-          data as the record of the baseline - nothing renders it. */}
-      <div style={{ padding: '16px 18px', minHeight: 60, boxSizing: 'border-box', display: 'flex', alignItems: 'center' }}>
-        <div
-          style={{
-            fontFamily: "'Montserrat', sans-serif",
-            fontWeight: 800,
-            fontSize: 18,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            color: theme.name,
-          }}
-        >
-          {product.name}
-        </div>
+
+      <div className="product-card__name" style={{ color: theme.name }}>
+        {product.name}
       </div>
+
+      {/* Product-owner copy, verbatim, and only where a product has it - a
+          missing tagline is a product nobody has written one for yet, not a
+          reason to write one here. See docs/PRODUCT_CATALOG.md, which records
+          each line beside the construction it describes. */}
+      {product.tagline && (
+        <p className="product-card__tagline" style={{ color: theme.tagline }}>
+          {product.tagline}
+        </p>
+      )}
     </Link>
   );
 }

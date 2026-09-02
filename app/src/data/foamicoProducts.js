@@ -55,6 +55,11 @@ const product = (slug, name, feel, warranty, variants, extra = {}) => {
     // rather than the default.
     ...(extra.holdUpholstery ? { holdUpholstery: true } : null),
     variants,
+    // The line under the name on the grid card. Product-owner copy, verbatim -
+    // it is a claim about the product, so it is recorded in
+    // docs/PRODUCT_CATALOG.md beside the construction it describes and is not
+    // to be reworded here. A product without one shows its name alone.
+    ...(extra.tagline ? { tagline: extra.tagline } : null),
     specLine: {
       variant: baseline.variant,
       thickness: `${baseline.height}\u2033 ${feel}`,
@@ -120,7 +125,10 @@ export const foamicoProducts = [
     { variant: 'Luxury', height: 7 },
     { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
     { variant: 'Premium', height: 6.5, omitLayers: ['foam-3'] },
-  ], { holdUpholstery: true }),
+  ], {
+    holdUpholstery: true,
+    tagline: 'Firm, high-resilience support. Cool comfort that holds its shape.',
+  }),
   // Both Classic heights drop the same two bands: the product owner gave one
   // rule for "sova classic" and Sova presents two of them.
   product('sova', 'Sova', 'Firm', '15-Year Warranty + 5-Year Full Replacement', [
@@ -132,7 +140,7 @@ export const foamicoProducts = [
     // slab sits under the purple comfort foam where the standard grade carries
     // the blue one. Read from "source/Layers/SOVA NATURAL.png".
     { variant: 'Natural', height: 6, layers: sovaNaturalLayers },
-  ]),
+  ], { tagline: 'Responsive latex bounce. Orthopaedic support that keeps you aligned.' }),
   // Corrected by the product owner (2026-08-26): Luma's grades step 6" / 8" /
   // 10" and Classic is the 6". The earlier reading of the catalog had Classic
   // at 8" and put a 5" against Luxury, which is not a Luma thickness at all.
@@ -144,7 +152,7 @@ export const foamicoProducts = [
     { variant: 'Luxury', height: 10 },
     { variant: 'Classic', height: 6, omitLayers: ['foam-3'] },
     { variant: 'Premium', height: 8, omitLayers: ['foam-3'] },
-  ]),
+  ], { tagline: 'Pocket springs that isolate motion. Balanced comfort, every night.' }),
   product('ultima', 'Ultima', 'Firm', '25-Year Warranty + 5-Year Full Replacement', [
     // 7", not the 6.5" carried here until 2026-08-31. Ultima's Luxury is the
     // same height as Resto's and Sova's; the 6.5" was the odd one out.
@@ -160,7 +168,7 @@ export const foamicoProducts = [
     // perforated latex slab in place of the blue and purple comfort foams.
     // Read from "source/Layers/ULTIMA NATURAL.png".
     { variant: 'Natural', height: 6, layers: ultimaNaturalLayers },
-  ]),
+  ], { tagline: 'Cloud-like softness above. Quiet, aligned support underneath.' }),
   // Riva is the only product in either line whose border carries a woven badge.
   // 21.2in x 4.0in is the badge's real size: its 208x85 crop divided by the
   // photograph's own scale on the wall (about 9.8 px/in across, 21.2 px/in up).
@@ -188,6 +196,7 @@ export const foamicoProducts = [
     // latex slab over half the mattress. Read from "source/Layers/RIVA NATURAL.png".
     { variant: 'Natural', height: 6, layers: rivaNaturalLayers },
   ], {
+    tagline: 'Italian-engineered comfort layers. Indulgent support, every single night.',
     sideBadge: {
       src: '/textures/foamico/riva/side-badge.png',
       width: 21.2,

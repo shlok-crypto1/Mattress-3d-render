@@ -34,6 +34,8 @@ const CARD = {
   background: '#3A4F3F',
   border: '#4C6552',
   name: '#F7F5F0',
+  // Veda Chrome's secondary ink, the counterpart of FOAMICO's Sand.
+  tagline: '#93A197',
   badge: ACCENT,
   badgeBg: 'rgba(24,32,26,0.78)',
 };
@@ -112,7 +114,10 @@ export default function CatalogPage() {
       >
         &larr; Brands
       </Link>
-      <div style={{ maxWidth: 980, margin: '0 auto' }}>
+      {/* Matched to the FOAMICO grid: the same three plates at the same size,
+          so a card is the same object in both lines. VedaSleep's three
+          products fill one row of it. */}
+      <div style={{ maxWidth: 1744, margin: '0 auto' }}>
         <div
           style={{
             display: 'flex',
@@ -147,7 +152,6 @@ export default function CatalogPage() {
           theme={CARD}
           accent={ACCENT}
           dotIdle={DOT_IDLE}
-          minCardWidth={200}
           revealed={revealed}
           label="VedaSleep products"
         />
