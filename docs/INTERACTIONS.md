@@ -14,6 +14,49 @@ Potential interaction categories include:
 - Navigation
 - Responsive touch gestures
 
+### The Mattress Guide, docked
+The guide is a document of its own in an iframe - see `docs/ASSET_MANAGEMENT.md`
+for why, and for which file is the source of record. What follows is how it
+behaves as part of the site.
+
+**Two shapes, one panel.** On a desktop it is a 400x620 panel in the
+bottom-right corner with the page still visible beside it. At 620px and below -
+the project's phone breakpoint - it is the screen: full bleed, no radius, no
+border, the page behind it locked so the thing under the thumb is the only thing
+that moves. It was a 370px column inset ten pixels from each edge, which left a
+sliver of page down both sides and a band of it underneath.
+
+**The launcher hands over its close duty on a phone.** A floating disc over a
+full-screen chat sits on top of the composer, the one control that must never be
+covered, so below 620px the launcher hides while the panel is open and the
+frame's own header closes it.
+
+**Minimize and close are different acts, which is the only reason there are
+two.** Minimize hides the panel with the conversation intact - the frame stays
+mounted precisely so it survives, including across a trip to a product page and
+back. Close ends the conversation and returns the guide to its opening. Escape
+does what minimize does, and is handled inside the frame as well as outside it,
+because a keystroke typed with the caret in the guide never reaches the page.
+
+**The frame asks; the page decides.** The sandbox withholds top-navigation on
+purpose, so nothing inside the guide can move the page on its own. A small
+message channel is how the header controls and the product links cross that
+boundary: the frame posts a request, `ChatWidget` checks it came from the frame
+it mounted, and acts. Product links are checked twice over - the page hands the
+frame the route table built from its own product data, and then only honours a
+path it recognises from that same list, so the guide can offer a product but
+never invent a destination.
+
+**A product answer ends with a way to see the product.** Every product card the
+guide draws closes with the same pill row, so the offer to open that mattress in
+3D is written once, in `pitch()`, and appears on all of them - and only for a
+product the site actually has a page for.
+
+**The opening offers four things to tap.** The same four the chip row carries,
+in the conversation, where someone who does not yet know what to ask is looking;
+the chip row itself waits until there is a conversation for it to sit under, so
+the two are never on screen saying the same thing at once.
+
 ### Browsing the lineup on a phone
 On a phone the brand grid's cards are a horizontally swiped row rather than a
 grid - one card is the subject and a sliver of the next one is visible. The

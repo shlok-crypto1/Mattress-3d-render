@@ -1,0 +1,1 @@
+import{l as e}from"./index-DcfxBMDM.js";import{getFoamicoProductBySlug as t}from"./foamicoProducts-BAjoUzSu.js";import{t as n}from"./ProductPage-BD2gulfG.js";var r=e();function i(){return(0,r.jsx)(n,{product:t(`sova`),backTo:`/foamico`,brand:`foamico`,transitionId:`product-foamico-sova`})}export{i as default};

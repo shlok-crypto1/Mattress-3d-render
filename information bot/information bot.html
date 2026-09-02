@@ -58,7 +58,17 @@ body{
   letter-spacing:0; margin:0; line-height:1.15;
 }
 .bar h1 .dot{color:var(--kiwi)}
-.bar .sub{font-size:11px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-top:1px}
+.bar .sub{
+  font-size:11px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;
+  font-weight:600;margin-top:1px;
+  /* One line. In a 390px panel this wrapped to two and pushed the header to
+     58px of chrome above a conversation that needed the height more. */
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* The name block is what gives way when the controls need the room - it can be
+   clipped and still read, where a button cannot be clipped and still be pressed. */
+.bar > div:not(.spacer){min-width:0}
+.bar h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar .spacer{flex:1}
 .langsel{
   border:1px solid var(--border);background:var(--surface-2);color:var(--muted);
@@ -71,6 +81,18 @@ body{
   border-radius:9px; width:34px; height:34px; cursor:pointer; font-size:15px; line-height:1;
 }
 .themebtn:hover{color:var(--text)}
+/* The dock's own controls, drawn here because this document owns the header
+   the site's panel shows. Hidden until the document knows it is in a frame -
+   opened on its own, the window's own chrome is the close button. */
+.barbtn{
+  display:none; flex:none; border:1px solid var(--border); background:var(--surface-2);
+  color:var(--muted); border-radius:9px; width:34px; height:34px; cursor:pointer;
+  align-items:center; justify-content:center; padding:0;
+}
+:root[data-framed] .barbtn{display:inline-flex}
+.barbtn svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;fill:none}
+.barbtn:hover{color:var(--text);border-color:var(--kiwi)}
+.barbtn:focus-visible{outline:2px solid var(--kiwi);outline-offset:2px}
 .themebtn:focus-visible,.chip:focus-visible,#send:focus-visible,#q:focus-visible{
   outline:2px solid var(--kiwi); outline-offset:2px;
 }
@@ -209,16 +231,37 @@ td.name{font-weight:600;white-space:nowrap}
   background:var(--surface);color:var(--text);
 }
 .next:hover{border-color:var(--kiwi);color:var(--kiwi-deep)}
+/* Opens the product on the site behind this panel. Filled where the follow-up
+   questions beside it are outlined, because it leaves the conversation. */
+.next.open3d{background:var(--kiwi);color:var(--kiwi-ink);border-color:transparent;font-weight:700}
+.next.open3d:hover{background:var(--kiwi-deep);color:#FEFEFE;border-color:transparent}
 .next:focus-visible{outline:2px solid var(--kiwi);outline-offset:2px}
 
 /* ---------- composer ---------- */
 .dock{
   flex:none;background:var(--bg);border-top:1px solid var(--border);
-  padding:10px 16px 14px;
+  /* The ground continues under the phone's home bar rather than stopping in a
+     line above it. env() reads 0 wherever the host page has not opted into a
+     covered viewport, which is exactly the fallback wanted. */
+  padding:10px 16px calc(14px + env(safe-area-inset-bottom));
 }
 .dockin{max-width:720px;margin:0 auto}
-.chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:9px;scrollbar-width:none}
+.chips{
+  display:flex;gap:7px;overflow-x:auto;padding-bottom:9px;scrollbar-width:none;
+  /* The row runs past the panel's edge on any width, and a chip cut through its
+     own label reads as a clipping bug. Fading the last few pixels says "there
+     is more this way" in the same breath. */
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);
+  scroll-snap-type:x proximity;
+}
 .chips::-webkit-scrollbar{display:none}
+.chip{scroll-snap-align:start}
+/* While the opening is still on screen the same four things are already being
+   offered in the conversation, where someone who does not know what to ask is
+   looking. Showing them twice reads as two different sets. The row comes back
+   the moment there is a conversation for it to sit under. */
+body.opening .chips{display:none}
 .chip{
   flex:none;border:1px solid var(--border);background:var(--surface);color:var(--muted);
   font-family:inherit;font-size:12.5px;font-weight:500;padding:6px 13px;border-radius:999px;
@@ -234,11 +277,52 @@ td.name{font-weight:600;white-space:nowrap}
 #send{
   border:0;background:var(--kiwi);color:var(--kiwi-ink);font-family:Montserrat,sans-serif;
   font-weight:700;font-size:14px;padding:0 20px;border-radius:12px;cursor:pointer;
+  transition:background .2s ease,opacity .2s ease;
 }
 #send:hover{background:var(--kiwi-deep);color:#FEFEFE}
+/* Nothing typed, nothing to send. Kept in the layout rather than hidden, so the
+   composer does not change width the moment someone starts typing. */
+#send:disabled{background:var(--surface-2);color:var(--faint);cursor:default;opacity:.85}
+#send:disabled:hover{background:var(--surface-2);color:var(--faint)}
 .foot{text-align:center;font-size:10.5px;color:var(--faint);margin-top:9px;letter-spacing:.03em}
+/* A narrow panel - which, docked, is every panel: the frame is 400px wide on a
+   desktop and the screen on a phone, and these queries measure the frame, not
+   the display. So this is the header the site actually shows.
+
+   The name and the controls cannot both fit one line at 390px, and of the two
+   the name is what may not be clipped: "Mattre..." is not a name. The subtitle
+   drops to a line of its own, where it gets the full width it needs - it states
+   what the prices in here are, which is not a line to abbreviate. */
+@media (max-width:560px){
+  .bar{padding:9px 12px;gap:6px;flex-wrap:wrap}
+  .bar .rule{display:none}
+  .logo{width:34px;height:34px;margin:-2px 0}
+  /* The wrapper stops being a box so its two lines can be placed
+     independently: the name up with the controls, the subtitle under them. */
+  .bar > div:not(.spacer){display:contents}
+  /* The name is the only thing here that may give up width. Every control is
+     fixed: a button that shrinks to fit is a button that stops being a target,
+     and one that wraps to a second row is worse - it was the header growing to
+     129px on a 320px screen, three rows of chrome over a conversation. */
+  .bar h1{flex:1 1 auto;min-width:0;font-size:14.5px}
+  .bar .sub{flex-basis:100%;order:9;margin-top:0;font-size:10.5px}
+  .langsel,.themebtn,.barbtn{flex:none}
+  .langsel{height:30px;font-size:11.5px;padding:0 3px}
+  .themebtn,.barbtn{width:30px;height:30px}
+  .barbtn svg{width:18px;height:18px}
+}
+/* The narrowest phones still in use. Everything gives up two more pixels so the
+   row stays a row. */
+@media (max-width:380px){
+  .bar{padding:8px 10px;gap:5px}
+  .logo{width:30px;height:30px}
+  .bar h1{font-size:13.5px}
+  .langsel{height:28px;font-size:11px}
+  .themebtn,.barbtn{width:28px;height:28px}
+  .barbtn svg{width:17px;height:17px}
+}
 @media (max-width:520px){
-  .stream{padding:16px 12px 4px} .dock{padding:8px 12px 12px}
+  .stream{padding:16px 12px 4px} .dock{padding:8px 12px calc(12px + env(safe-area-inset-bottom))}
   .ans{padding:14px 15px} .scroll{margin:12px -15px 0;padding:0 15px}
   .hero{font-size:28px}
 }
@@ -261,6 +345,14 @@ td.name{font-weight:600;white-space:nowrap}
     <option value="en">EN</option><option value="hi">&#2361;&#2367;&#2306;</option><option value="hr">Hin</option>
   </select>
   <button class="themebtn" id="theme" aria-label="Switch theme">&#9680;</button>
+  <!-- Shown only inside the dock on the site: standalone, this document is the
+       whole window and has nothing to minimise into. See FRAMED in the script. -->
+  <button class="barbtn" id="minimize" aria-label="Minimise the guide" title="Minimise">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10.5h10" /></svg>
+  </button>
+  <button class="barbtn" id="close" aria-label="Close the guide and clear this conversation" title="Close">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9" /></svg>
+  </button>
 </header>
 
 <main class="stream" id="stream"><div class="inner" id="inner" aria-live="polite"></div></main>
@@ -739,7 +831,11 @@ function pitch(fam,v){
   return '<div class="pills" style="margin-top:12px">'+
     '<span class="pill on">'+esc(isNat0?"Natural latex":P.feel)+(P.hr?" \u00B7 "+P.hr+"% Float Sense":"")+'</span>'+
     (P.badge?'<span class="pill badgepill">'+esc(P.badge)+'</span>':'')+
-    (P.who?'<span class="pill">'+esc(isNat0?"Above 90 kg":P.who)+'</span>':'')+'</div>';
+    (P.who?'<span class="pill">'+esc(isNat0?"Above 90 kg":P.who)+'</span>':'')+'</div>'+
+    /* Every product answer ends here - the price card, the family card, the
+       spec card and the positioning card all close with this row - so this is
+       the one place the offer to go and look at the thing has to be written. */
+    (openCTA(fam)?'<div class="nextrow">'+openCTA(fam)+'</div>':'');
 }
 function pitchFull(fam,v){
   const P=POS[fam]; if(!P) return "";
@@ -756,11 +852,14 @@ function pitchFull(fam,v){
   if(P.noPrice) bits.push('<div class="warn"><b>No price here:</b> '+esc(P.noPrice)+'</div>');
   if(P.always&&!isNat) bits.push('<div class="warn upsell"><b>Upsell:</b> '+esc(P.always)+'</div>');
   const nx=isNat?["Riva","Ultima"]:P.next;
+  const cta=openCTA(fam);
   if(nx&&nx.length){
     bits.push('<div class="nextrow"><span class="nextlabel">You might also like</span>'+
-      nx.map(function(n){return '<button class="next" data-q="'+esc(n)+'">'+esc(n)+' \u203A</button>';}).join("")+'</div>');
+      nx.map(function(n){return '<button class="next" data-q="'+esc(n)+'">'+esc(n)+' \u203A</button>';}).join("")+cta+'</div>');
   } else if(P.top){
-    bits.push('<div class="nextrow"><span class="nextlabel">Top of the range \u2014 nothing to step up to. Sell the engineering.</span></div>');
+    bits.push('<div class="nextrow"><span class="nextlabel">Top of the range \u2014 nothing to step up to. Sell the engineering.</span>'+cta+'</div>');
+  } else if(cta){
+    bits.push('<div class="nextrow">'+cta+'</div>');
   }
   bits.push('</div>');
   return bits.join("");
@@ -1267,13 +1366,14 @@ function el(cls,html){const d=document.createElement("div");d.className=cls;d.in
 const sayMsg=t=>el("msg",'<div class="say">'+AV+"<p>"+t+"</p></div>");
 const cardMsg=h=>el("msg cardturn",h);
 const meMsg=t=>el("msg me",'<div class="bubble">'+esc(t)+"</div>");
-const nextMsg=a=>el("msg cardturn",'<div class="nextrow"><span class="nextlabel">You might also like</span>'+
+const nextMsg=(a,label)=>el("msg cardturn",'<div class="nextrow">'+(label===""?"":'<span class="nextlabel">'+(label||"You might also like")+'</span>')+
   a.map(function(n){return '<button class="next" data-q="'+esc(n)+'">'+esc(n)+' \u203A</button>';}).join("")+'</div>');
 function typingMsg(){return el("msg typing",'<div class="say">'+AV+'<div class="dots"><span></span><span></span><span></span></div></div>');}
 
 let busy=false;
 function ask(t){
   t=t.trim(); if(!t||busy) return;
+  document.body.classList.remove("opening");
   busy=true; meMsg(t); qEl.value="";
   const r=route(t);
   const dots=typingMsg();
@@ -1287,9 +1387,60 @@ function ask(t){
     else busy=false;
   },wait);
 }
-document.getElementById("send").onclick=function(){ask(qEl.value)};
+/* ---------- the page around this one ----------------------------------------
+ * Standalone, this document is the whole window: it has no header controls to
+ * draw and nowhere to send anyone. Docked on the site it is a panel inside a
+ * page and both become true - but the frame is sandboxed without
+ * top-navigation, deliberately, so neither can be done from in here. The site
+ * listens for these messages and decides; this side only ever asks.
+ */
+const FRAMED=window.parent!==window;
+const BRIDGE="foamico-guide";
+function tell(msg){ if(FRAMED) window.parent.postMessage(Object.assign({source:BRIDGE},msg),"*"); }
+if(FRAMED) document.documentElement.setAttribute("data-framed","");
+
+/* The site answers with its own product routes, and they are the only
+   destinations this document can offer: a family the site did not name gets no
+   button rather than a guessed URL that 404s. Keyed by the name in capitals,
+   which is what both sides already call a product. */
+let ROUTES={};
+window.addEventListener("message",function(e){
+  const d=e.data;
+  if(!d||d.source!==BRIDGE||d.type!=="products"||!Array.isArray(d.routes)) return;
+  const map={};
+  d.routes.forEach(function(r){
+    if(r&&r.family&&r.path) map[String(r.family).toUpperCase()]={path:r.path,name:r.name||r.family};
+  });
+  ROUTES=map;
+});
+function openCTA(fam){
+  const r=ROUTES[String(fam||"").toUpperCase()];
+  if(!r) return "";
+  return '<button class="next open3d" data-open="'+esc(r.path)+'">Explore '+esc(r.name)+' in 3D</button>';
+}
+
+/* Minimise leaves the conversation where it is - the site keeps this frame
+   mounted precisely so it survives. Close ends it, which is the difference
+   between the two and the only reason there are two. */
+document.getElementById("minimize").onclick=function(){ tell({type:"minimize"}); };
+/* Escape, from inside the frame. The site listens for it too, but a keystroke
+   typed with the caret in here never reaches that document - which is why
+   Escape stopped working the moment anyone actually started using the guide. */
+document.addEventListener("keydown",function(e){ if(e.key==="Escape") tell({type:"minimize"}); });
+document.getElementById("close").onclick=function(){ tell({type:"close"}); opening(); };
+
+/* Nothing typed, nothing to send. Disabled rather than hidden, so the composer
+   does not change width the moment someone starts typing. */
+const sendBtn=document.getElementById("send");
+function syncSend(){ sendBtn.disabled=!qEl.value.trim(); }
+qEl.addEventListener("input",syncSend);
+syncSend();
+
+sendBtn.onclick=function(){ask(qEl.value)};
 qEl.addEventListener("keydown",function(e){if(e.key==="Enter")ask(qEl.value)});
 inner.addEventListener("click",function(e){
+  const o=e.target.closest(".open3d");
+  if(o){ tell({type:"open-product",path:o.dataset.open}); return; }
   const n=e.target.closest(".next");
   if(n){ ask(n.dataset.q); return; }
   const b=e.target.closest(".copy"); if(!b) return;
@@ -1337,9 +1488,16 @@ tb.onclick=function(){
 /* opening \u2014 staggered, like someone typing */
 function opening(){
   inner.innerHTML="";
+  document.body.classList.add("opening");
   sayMsg(hourGreetL()+"! "+t().intro);
   setTimeout(function(){sayMsg(t().introB)},700);
   setTimeout(function(){sayMsg(t().introC)},1600);
+  /* Four things to tap, in the conversation, where someone who does not yet
+     know what to type is looking. The same list the chip row carries and the
+     same handler behind them - these are not a second set of shortcuts, they
+     are the first four of the one set, offered where the question is being
+     asked. No label: nothing has been said yet for them to follow on from. */
+  setTimeout(function(){nextMsg(CHIPS.slice(0,4),"")},2300);
 }
 try{const st=localStorage.getItem("fg-lang"); if(st&&LANGS[st]) LANG=st;}catch(e){}
 opening();

@@ -114,5 +114,6 @@ Taken from the implementation, not chosen: these are the values in the source.
 |---|---|---|
 | `max-width: 620px` | `app/src/index.css` | Phone. The viewer chrome (head, wordmark tracking, control row, layer labels) and the brand grid's card row, which becomes the swipeable lineup described above. **This is the project's phone breakpoint** - a new phone rule belongs here rather than at a fourth value. |
 | `max-height: 480px and (orientation: landscape)` | `app/src/index.css` | Landscape phone. The viewer header collapses so the stage keeps the height. |
-| `max-width: 520px` | `app/src/components/ChatWidget.jsx` | The chat panel goes full-width. Scoped to that component's own `<style>`. |
+| `max-width: 620px` | `app/src/components/ChatWidget.jsx` | The Mattress Guide stops being a corner panel and becomes the screen, the launcher hides while it is open, and the page behind it stops scrolling. Scoped to that component's own `<style>`. Moved from 520px on 2026-09-02 to match the phone breakpoint above. |
+| `max-width: 560px` / `380px` | the guide's own document | **These measure the panel, not the display.** The frame is 400px wide on a desktop and the screen on a phone, so the guide's own queries are what shape its header in both - which is why its narrow-panel header is the one the site actually shows. |
 | `innerWidth < 760` | `MattressViewer.jsx`, `SofaViewer.jsx` | Not a layout breakpoint. Read once in JS, with `(pointer: coarse)`, to pick camera framing and interaction defaults for a small screen. |
