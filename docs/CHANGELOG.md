@@ -14,6 +14,19 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-09-02 — The page ground follows the route, so an iPhone stops drawing cream bands
+- **Fixed — a cream band above and below the page on iOS.** Reported from an iPhone, 2026-09-02: Safari was tinting its status bar and its bottom toolbar cream around a Key Black page.
+- **The cause was the canvas, not a container.** Nothing was constraining the width - every page element measured exactly the viewport at left 0, at every width tested, with no horizontal overflow anywhere. What showed was `body { background: var(--paper) }` propagating to the canvas: Paper is the one cream in a site whose every full page is dark, and the canvas is exactly what Safari samples for its chrome and what a rubber-band overscroll uncovers. There was no `theme-color` meta at all, so Safari had nothing else to go on.
+- **Added — `--page-ground`, set per route.** `PageGround` in `app/src/App.jsx` writes it and the `theme-color` meta on every navigation, from the same per-brand table the route holding screen already uses: Key Black on FOAMICO, Veda Green-Black on VedaSleep. Both are set because Safari uses both — `theme-color` is what it prefers and the only one that reaches the bottom toolbar; the custom property is what paints the document and what every other browser overscrolls into.
+- **The selector takes the panel at the top.** It is the one split screen and a canvas takes one colour, so it takes FOAMICO's Key Black — the half the status bar sits over, and the panel a phone stacks first. Its Paper panel still paints its own half, so the split is unchanged.
+- **No safe-area padding was added.** `env(safe-area-inset-*)` insets content away from the edges, and the bands were never content — padding the page would have moved the problem inward. The insets stay where they were, on the viewer's floating chrome.
+- **Reason:** Product owner, 2026-09-02.
+- **Files/areas:** `app/src/App.jsx` (adds `PageGround` and `pageGround()`), `app/src/index.css` (`--page-ground`, and `html`/`body` painted from it in place of Paper), `app/index.html` (cold-load `theme-color`), `docs/RESPONSIVE_BEHAVIOUR.md`; published set re-synced from `app/dist/`.
+- **Impact:** No layout change at any width. `--paper` stays a brand token; nothing but the body rule was reading it. The carousel, the cards, the chat dock and the back pill are untouched.
+- **Validation:** `npm run lint` clean for the changed files; `npm run build` succeeds. Checked at 320, 375, 390, 430, 768, 1024 and 1440px on the selector and both grids: ground and `theme-color` match the route everywhere, no horizontal overflow at any width, every page element exactly viewport-wide at left 0, all four viewport corners the route's own ground on the grids (the selector's bottom corners stay Paper, which is its own panel), carousel unchanged, chat dock still 20px off the right edge and the back pill 18px off the left, no console errors.
+
+---
+
 ### 2026-09-02 — Both brand grids become one card at a time on a phone
 - **Changed — the card row on both brand grids is a horizontal snap carousel at 620px and below.** Six cards in a two-column grid gave a phone six half-width cards and no subject; it now shows one card at 80-84% of the screen with a 24px sliver of the next, swiped with the browser's own scrolling and snapped to each card's start edge. Product owner's request, 2026-09-02, with Apple's product lineup as the interaction reference. Asked for FOAMICO and extended to VedaSleep in the same change at the product owner's confirmation, so the two brand grids do not diverge on a phone.
 - **Nothing above 620px changes.** Tablet and desktop keep the auto-fitting grid, the same columns at the same minimum width. The two layouts are one class, `.product-lineup`, so a card is not rebuilt between them.

@@ -8,6 +8,22 @@
   --gold-soft: rgba(199, 125, 17, 0.08);
   --gold-glow: rgba(199, 125, 17, 0.1);
   --card-border: #e4e0d4;
+
+  /* The page ground.
+   *
+   * Not a page's own background - this is what the canvas is painted with:
+   * the colour iOS Safari tints its status bar and its bottom toolbar from,
+   * and the colour a rubber-band overscroll uncovers past either end of a
+   * scroll. It was Paper, propagated from body, which is the one cream in a
+   * site whose every full page is dark - so an iPhone drew a cream band above
+   * and below a Key Black page.
+   *
+   * It belongs to the route rather than to the document, so PageGround in
+   * App.jsx sets it on every navigation. The value here is only what the first
+   * paint uses, before React has decided: Key Black, because that is the panel
+   * at the top of the selector, which is where a cold load lands.
+   */
+  --page-ground: #1A1A1A;
 }
 
 * {
@@ -22,8 +38,15 @@ body,
   height: 100%;
 }
 
+/* Both, deliberately. The canvas takes html's background when html has one and
+   body's when it does not, and pinning the pair to the same value means it
+   cannot matter which rule that is. */
+html {
+  background: var(--page-ground);
+}
+
 body {
-  background: var(--paper);
+  background: var(--page-ground);
   color: var(--ink);
   font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;

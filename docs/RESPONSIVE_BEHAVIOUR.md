@@ -20,6 +20,30 @@ The 3D experience must remain usable across desktop, tablet and mobile widths.
 - Keep text legible without excessive zoom.
 - Prevent horizontal overflow.
 
+### The page ground is the route's, not the document's
+A phone browser paints more than the page. iOS Safari tints its status bar and
+its bottom toolbar from the page's colour, and a rubber-band overscroll uncovers
+that same colour past either end of a scroll - so on an iPhone the site drew a
+cream band above and below a Key Black page, which is what
+`--page-ground` exists to stop.
+
+- **The ground is a route's property.** `PageGround` in `app/src/App.jsx` sets
+  `--page-ground` and the `theme-color` meta on every navigation, from the same
+  per-brand table the route holding screen uses. Both are set because Safari
+  uses both: `theme-color` is what it prefers and the only one that reaches the
+  bottom toolbar, and the custom property is what actually paints the document
+  and what every other browser overscrolls into.
+- **The selector takes the panel at the top.** It is the one split screen and a
+  canvas takes a single colour, so it takes FOAMICO's Key Black - the half the
+  status bar sits over, and the panel a phone stacks first.
+- **This is not the same thing as a page background.** Every page still paints
+  its own, full-bleed, over a ground that already matches it. Nothing here
+  should ever be the reason a page looks right.
+- **Not solved with safe-area padding.** `env(safe-area-inset-*)` insets content
+  away from the edges; the bands were never content, and padding the page would
+  have moved the problem inward rather than removed it. The insets stay where
+  they already are, on the viewer's own floating chrome.
+
 ### The brand grid becomes one card at a time
 At 620px and below, the row of product cards on a brand grid stops being a grid
 and becomes a horizontally scrolled row: one card is the subject, and a fixed

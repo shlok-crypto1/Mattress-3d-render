@@ -1,4 +1,4 @@
-import { Component, Suspense, lazy } from 'react';
+import { Component, Suspense, lazy, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import BrandSelectPage from './pages/BrandSelectPage';
 import ChatWidget from './components/ChatWidget';
@@ -39,6 +39,50 @@ const CHROME = {
   // the note above on why this table exists); if the stage moves, move both.
   vedasleep: { bg: '#1F2A22', ink: '#F7F5F0', dim: '#93A197', accent: '#c77d11', word: 'VEDASLEEP' },
 };
+
+/**
+ * The ground a route stands on - the colour behind everything it paints.
+ *
+ * The selector is the one split screen, and a canvas takes a single colour, so
+ * it takes the panel at the top: FOAMICO's Key Black on a phone, where the
+ * panels stack, and the half the status bar sits over on a desktop.
+ */
+function pageGround(pathname) {
+  const [, brand] = pathname.split('/');
+  return (CHROME[brand] ?? CHROME.foamico).bg;
+}
+
+/**
+ * Keeps the page ground in step with the route.
+ *
+ * This is not a page's own background - every page paints that itself. It is
+ * the colour of the canvas: what iOS Safari tints its status bar and its bottom
+ * toolbar from, and what a rubber-band overscroll uncovers past either end of a
+ * scroll. It was Paper for every route, being body's background propagated up,
+ * which put a cream band above and below a Key Black page on an iPhone.
+ *
+ * Two things are set because Safari uses two. `theme-color` is what it prefers,
+ * and the only one that reaches the bottom toolbar at all; the custom property
+ * is what actually paints the document, and what every other browser overscrolls
+ * into. See --page-ground in src/index.css.
+ */
+function PageGround() {
+  const { pathname } = useLocation();
+  const ground = pageGround(pathname);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--page-ground', ground);
+    let meta = document.head.querySelector('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'theme-color');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', ground);
+  }, [ground]);
+
+  return null;
+}
 
 /** Brand and product implied by a route, for chrome that renders before it. */
 function routeIdentity(pathname) {
@@ -194,6 +238,7 @@ export default function App() {
     // (/#/foamico/resto) always resolve to index.html first, so direct links
     // work without any extra server config.
     <HashRouter>
+      <PageGround />
       <TransitionProvider>
         <RouteErrorBoundary>
         <Suspense fallback={<RouteFallback />}>
