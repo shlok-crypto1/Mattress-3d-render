@@ -14,6 +14,34 @@ Potential interaction categories include:
 - Navigation
 - Responsive touch gestures
 
+### Browsing the lineup on a phone
+On a phone the brand grid's cards are a horizontally swiped row rather than a
+grid - one card is the subject and a sliver of the next one is visible. The
+layout and its sizing are `docs/RESPONSIVE_BEHAVIOUR.md`; what belongs here is
+how it behaves under a thumb.
+
+**It is the browser's own scrolling, snapped.** No drag handler, no autoplay, no
+arrows: `scroll-snap-type: x mandatory` with each card snapping to the row's
+start edge, which is what gives it the platform's own momentum and rubber-band
+for free, and what makes a trackpad's horizontal gesture work without anything
+being written for it. A swipe that runs past the last card is contained so it
+cannot become the browser's back gesture, and the scrollbar is hidden - the
+sliver of the next card is what says the row keeps going.
+
+**A card is still just a link.** Tapping one opens its 3D page exactly as it
+does in the grid, with the same shared-element flight from the card's own
+texture. Nothing about the carousel intercepts a press: the only interaction
+added is the swipe itself, and the pressed lift a card already had is what
+acknowledges the tap.
+
+**The marks under the row state position, not navigation.** One per product,
+the active one in the brand's accent, following the swipe. They are marks
+rather than buttons on purpose - the cards are the controls, and six more tab
+stops that only repeat them would be a cost with no gain - so they are hidden
+from assistive tech, which reads the six links in order whatever the row is
+scrolled to. Keyboard focus moves through the cards in the same order and the
+row scrolls each one into place as it goes.
+
 ### Variant selection
 Product pages carry a pill under the product name stating the variant on screen.
 Where the product's catalog entry confirms more than one variant it opens a list

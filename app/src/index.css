@@ -356,3 +356,108 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
   .mv-stage-tint { transition: none; }
 }
       
+
+/* -------------------------------------------------------- product lineup --
+ * The card row both brand grids stand on. One class, two layouts: the
+ * auto-fitting grid the grids have always used, and - on a phone - a
+ * horizontal snap carousel where one card is the subject and a sliver of the
+ * next one says the row keeps going.
+ *
+ * Sizing lives here for the same reason the viewer's does: an inline style
+ * outranks every media query, so a phone layout written inline could never
+ * win. Each grid passes only what differs - its own minimum column width, as
+ * --lineup-min - and the card itself is untouched by any of this.
+ */
+.product-lineup {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--lineup-min, 200px), 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+.product-lineup-item {
+  display: flex;
+}
+.product-lineup-dots {
+  display: none;
+}
+
+/* Phones. Same breakpoint as the viewer chrome above. */
+@media (max-width: 620px) {
+  .product-lineup {
+    /* The page's own horizontal padding, cancelled and re-applied inside the
+       row: that is what lets a card scroll to the screen edge while the first
+       one still starts on the page's left margin. Keep in step with the
+       padding on the catalog pages' root element. */
+    --lineup-gutter: 24px;
+    --lineup-gap: 14px;
+    /* How much of the next card stays on screen. Fixed rather than
+       proportional, so the invitation to swipe is the same on every phone. */
+    --lineup-peek: 24px;
+
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--lineup-gap);
+    overflow-x: auto;
+    /* Explicit, because `overflow-x: auto` alone would compute the block axis
+       to `auto` as well, and a card lifting under the thumb would briefly make
+       this row scroll vertically inside the page. The block padding below is
+       what that lift moves into. */
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--lineup-gutter);
+    /* A swipe that runs out of cards must not become the browser's back
+       gesture. */
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-inline: calc(-1 * var(--lineup-gutter));
+    padding-inline: var(--lineup-gutter);
+    /* Room for the pressed card's 4px lift and the entrance's 12px rise,
+       taken back out again so the row still occupies the height it did. */
+    padding-block: 14px;
+    margin-block: -14px;
+  }
+  .product-lineup::-webkit-scrollbar {
+    display: none;
+  }
+  .product-lineup-item {
+    flex: 0 0 auto;
+    /* One card, one gap, one sliver of the next, and the page margin they all
+       sit inside - solved for the card. The percentage resolves against this
+       row's content box, which is the screen less its two gutters, so the
+       sliver is exactly --lineup-peek wide at every width and the card lands
+       at 80-84% of the screen from 320px up. The second term is what holds
+       that ceiling on a wide phone: past ~460px it takes over and the sliver
+       widens instead of the card, which is the better of the two ways to
+       spend the extra room. */
+    width: min(
+      calc(100% + var(--lineup-gutter) - var(--lineup-gap) - var(--lineup-peek)),
+      84vw
+    );
+    scroll-snap-align: start;
+  }
+  /* Position, not navigation - which is why these are marks rather than
+     buttons: the cards are the controls, and six more tab stops that only
+     repeat them is not an accessibility gain. */
+  .product-lineup-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    margin-top: 22px;
+  }
+  .product-lineup-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 100px;
+    background: var(--lineup-dot-idle);
+    transition: background 200ms ease;
+  }
+  .product-lineup-dot[data-active='true'] {
+    background: var(--lineup-dot-active);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-lineup-dot { transition: none; }
+}
