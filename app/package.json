@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "sync:bot": "node scripts/build-chatbot.mjs",
+    "prebuild": "node scripts/build-chatbot.mjs",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"

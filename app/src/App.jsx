@@ -1,6 +1,7 @@
 import { Component, Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import BrandSelectPage from './pages/BrandSelectPage';
+import ChatWidget from './components/ChatWidget';
 import { TransitionProvider } from './transition/ProductTransition';
 import { MOTION, EASE } from './lib/motion';
 
@@ -221,6 +222,14 @@ export default function App() {
           </Routes>
         </Suspense>
         </RouteErrorBoundary>
+        {/* Outside <Routes> on purpose. The dock decides for itself which
+            routes it belongs on (the brand selector and the two card grids -
+            never a product viewer), and mounting it once here rather than
+            inside three page components means the conversation survives moving
+            between those pages instead of restarting on each one. It portals
+            to <body>, so the receding blur a page applies to itself while
+            navigating away never reaches it. */}
+        <ChatWidget />
       </TransitionProvider>
     </HashRouter>
   );

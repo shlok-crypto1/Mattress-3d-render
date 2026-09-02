@@ -11,12 +11,16 @@ The root holds three different kinds of thing, and two of them look alike. Read
 this before deleting anything.
 
 ```
-index.html  assets/  brand/  textures/  products/  .nojekyll
+index.html  assets/  brand/  textures/  products/  chatbot/  .nojekyll
                     the PUBLISHED SITE - GitHub Pages deploys from the
                     repository root, so this is the live deployment. It is
                     app/dist/ copied up a level. Do not hand-edit; rebuild.
 app/        Source code. app/public/ is what the build copies into the set
             above, which is why brand/ and textures/ appear in both places.
+information bot/
+            The chat bot's authored document, and its source of record. Not
+            served: `npm run sync:bot` generates the served copy from it into
+            app/public/chatbot/. See docs/ASSET_MANAGEMENT.md.
 source/     Source material, never shipped: reference photography, the
             per-grade cutaway renders, supplied logos. Nothing here is
             served or read at runtime.

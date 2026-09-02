@@ -1,0 +1,1355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Foamico Genius</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#FBFCF8; --surface:#FFFFFF; --surface-2:#F4F7EE; --border:#E3E7DA;
+  --text:#1A1A1A; --muted:#5A5A5A; --faint:#8A9179;
+  --kiwi:#95C12B; --kiwi-deep:#3F5E12; --kiwi-ink:#1A1A1A; --tint:#E4F2C5;
+  --gold:#B8901F; --gold-tint:#F7EFDA; --forest:#1F3D2F;
+  --user-bg:#E4F2C5; --shadow:0 1px 2px rgba(26,26,26,.06),0 8px 24px -12px rgba(26,26,26,.14);
+  --radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#131610; --surface:#1C201A; --surface-2:#232821; --border:#2F3629;
+    --text:#F0F2EA; --muted:#A8AF9B; --faint:#7C8470;
+    --kiwi:#A6D138; --kiwi-deep:#C3E070; --kiwi-ink:#131610; --tint:#26301A;
+    --gold:#D9B84A; --gold-tint:#2C2718; --forest:#B9D6C4;
+    --user-bg:#2A3319; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131610; --surface:#1C201A; --surface-2:#232821; --border:#2F3629;
+  --text:#F0F2EA; --muted:#A8AF9B; --faint:#7C8470;
+  --kiwi:#A6D138; --kiwi-deep:#C3E070; --kiwi-ink:#131610; --tint:#26301A;
+  --gold:#D9B84A; --gold-tint:#2C2718; --forest:#B9D6C4;
+  --user-bg:#2A3319; --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:Poppins,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  display:flex; flex-direction:column;
+  height:100vh; height:100dvh; overflow:hidden;
+}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- header ---------- */
+.bar{
+  flex:none; z-index:20; background:var(--surface);
+  border-bottom:1px solid var(--border); padding:12px 16px;
+  display:flex; align-items:center; gap:12px;
+}
+/* the logo carries its own clear space in the artwork's outer box */
+.logo{width:52px;height:52px;flex:none;display:block;margin:-8px 0}
+.logo-dark{display:none}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .logo-light{display:none}
+  :root:not([data-theme="light"]) .logo-dark{display:block}
+}
+:root[data-theme="dark"] .logo-light{display:none}
+:root[data-theme="dark"] .logo-dark{display:block}
+.rule{width:1px;height:26px;background:var(--border);flex:none;margin:0 2px}
+.bar h1{
+  font-family:Poppins,sans-serif; font-weight:600; font-size:15px;
+  letter-spacing:0; margin:0; line-height:1.15;
+}
+.bar h1 .dot{color:var(--kiwi)}
+.bar .sub{font-size:11px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-top:1px}
+.bar .spacer{flex:1}
+.langsel{
+  border:1px solid var(--border);background:var(--surface-2);color:var(--muted);
+  border-radius:9px;height:34px;padding:0 6px;font-family:inherit;font-size:12px;
+  font-weight:600;cursor:pointer;
+}
+.langsel:focus-visible{outline:2px solid var(--kiwi);outline-offset:2px}
+.themebtn{
+  border:1px solid var(--border); background:var(--surface-2); color:var(--muted);
+  border-radius:9px; width:34px; height:34px; cursor:pointer; font-size:15px; line-height:1;
+}
+.themebtn:hover{color:var(--text)}
+.themebtn:focus-visible,.chip:focus-visible,#send:focus-visible,#q:focus-visible{
+  outline:2px solid var(--kiwi); outline-offset:2px;
+}
+
+/* ---------- stream ---------- */
+.stream{flex:1;overflow-y:auto;padding:20px 16px 8px}
+.inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.msg{display:flex}
+.msg.me{justify-content:flex-end}
+.me .bubble{
+  background:var(--user-bg); border:1px solid var(--border); color:var(--text);
+  padding:9px 14px; border-radius:16px 16px 4px 16px; max-width:82%; font-weight:500;
+}
+.ans{
+  background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--kiwi);
+  border-radius:4px var(--radius) var(--radius) 4px; box-shadow:var(--shadow);
+  padding:16px 18px; width:100%;
+}
+.ans.veda{border-left-color:var(--gold)}
+
+/* ---------- answer internals ---------- */
+.eyebrow{
+  font-size:10.5px; font-weight:700; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--kiwi-deep); margin-bottom:7px;
+}
+.veda .eyebrow{color:var(--gold)}
+.title{font-family:Montserrat,sans-serif;font-weight:800;font-size:19px;letter-spacing:-.01em;line-height:1.2;text-wrap:balance;margin:0 0 2px}
+.title em{font-style:normal;font-weight:600;color:var(--kiwi-deep)}
+.veda .title em{color:var(--gold)}
+.sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+.hero{font-family:Montserrat,sans-serif;font-weight:800;font-size:32px;letter-spacing:-.02em;line-height:1;margin:6px 0 2px}
+.herolabel{font-size:12px;color:var(--muted);margin-bottom:12px}
+.p{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+.p:last-child{margin-bottom:0}
+.p strong{color:var(--text);font-weight:600}
+
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.pill{
+  font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;
+  background:var(--surface-2);color:var(--muted);border:1px solid var(--border);
+}
+.pill.on{background:var(--tint);color:var(--kiwi-deep);border-color:transparent}
+.veda .pill.on{background:var(--gold-tint);color:var(--gold)}
+
+.scroll{overflow-x:auto;margin:12px -18px 0;padding:0 18px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:340px;color:var(--text)}
+th{
+  text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--faint);padding:0 12px 6px 0;border-bottom:1px solid var(--border);white-space:nowrap;
+}
+td{padding:8px 12px 8px 0;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
+tr:last-child td{border-bottom:0}
+th.n,td.n{text-align:right;padding-right:0}
+td.n{font-variant-numeric:tabular-nums;font-weight:600}
+td.name{font-weight:600;white-space:nowrap}
+.warn{
+  margin-top:12px;padding:9px 12px;border-radius:9px;background:var(--surface-2);
+  border:1px solid var(--border);font-size:12.5px;color:var(--muted);
+}
+.warn b{color:var(--text)}
+.layers{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:0}
+.layers li{
+  display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--border);font-size:13px;
+}
+.layers li:last-child{border-bottom:0}
+.layers .num{
+  font-size:10px;font-weight:700;color:var(--kiwi-deep);background:var(--tint);
+  min-width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex:none;
+}
+.veda .layers .num{color:var(--gold);background:var(--gold-tint)}
+.copy{
+  margin-top:12px;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);
+  font-family:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;
+}
+.copy:hover{color:var(--text);border-color:var(--kiwi)}
+.copy:focus-visible{outline:2px solid var(--kiwi);outline-offset:2px}
+
+/* ---------- assistant speech ---------- */
+.say{display:flex;gap:10px;align-items:flex-start;width:100%}
+.av{
+  width:26px;height:26px;border-radius:50%;background:var(--tint);flex:none;margin-top:2px;
+  display:grid;place-items:center;
+}
+.av::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--kiwi-deep)}
+.say p{
+  margin:0;font-size:14.5px;line-height:1.62;color:var(--text);max-width:88%;
+}
+.say p b{font-weight:600}
+.say + .msg .ans, .msg.cardturn .ans{margin-left:36px;width:calc(100% - 36px)}
+@media (max-width:520px){
+  .msg.cardturn .ans{margin-left:0;width:100%}
+}
+.typing .dots{
+  display:flex;gap:4px;align-items:center;height:26px;padding:0 4px;
+}
+.typing .dots span{
+  width:6px;height:6px;border-radius:50%;background:var(--faint);
+}
+@media (prefers-reduced-motion:no-preference){
+  .typing .dots span{animation:blink 1.15s infinite}
+  .typing .dots span:nth-child(2){animation-delay:.18s}
+  .typing .dots span:nth-child(3){animation-delay:.36s}
+  @keyframes blink{0%,60%,100%{opacity:.28}30%{opacity:1}}
+}
+
+/* ---------- pitch / upsell ---------- */
+.pitch{
+  margin-top:14px;padding:13px 15px;border-radius:10px;
+  background:var(--tint);border:1px solid transparent;
+}
+.veda .pitch{background:var(--gold-tint)}
+.pitchhead{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:7px}
+.feel{
+  font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--kiwi-deep);
+}
+.veda .feel{color:var(--gold)}
+.badge{
+  font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  background:var(--kiwi);color:var(--kiwi-ink);padding:3px 8px;border-radius:999px;
+}
+.badge.sm{font-size:9px;padding:2px 6px}
+.pill.badgepill{background:var(--kiwi);color:var(--kiwi-ink);border-color:transparent;font-weight:700}
+.veda .pill.badgepill{background:var(--gold);color:var(--kiwi-ink)}
+.pitch .p{font-size:13px;color:var(--text);margin-bottom:7px}
+.pitch .p:last-of-type{margin-bottom:0}
+.pitch .warn{background:var(--surface);margin-top:9px}
+.pitch .warn.upsell{border-color:var(--kiwi)}
+.nextrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:11px}
+.nextlabel{
+  font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);
+}
+.next{
+  font-family:Poppins,sans-serif;font-size:12px;font-weight:600;cursor:pointer;
+  padding:5px 11px;border-radius:999px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+}
+.next:hover{border-color:var(--kiwi);color:var(--kiwi-deep)}
+.next:focus-visible{outline:2px solid var(--kiwi);outline-offset:2px}
+
+/* ---------- composer ---------- */
+.dock{
+  flex:none;background:var(--bg);border-top:1px solid var(--border);
+  padding:10px 16px 14px;
+}
+.dockin{max-width:720px;margin:0 auto}
+.chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:9px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:none;border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  font-family:inherit;font-size:12.5px;font-weight:500;padding:6px 13px;border-radius:999px;
+  cursor:pointer;white-space:nowrap;
+}
+.chip:hover{border-color:var(--kiwi);color:var(--text)}
+.row{display:flex;gap:8px}
+#q{
+  flex:1;border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font-family:inherit;font-size:15px;padding:12px 16px;border-radius:12px;min-width:0;
+}
+#q::placeholder{color:var(--faint)}
+#send{
+  border:0;background:var(--kiwi);color:var(--kiwi-ink);font-family:Montserrat,sans-serif;
+  font-weight:700;font-size:14px;padding:0 20px;border-radius:12px;cursor:pointer;
+}
+#send:hover{background:var(--kiwi-deep);color:#FEFEFE}
+.foot{text-align:center;font-size:10.5px;color:var(--faint);margin-top:9px;letter-spacing:.03em}
+@media (max-width:520px){
+  .stream{padding:16px 12px 4px} .dock{padding:8px 12px 12px}
+  .ans{padding:14px 15px} .scroll{margin:12px -15px 0;padding:0 15px}
+  .hero{font-size:28px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .msg{animation:rise .22s ease-out both}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <img class="logo logo-light" src="data:image/png;base64,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" alt="Foamico Luxury Mattress">
+  <img class="logo logo-dark"  src="data:image/png;base64,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"  alt="Foamico Luxury Mattress">
+  <span class="rule" aria-hidden="true"></span>
+  <div>
+    <h1>Mattress Guide<span class="dot">.</span></h1>
+    <div class="sub">MRP w.e.f 1 Aug 2026 &#183; incl. taxes</div>
+  </div>
+  <div class="spacer"></div>
+  <select class="langsel" id="lang" aria-label="Language">
+    <option value="en">EN</option><option value="hi">&#2361;&#2367;&#2306;</option><option value="hr">Hin</option>
+  </select>
+  <button class="themebtn" id="theme" aria-label="Switch theme">&#9680;</button>
+</header>
+
+<main class="stream" id="stream"><div class="inner" id="inner" aria-live="polite"></div></main>
+
+<div class="dock">
+  <div class="dockin">
+    <div class="chips" id="chips"></div>
+    <div class="row">
+      <input id="q" autocomplete="off" placeholder="Ask a price, size or spec&#8230;" aria-label="Ask about a Foamico or VedaSleep product">
+      <button id="send">Ask</button>
+    </div>
+    <div class="foot">MRP incl. GST &#183; From the house of LPPL &#183; Legend Polyfoams Pvt. Ltd.</div>
+  </div>
+</div>
+
+<script>
+const DB = {"effective_from":"2026-08-01","source":"LPPL Master MRP Price List w.e.f 1 August 2026 (supersedes all previous lists)","sizes":[{"length_cm":"182.9","width_cm":"76.2","size_in":"72x30"},{"length_cm":"182.9","width_cm":"91.4","size_in":"72x36"},{"length_cm":"182.9","width_cm":"106.7","size_in":"72x42"},{"length_cm":"182.9","width_cm":"121.9","size_in":"72x48"},{"length_cm":"182.9","width_cm":"152.4","size_in":"72x60"},{"length_cm":"182.9","width_cm":"167.6","size_in":"72x66"},{"length_cm":"182.9","width_cm":"182.9","size_in":"72x72"},{"length_cm":"190.5","width_cm":"76.2","size_in":"75x30"},{"length_cm":"190.5","width_cm":"91.4","size_in":"75x36"},{"length_cm":"190.5","width_cm":"106.7","size_in":"75x42"},{"length_cm":"190.5","width_cm":"121.9","size_in":"75x48"},{"length_cm":"190.5","width_cm":"152.4","size_in":"75x60"},{"length_cm":"190.5","width_cm":"167.6","size_in":"75x66"},{"length_cm":"190.5","width_cm":"182.9","size_in":"75x72"},{"length_cm":"198.1","width_cm":"76.2","size_in":"78x30"},{"length_cm":"198.1","width_cm":"91.4","size_in":"78x36"},{"length_cm":"198.1","width_cm":"106.7","size_in":"78x42"},{"length_cm":"198.1","width_cm":"121.9","size_in":"78x48"},{"length_cm":"198.1","width_cm":"152.4","size_in":"78x60"},{"length_cm":"198.1","width_cm":"167.6","size_in":"78x66"},{"length_cm":"198.1","width_cm":"182.9","size_in":"78x72"},{"length_cm":"213.4","width_cm":"91.4","size_in":"84x36"},{"length_cm":"213.4","width_cm":"152.4","size_in":"84x60"},{"length_cm":"213.4","width_cm":"182.9","size_in":"84x72"}],"skus":{"RIVA Natural 6\"":{"brand":"Foamico","sqft_rate":3333,"warranty_years":30,"mrp":{"72x30":42916,"72x36":49999,"72x42":60082,"72x48":66665,"72x60":85832,"72x66":94415,"72x72":99998,"75x30":44704,"75x36":52082,"75x42":62586,"75x48":69443,"75x60":89408,"75x66":98349,"75x72":104166,"78x30":46492,"78x36":54166,"78x42":65089,"78x48":72221,"78x60":92984,"78x66":102283,"78x72":108330,"84x36":58332,"84x60":100137,"84x72":116664}},"RIVA R1000 8\"":{"brand":"Foamico","sqft_rate":2133,"warranty_years":30,"mrp":{"72x30":27466,"72x36":31999,"72x42":38452,"72x48":42665,"72x60":54932,"72x66":60425,"72x72":63998,"75x30":28610,"75x36":33332,"75x42":40054,"75x48":44443,"75x60":57220,"75x66":62942,"75x72":66666,"78x30":29755,"78x36":34666,"78x42":41656,"78x48":46221,"78x60":59509,"78x66":65460,"78x72":69330,"84x36":37332,"84x60":64087,"84x72":74664}},"RIVA R2000 9\"":{"brand":"Foamico","sqft_rate":2800,"warranty_years":30,"mrp":{"72x30":36049,"72x36":41999,"72x42":50469,"72x48":55999,"72x60":72098,"72x66":79308,"72x72":83998,"75x30":37551,"75x36":43749,"75x42":52572,"75x48":58332,"75x60":75102,"75x66":82613,"75x72":87499,"78x30":39053,"78x36":45499,"78x42":54675,"78x48":60665,"78x60":78106,"78x66":85917,"78x72":90997,"84x36":48999,"84x60":84115,"84x72":97998}},"RIVA R3000 10\"":{"brand":"Foamico","sqft_rate":3533,"warranty_years":30,"mrp":{"72x30":45491,"72x36":52999,"72x42":63687,"72x48":70665,"72x60":90982,"72x66":100080,"72x72":105998,"75x30":47386,"75x36":55207,"75x42":66341,"75x48":73610,"75x60":94773,"75x66":104250,"75x72":110416,"78x30":49282,"78x36":57416,"78x42":68994,"78x48":76554,"78x60":98563,"78x66":108420,"78x72":114830,"84x36":61832,"84x60":106145,"84x72":123664}},"ULTIMA Classic 5\"":{"brand":"Foamico","sqft_rate":933,"warranty_years":25,"mrp":{"72x30":12016,"72x36":13999,"72x42":16822,"72x48":18665,"72x60":24032,"72x66":26435,"72x72":27998,"75x30":12516,"75x36":14582,"75x42":17523,"75x48":19443,"75x60":25033,"75x66":27536,"75x72":29166,"78x30":13017,"78x36":15166,"78x42":18224,"78x48":20221,"78x60":26034,"78x66":28638,"78x72":30330,"84x36":16332,"84x60":28037,"84x72":32664}},"ULTIMA Classic 6\"":{"brand":"Foamico","sqft_rate":1067,"warranty_years":25,"mrp":{"72x30":13732,"72x36":15999,"72x42":19225,"72x48":21332,"72x60":27465,"72x66":30211,"72x72":31998,"75x30":14305,"75x36":16666,"75x42":20027,"75x48":22221,"75x60":28609,"75x66":31470,"75x72":33332,"78x30":14877,"78x36":17332,"78x42":20828,"78x48":23110,"78x60":29754,"78x66":32729,"78x72":34663,"84x36":18665,"84x60":32042,"84x72":37331}},"ULTIMA Premium 6.5\"":{"brand":"Foamico","sqft_rate":1200,"warranty_years":25,"mrp":{"72x30":15449,"72x36":17999,"72x42":21629,"72x48":23999,"72x60":30898,"72x66":33988,"72x72":35998,"75x30":16093,"75x36":18749,"75x42":22530,"75x48":24999,"75x60":32186,"75x66":35404,"75x72":37499,"78x30":16737,"78x36":19499,"78x42":23431,"78x48":25999,"78x60":33473,"78x66":36820,"78x72":38997,"84x36":20999,"84x60":36048,"84x72":41998}},"ULTIMA Luxury 7\"":{"brand":"Foamico","sqft_rate":1400,"warranty_years":25,"mrp":{"72x30":18024,"72x36":20999,"72x42":25234,"72x48":27999,"72x60":36048,"72x66":39653,"72x72":41998,"75x30":18775,"75x36":21874,"75x42":26285,"75x48":29165,"75x60":37550,"75x66":41305,"75x72":43749,"78x30":19526,"78x36":22749,"78x42":27337,"78x48":30332,"78x60":39052,"78x66":42958,"78x72":45497,"84x36":24499,"84x60":42056,"84x72":48998}},"ULTIMA Natural 6\"":{"brand":"Foamico","sqft_rate":2133,"warranty_years":25,"mrp":{"72x30":27466,"72x36":31999,"72x42":38452,"72x48":42665,"72x60":54932,"72x66":60425,"72x72":63998,"75x30":28610,"75x36":33332,"75x42":40054,"75x48":44443,"75x60":57220,"75x66":62942,"75x72":66666,"78x30":29755,"78x36":34666,"78x42":41656,"78x48":46221,"78x60":59509,"78x66":65460,"78x72":69330,"84x36":37332,"84x60":64087,"84x72":74664}},"SOVA Classic 5\"":{"brand":"Foamico","sqft_rate":700,"warranty_years":15,"mrp":{"72x30":9012,"72x36":10499,"72x42":12616,"72x48":13999,"72x60":18023,"72x66":19826,"72x72":20998,"75x30":9387,"75x36":10936,"75x42":13142,"75x48":14582,"75x60":18774,"75x66":20652,"75x72":21874,"78x30":9763,"78x36":11374,"78x42":13668,"78x48":15165,"78x60":19525,"78x66":21478,"78x72":22747,"84x36":12249,"84x60":21027,"84x72":24498}},"SOVA Classic 6\"":{"brand":"Foamico","sqft_rate":840,"warranty_years":15,"mrp":{"72x30":10814,"72x36":12599,"72x42":15140,"72x48":16799,"72x60":21628,"72x66":23791,"72x72":25198,"75x30":11265,"75x36":13124,"75x42":15771,"75x48":17499,"75x60":22529,"75x66":24782,"75x72":26249,"78x30":11715,"78x36":13649,"78x42":16401,"78x48":18199,"78x60":23431,"78x66":25774,"78x72":27297,"84x36":14699,"84x60":25233,"84x72":29398}},"SOVA Premium 6.5\"":{"brand":"Foamico","sqft_rate":980,"warranty_years":15,"mrp":{"72x30":12617,"72x36":14699,"72x42":17663,"72x48":19599,"72x60":25233,"72x66":27757,"72x72":29398,"75x30":13142,"75x36":15311,"75x42":18399,"75x48":20415,"75x60":26285,"75x66":28913,"75x72":30624,"78x30":13668,"78x36":15924,"78x42":19135,"78x48":21232,"78x60":27336,"78x66":30070,"78x72":31847,"84x36":17149,"84x60":29439,"84x72":34298}},"SOVA Luxury 7\"":{"brand":"Foamico","sqft_rate":1067,"warranty_years":15,"mrp":{"72x30":13732,"72x36":15999,"72x42":19225,"72x48":21332,"72x60":27465,"72x66":30211,"72x72":31998,"75x30":14305,"75x36":16666,"75x42":20027,"75x48":22221,"75x60":28609,"75x66":31470,"75x72":33332,"78x30":14877,"78x36":17332,"78x42":20828,"78x48":23110,"78x60":29754,"78x66":32729,"78x72":34663,"84x36":18665,"84x60":32042,"84x72":37331}},"SOVA Natural 6\"":{"brand":"Foamico","sqft_rate":1600,"warranty_years":15,"mrp":{"72x30":20599,"72x36":23999,"72x42":28839,"72x48":31999,"72x60":41198,"72x66":45318,"72x72":47998,"75x30":21457,"75x36":24999,"75x42":30040,"75x48":33332,"75x60":42915,"75x66":47206,"75x72":49999,"78x30":22316,"78x36":25999,"78x42":31242,"78x48":34665,"78x60":44631,"78x66":49095,"78x72":51997,"84x36":27999,"84x60":48065,"84x72":55998}},"RESTO Classic 5\"":{"brand":"Foamico","sqft_rate":700,"warranty_years":10,"mrp":{"72x30":9012,"72x36":10499,"72x42":12616,"72x48":13999,"72x60":18023,"72x66":19826,"72x72":20998,"75x30":9387,"75x36":10936,"75x42":13142,"75x48":14582,"75x60":18774,"75x66":20652,"75x72":21874,"78x30":9763,"78x36":11374,"78x42":13668,"78x48":15165,"78x60":19525,"78x66":21478,"78x72":22747,"84x36":12249,"84x60":21027,"84x72":24498}},"RESTO Classic 6\"":{"brand":"Foamico","sqft_rate":840,"warranty_years":10,"mrp":{"72x30":10814,"72x36":12599,"72x42":15140,"72x48":16799,"72x60":21628,"72x66":23791,"72x72":25198,"75x30":11265,"75x36":13124,"75x42":15771,"75x48":17499,"75x60":22529,"75x66":24782,"75x72":26249,"78x30":11715,"78x36":13649,"78x42":16401,"78x48":18199,"78x60":23431,"78x66":25774,"78x72":27297,"84x36":14699,"84x60":25233,"84x72":29398}},"RESTO Premium 6.5\"":{"brand":"Foamico","sqft_rate":980,"warranty_years":10,"mrp":{"72x30":12617,"72x36":14699,"72x42":17663,"72x48":19599,"72x60":25233,"72x66":27757,"72x72":29398,"75x30":13142,"75x36":15311,"75x42":18399,"75x48":20415,"75x60":26285,"75x66":28913,"75x72":30624,"78x30":13668,"78x36":15924,"78x42":19135,"78x48":21232,"78x60":27336,"78x66":30070,"78x72":31847,"84x36":17149,"84x60":29439,"84x72":34298}},"RESTO Luxury 7\"":{"brand":"Foamico","sqft_rate":1067,"warranty_years":10,"mrp":{"72x30":13732,"72x36":15999,"72x42":19225,"72x48":21332,"72x60":27465,"72x66":30211,"72x72":31998,"75x30":14305,"75x36":16666,"75x42":20027,"75x48":22221,"75x60":28609,"75x66":31470,"75x72":33332,"78x30":14877,"78x36":17332,"78x42":20828,"78x48":23110,"78x60":29754,"78x66":32729,"78x72":34663,"84x36":18665,"84x60":32042,"84x72":37331}},"LUMA Classic 6\"":{"brand":"Foamico","sqft_rate":933,"warranty_years":7,"mrp":{"72x30":12016,"72x36":13999,"72x42":16822,"72x48":18665,"72x60":24032,"72x66":26435,"72x72":27998,"75x30":12516,"75x36":14582,"75x42":17523,"75x48":19443,"75x60":25033,"75x66":27536,"75x72":29166,"78x30":13017,"78x36":15166,"78x42":18224,"78x48":20221,"78x60":26034,"78x66":28638,"78x72":30330,"84x36":16332,"84x60":28037,"84x72":32664}},"LUMA Premium 8\"":{"brand":"Foamico","sqft_rate":1000,"warranty_years":7,"mrp":{"72x30":12874,"72x36":14999,"72x42":18024,"72x48":19999,"72x60":25748,"72x66":28323,"72x72":29998,"75x30":13411,"75x36":15624,"75x42":18775,"75x48":20832,"75x60":26821,"75x66":29503,"75x72":31249,"78x30":13947,"78x36":16249,"78x42":19526,"78x48":21665,"78x60":27894,"78x66":30683,"78x72":32497,"84x36":17499,"84x60":30040,"84x72":34998}},"LUMA Luxury 10\"":{"brand":"Foamico","sqft_rate":1133,"warranty_years":7,"mrp":{"72x30":14591,"72x36":16999,"72x42":20427,"72x48":22665,"72x60":29182,"72x66":32100,"72x72":33998,"75x30":15199,"75x36":17707,"75x42":21278,"75x48":23610,"75x60":30398,"75x66":33437,"75x72":35416,"78x30":15807,"78x36":18416,"78x42":22129,"78x48":24554,"78x60":31613,"78x66":34775,"78x72":36830,"84x36":19832,"84x60":34045,"84x72":39664}},"SOFA Classic 8\"":{"brand":"Foamico","sqft_rate":867,"warranty_years":5,"mrp":{"72x30":11157,"72x36":12999,"72x42":15620,"72x48":17332,"72x60":22315,"72x66":24546,"72x72":25998,"75x30":11622,"75x36":13541,"75x42":16271,"75x48":18054,"75x60":23245,"75x66":25569,"75x72":27082,"78x30":12087,"78x36":14082,"78x42":16922,"78x48":18776,"78x60":24175,"78x66":26592,"78x72":28163,"84x36":15166,"84x60":26034,"84x72":30331}},"SOFA Premium 8\"":{"brand":"Foamico","sqft_rate":1067,"warranty_years":10,"mrp":{"72x30":13732,"72x36":15999,"72x42":19225,"72x48":21332,"72x60":27465,"72x66":30211,"72x72":31998,"75x30":14305,"75x36":16666,"75x42":20027,"75x48":22221,"75x60":28609,"75x66":31470,"75x72":33332,"78x30":14877,"78x36":17332,"78x42":20828,"78x48":23110,"78x60":29754,"78x66":32729,"78x72":34663,"84x36":18665,"84x60":32042,"84x72":37331}},"DURO Classic 5\"":{"brand":"VedaSleep","sqft_rate":560,"warranty_years":10,"mrp":{"72x30":7209,"72x36":8399,"72x42":10093,"72x48":11199,"72x60":14418,"72x66":15860,"72x72":16798,"75x30":7510,"75x36":8749,"75x42":10513,"75x48":11665,"75x60":15019,"75x66":16521,"75x72":17499,"78x30":7810,"78x36":9099,"78x42":10934,"78x48":12132,"78x60":15620,"78x66":17182,"78x72":18197,"84x36":9799,"84x60":16821,"84x72":19598}},"DURO Premium 6\"":{"brand":"VedaSleep","sqft_rate":687,"warranty_years":10,"mrp":{"72x30":8840,"72x36":10299,"72x42":12376,"72x48":13732,"72x60":17680,"72x66":19448,"72x72":20598,"75x30":9208,"75x36":10728,"75x42":12892,"75x48":14304,"75x60":18417,"75x66":20258,"75x72":21457,"78x30":9577,"78x36":11157,"78x42":13407,"78x48":14876,"78x60":19153,"78x66":21069,"78x72":22313,"84x36":12016,"84x60":20627,"84x72":24031}},"DURO Luxury 6\"":{"brand":"VedaSleep","sqft_rate":700,"warranty_years":10,"mrp":{"72x30":9012,"72x36":10499,"72x42":12616,"72x48":13999,"72x60":18023,"72x66":19826,"72x72":20998,"75x30":9387,"75x36":10936,"75x42":13142,"75x48":14582,"75x60":18774,"75x66":20652,"75x72":21874,"78x30":9763,"78x36":11374,"78x42":13668,"78x48":15165,"78x60":19525,"78x66":21478,"78x72":22747,"84x36":12249,"84x60":21027,"84x72":24498}},"MAXA Classic 5\"":{"brand":"VedaSleep","sqft_rate":560,"warranty_years":7,"mrp":{"72x30":7209,"72x36":8399,"72x42":10093,"72x48":11199,"72x60":14418,"72x66":15860,"72x72":16798,"75x30":7510,"75x36":8749,"75x42":10513,"75x48":11665,"75x60":15019,"75x66":16521,"75x72":17499,"78x30":7810,"78x36":9099,"78x42":10934,"78x48":12132,"78x60":15620,"78x66":17182,"78x72":18197,"84x36":9799,"84x60":16821,"84x72":19598}},"MAGIC Classic 5\"":{"brand":"VedaSleep","sqft_rate":493,"warranty_years":5,"mrp":{"72x30":6351,"72x36":7399,"72x42":8891,"72x48":9865,"72x60":12702,"72x66":13972,"72x72":14798,"75x30":6615,"75x36":7707,"75x42":9262,"75x48":10276,"75x60":13231,"75x66":14554,"75x72":15416,"78x30":6880,"78x36":8016,"78x42":9632,"78x48":10687,"78x60":13760,"78x66":15136,"78x72":16030,"84x36":8632,"84x60":14819,"84x72":17264}},"SIGNATURE Classic 4\"":{"brand":"VedaSleep","sqft_rate":387,"warranty_years":3,"mrp":{"72x30":4977,"72x36":5799,"72x42":6968,"72x48":7732,"72x60":9955,"72x66":10950,"72x72":11598,"75x30":5185,"75x36":6041,"75x42":7259,"75x48":8054,"75x60":10370,"75x66":11407,"75x72":12082,"78x30":5392,"78x36":6282,"78x42":7549,"78x48":8376,"78x60":10785,"78x66":11863,"78x72":12564,"84x36":6765,"84x60":11614,"84x72":13531}},"SIGNATURE Premium 4\"":{"brand":"VedaSleep","sqft_rate":420,"warranty_years":3,"mrp":{"72x30":5407,"72x36":6299,"72x42":7569,"72x48":8399,"72x60":10813,"72x66":11895,"72x72":12598,"75x30":5632,"75x36":6561,"75x42":7885,"75x48":8749,"75x60":11264,"75x66":12390,"75x72":13124,"78x30":5857,"78x36":6824,"78x42":8200,"78x48":9099,"78x60":11714,"78x66":12886,"78x72":13647,"84x36":7349,"84x60":12615,"84x72":14698}},"SIGNATURE Luxury 4\"":{"brand":"VedaSleep","sqft_rate":420,"warranty_years":3,"mrp":{"72x30":5407,"72x36":6299,"72x42":7569,"72x48":8399,"72x60":10813,"72x66":11895,"72x72":12598,"75x30":5632,"75x36":6561,"75x42":7885,"75x48":8749,"75x60":11264,"75x66":12390,"75x72":13124,"78x30":5857,"78x36":6824,"78x42":8200,"78x48":9099,"78x60":11714,"78x66":12886,"78x72":13647,"84x36":7349,"84x60":12615,"84x72":14698}},"SIGNATURE Classic 5\"":{"brand":"VedaSleep","sqft_rate":460,"warranty_years":3,"mrp":{"72x30":5922,"72x36":6899,"72x42":8290,"72x48":9199,"72x60":11843,"72x66":13028,"72x72":13798,"75x30":6168,"75x36":7186,"75x42":8636,"75x48":9582,"75x60":12337,"75x66":13570,"75x72":14374,"78x30":6415,"78x36":7474,"78x42":8981,"78x48":9965,"78x60":12830,"78x66":14113,"78x72":14947,"84x36":8049,"84x60":13817,"84x72":16098}},"SIGNATURE Premium 5\"":{"brand":"VedaSleep","sqft_rate":493,"warranty_years":3,"mrp":{"72x30":6351,"72x36":7399,"72x42":8891,"72x48":9865,"72x60":12702,"72x66":13972,"72x72":14798,"75x30":6615,"75x36":7707,"75x42":9262,"75x48":10276,"75x60":13231,"75x66":14554,"75x72":15416,"78x30":6880,"78x36":8016,"78x42":9632,"78x48":10687,"78x60":13760,"78x66":15136,"78x72":16030,"84x36":8632,"84x60":14819,"84x72":17264}},"SIGNATURE Luxury 5\"":{"brand":"VedaSleep","sqft_rate":493,"warranty_years":3,"mrp":{"72x30":6351,"72x36":7399,"72x42":8891,"72x48":9865,"72x60":12702,"72x66":13972,"72x72":14798,"75x30":6615,"75x36":7707,"75x42":9262,"75x48":10276,"75x60":13231,"75x66":14554,"75x72":15416,"78x30":6880,"78x36":8016,"78x42":9632,"78x48":10687,"78x60":13760,"78x66":15136,"78x72":16030,"84x36":8632,"84x60":14819,"84x72":17264}},"ECOLITE Classic 5\"":{"brand":"VedaSleep","sqft_rate":537,"warranty_years":5,"mrp":{"72x30":6909,"72x36":8049,"72x42":9672,"72x48":10732,"72x60":13817,"72x66":15199,"72x72":16098,"75x30":7197,"75x36":8384,"75x42":10075,"75x48":11179,"75x60":14393,"75x66":15832,"75x72":16770,"78x30":7484,"78x36":8720,"78x42":10478,"78x48":11626,"78x60":14969,"78x66":16466,"78x72":17438,"84x36":9390,"84x60":16120,"84x72":18781}},"SIGMA Classic 5\"":{"brand":"Vivorest","sqft_rate":367,"warranty_years":2,"mrp":{"72x30":4720,"72x36":5499,"72x42":6608,"72x48":7332,"72x60":9440,"72x66":10384,"72x72":10998,"75x30":4917,"75x36":5728,"75x42":6883,"75x48":7638,"75x60":9833,"75x66":10817,"75x72":11457,"78x30":5113,"78x36":5957,"78x42":7159,"78x48":7943,"78x60":10227,"78x66":11249,"78x72":11914,"84x36":6415,"84x60":11013,"84x72":12831}},"SIGMA Premium 5\"":{"brand":"Vivorest","sqft_rate":387,"warranty_years":2,"mrp":{"72x30":4977,"72x36":5799,"72x42":6968,"72x48":7732,"72x60":9955,"72x66":10950,"72x72":11598,"75x30":5185,"75x36":6041,"75x42":7259,"75x48":8054,"75x60":10370,"75x66":11407,"75x72":12082,"78x30":5392,"78x36":6282,"78x42":7549,"78x48":8376,"78x60":10785,"78x66":11863,"78x72":12564,"84x36":6765,"84x60":11614,"84x72":13531}},"SIGMA Luxury 5\"":{"brand":"Vivorest","sqft_rate":393,"warranty_years":2,"mrp":{"72x30":5063,"72x36":5899,"72x42":7089,"72x48":7865,"72x60":10127,"72x66":11139,"72x72":11798,"75x30":5274,"75x36":6145,"75x42":7384,"75x48":8193,"75x60":10549,"75x66":11603,"75x72":12291,"78x30":5485,"78x36":6391,"78x42":7679,"78x48":8521,"78x60":10971,"78x66":12068,"78x72":12780,"84x36":6882,"84x60":11814,"84x72":13764}}}};
+
+/* ---------- catalog specs ---------- */
+const FAM = {
+  RIVA:{brand:"Foamico",tag:"Made in Italy \u00B7 the flagship",fabric:"UltraLuxe Adaptive Knit",
+    icons:["Adaptive Support","Plush Comforter","Made in Italy"],
+    v:{ "R1000 8\"":{f:"8 / 10",L:["UltraLuxe Adaptive Knit Fabric","NubeSoave\u2122 adaptive foam","Struttura Forte\u2122 firm support","FondoCore Italia\u2122 base","Soft foam with quilting"]},
+        "R2000 9\"":{f:"7 / 10",L:["UltraLuxe Adaptive Knit Fabric","NubeSoave\u2122 adaptive foam","NubeSoave\u2122 (second layer)","Struttura Forte\u2122 firm support","FondoCore Italia\u2122 base","Soft foam with quilting"]},
+        "R3000 10\"":{f:"6 / 10",L:["UltraLuxe Adaptive Knit Fabric","SetaComforto\u2122 transition foam","LussoMorbido\u2122 high-resilience comfort","NubeSoave\u2122 adaptive foam","Struttura Forte\u2122 firm support","FondoCore Italia\u2122 base","Soft foam with quilting"]},
+        "Natural 6\"":{f:"7 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","7 Zone Latex","Soft foam with quilting"],icons:["Adaptive Support","Plush Comforter","7 Zone Latex"]}}},
+  ULTIMA:{brand:"Foamico",tag:"Zero G latex core \u00B7 25-year warranty",
+    icons:["Cloud Like Comfort","Motion Isolation","Spinal Alignment"],
+    v:{ "Classic 5\"":{f:"7 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Cloud Sense Foam","Zero G Latex Foam","Soft foam with quilting"]},
+        "Classic 6\"":{f:"7 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Cloud Sense Foam","Zero G Latex Foam","Soft foam with quilting"]},
+        "Premium 6.5\"":{f:"6 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Cosmic Byte Foam","Cloud Sense Foam","Zero G Latex Foam","Soft foam with quilting"]},
+        "Luxury 7\"":{f:"5 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Memorest Foam","Cosmic Byte Foam","Cloud Sense Foam","Zero G Latex Foam","Soft foam with quilting"]},
+        "Natural 6\"":{f:"6 / 10",L:["Super Plush Luxeknit Fabric (bamboo print)","Aeroflex Foam Quilting","Pin Core Latex","Cloud Sense Foam","Zero G Latex Foam","Soft foam with quilting"],icons:["Cloud Like Comfort","Motion Isolation","Pincore Latex"]}}},
+  SOVA:{brand:"Foamico",tag:"Latex + bonded core \u00B7 15-year warranty",
+    icons:["Responsive Bounce","Ortho Support","Cooler Sleep"],
+    v:{ "Classic 5\"":{f:"8 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Plush Core Latex Foam","Posture Bond Foam","Soft foam with quilting"]},
+        "Classic 6\"":{f:"8 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Plush Core Latex Foam","Posture Bond Foam","Soft foam with quilting"]},
+        "Premium 6.5\"":{f:"7 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Cosmic Byte Foam","Plush Core Latex Foam","Posture Bond Foam","Soft foam with quilting"]},
+        "Luxury 7\"":{f:"6 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Memorest Foam","Cosmic Byte Foam","Plush Core Latex Foam","Posture Bond Foam","Soft foam with quilting"]},
+        "Natural 6\"":{f:"7 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Cosmic Byte Foam","Pincore Latex Foam","Posture Bond Foam","Soft foam with quilting"],icons:["Responsive Bounce","Ortho Support","Pincore Latex"]}}},
+  RESTO:{brand:"Foamico",tag:"Orthopaedic foam \u00B7 10-year warranty",
+    icons:["Back Support","Breathable Fabric","Pressure Relief"],
+    v:{ "Classic 5\"":{f:"8 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Pro Nexa Foam","Enduro HR Foam","Soft foam with quilting"]},
+        "Classic 6\"":{f:"8 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Pro Nexa Foam","Enduro HR Foam","Soft foam with quilting"]},
+        "Premium 6.5\"":{f:"7 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Cosmic Byte Foam","Pro Nexa Foam","Enduro HR Foam","Soft foam with quilting"]},
+        "Luxury 7\"":{f:"6 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Memorest Foam","Cosmic Byte Foam","Pro Nexa Foam","Enduro HR Foam","Soft foam with quilting"]}}},
+  LUMA:{brand:"Foamico",tag:"Hybrid pocket spring \u00B7 7-year warranty",
+    icons:["Motion Isolation","Pocket Spring","Active Ventilation"],
+    v:{ "Classic 6\"":{f:"5 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Pro Nexa Foam","Vector Base Felt","Hybrid Pocket Spring","Vector Base Felt","Soft foam with quilting"]},
+        "Premium 8\"":{f:"5 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Pro Nexa Foam","Vector Base Felt","Hybrid Pocket Spring","Vector Base Felt","Soft foam with quilting"]},
+        "Luxury 10\"":{f:"5 / 10",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilting","Memorest Foam","Pro Nexa Foam","Vector Base Felt","Hybrid Pocket Spring","Vector Base Felt","Soft foam with quilting"]}}},
+  SIGMA:{brand:"Vivorest",tag:"Vivo Rest \u00b7 student range \u00b7 2-year warranty",
+    icons:["High Resilience Foam","No springs"],
+    v:{ "Classic 5\"":{f:"7 / 10",L:["Luxeknit Fabric","Aeroflex Foam Quilt","Vivo HR Foam","EPE Foam base"]},
+        "Premium 5\"":{f:"6 / 10",L:["Luxeknit Fabric","Aeroflex Foam Quilt","Vivo HR Core"]},
+        "Luxury 5\"":{f:"8 / 10",L:["Luxeknit Fabric","Aeroflex Foam Quilt","Vivo HR Foam","Bonded Foam base"]}}},
+ SOFA:{brand:"Foamico",tag:"Sofa-cum-bed mattress",icons:["Breathable Fabric"],
+    v:{ "Classic 8\"":{f:"\u2014",L:[]}, "Premium 8\"":{f:"\u2014",L:[]}}},
+  DURO:{brand:"VedaSleep",tag:"Ortho bond core \u00B7 10-year warranty",
+    icons:["Anti-Bacterial Fabric","Complete Back Support","Multi Layer Support","Thermo Regulating"],
+    v:{ "Classic 5\"":{f:"Firm",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilt","Float Sense Foam","Ortho Bond Foam","Soft foam with quilt"]},
+        "Premium 6\"":{f:"Firm",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilt","Float Sense Foam","Ortho Bond Foam (deeper)","Soft foam with quilt"]},
+        "Luxury 6\"":{f:"Extra Firm",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilt","Ortho Bond Foam","Soft foam with quilt"]}}},
+  SIGNATURE:{brand:"VedaSleep",tag:"Entry range \u00B7 3-year warranty",
+    icons:["Anti-Bacterial Fabric","Complete Back Support","Multi Layer Support","Thermo Regulating"],
+    v:{ "Classic 4\"":{f:"Firm",L:["Regular kwality Fabric","Soft minimal quilting","Energex Foam","High Resilience Bonded","Soft foam with quilt"]},
+        "Classic 5\"":{f:"Firm",L:["Regular kwality Fabric","Soft minimal quilting","Energex Foam","High Resilience Bonded","Soft foam with quilt"]},
+        "Premium 4\"":{f:"Firm",L:["Calmknit Fabric","Aeroflex Foam Quilt","Energex Foam","High Resilience Bonded","Soft foam with quilt"]},
+        "Premium 5\"":{f:"Firm",L:["Calmknit Fabric","Aeroflex Foam Quilt","Energex Foam","High Resilience Bonded","Soft foam with quilt"]},
+        "Luxury 4\"":{f:"Extra Firm",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilt","High Resilience Bonded","Soft foam with quilt"]},
+        "Luxury 5\"":{f:"Extra Firm",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilt","High Resilience Bonded","Soft foam with quilt"]}}},
+  MAXA:{brand:"VedaSleep",tag:"Medium feel \u00B7 7-year warranty",
+    icons:["Anti-Bacterial Fabric","Complete Back Support","Multi Layer Support","Thermo Regulating"],
+    v:{ "Classic 5\"":{f:"Medium",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilt","Float Sense Foam (thick)","Soft foam with quilt"]}}},
+  MAGIC:{brand:"VedaSleep",tag:"Value range \u00B7 5-year warranty",
+    icons:["Anti-Bacterial Fabric","Complete Back Support","Multi Layer Support","Thermo Regulating"],
+    v:{ "Classic 5\"":{f:"Firm",L:["Super Plush Luxeknit Fabric","Aeroflex Foam Quilt","Float Sense Foam","High Resilience Bonded","Soft foam with quilt"]}}},
+  ECOLITE:{brand:"VedaSleep",tag:"Entry range \u00B7 5-year warranty",icons:[],
+    v:{ "Classic 5\"":{f:"\u2014",L:[]}}},
+};
+
+/* ---------- where each model sits ----------
+   Rungs 1-5 are the VedaSleep feel staircase (rising Float Sense HR content).
+   Rungs 6-9 are the Foamico specialist tiers, chosen by body weight and
+   sleeping position rather than by price. RIVA tops the range. */
+const POS={
+ SIGMA:{tier:1,brand:"Vivorest",feel:"Student",hr:null,
+   hook:"Our student mattress \u2014 high-resilience foam, built for hostel rooms and first apartments.",
+   who:"Students, hostels, PG rooms, first apartments",
+   next:["Signature","Magic"]},
+ ECOLITE:{tier:1,feel:"Entry",hr:null,
+   hook:"Our entry range.",who:"The most affordable way into a Foamico bed",next:["Signature","Magic"]},
+ SIGNATURE:{tier:2,feel:"Extra firm",hr:15,
+   hook:"Extra firm \u2014 15% Float Sense.",who:"If you like a really firm bed",next:["Magic","Duro"]},
+ MAGIC:{tier:3,feel:"Firm",hr:25,
+   hook:"Firm \u2014 25% Float Sense.",who:"Firm, with a little more give than the Signature",next:["Duro","Maxa"]},
+ DURO:{tier:4,feel:"Medium",hr:50,
+   hook:"Medium \u2014 50% Float Sense.",who:"The middle of the range, and the safest choice for most people",next:["Maxa","Sova"]},
+ MAXA:{tier:5,feel:"Soft",hr:100,
+   hook:"Soft \u2014 100% Float Sense all the way through.",who:"If you like a soft bed",next:["Sova","Ultima"]},
+ SOVA:{tier:6,feel:"Latex",hr:null,badge:"Best seller \u00B7 Latex",
+   hook:"Latex, and it sleeps 5\u00B0 cooler.",who:"Anyone over 90 kg",
+   always:"The Sova Natural is worth seeing \u2014 plant-based natural latex, 7\u00B0 cooler and more comfortable again.",
+   next:["Sova Natural"]},
+ RESTO:{tier:6,feel:"Pro Nexa foam",hr:null,
+   hook:"Pro Nexa foam \u2014 responsive, and it won't let you sink in.",who:"Anyone under 90 kg",next:["Luma","Ultima"]},
+ LUMA:{tier:7,feel:"Hybrid pocket spring",hr:null,
+   hook:"A hybrid pocket spring.",who:"Side sleepers under 90 kg",next:["Ultima","Riva"]},
+ ULTIMA:{tier:8,feel:"Cloud foam",hr:null,badge:"Best seller \u00B7 Cloud",
+   hook:"Cloud foam with very high airflow.",who:"Side and stomach sleepers",next:["Riva"]},
+ RIVA:{tier:9,feel:"Italian foam",hr:null,top:true,badge:"Flagship \u00B7 Founder's mattress",
+   hook:"Italian foam, 10,000 CNC cuts a mattress, engineered for extreme airflow.",who:"Anyone who doesn't want to compromise",next:[]},
+};
+/* what each mattress is, said to the person buying it */
+const SAY_L={
+ en:{
+  SIGMA:"It's our student mattress \u2014 high-resilience foam, built for hostels and first apartments.",
+  ECOLITE:"That's our entry range.",
+  SIGNATURE:"Extra firm \u2014 15% Float Sense high-resilience foam.",
+  MAGIC:"Firm \u2014 25% Float Sense.",
+  DURO:"Medium \u2014 50% Float Sense.",
+  MAXA:"Soft \u2014 100% Float Sense, all the way through.",
+  SOVA:"Latex, made for anyone over 90 kg. It sleeps 5\u00B0 cooler. This is our best-selling latex mattress.",
+  RESTO:"Pro Nexa foam, made for under 90 kg. Responsive, and it won't let you sink in.",
+  LUMA:"A hybrid pocket spring, for side sleepers under 90 kg.",
+  ULTIMA:"Cloud foam with very high airflow \u2014 made for side and stomach sleepers. The Luxury is our best-selling cloud mattress.",
+  RIVA:"Italian foam with 10,000 CNC cuts in every mattress, engineered for extreme airflow. It's our flagship \u2014 the founder's own mattress.",
+  NAT:"Plant-based natural latex \u2014 7\u00B0 cooler, and the most comfortable bed we make."},
+ hi:{
+  SIGMA:"\u092F\u0947 \u0939\u092E\u093E\u0930\u093E \u0938\u094D\u091F\u0942\u0921\u0947\u0902\u091F \u0917\u0926\u094D\u0926\u093E \u0939\u0948 \u2014 \u0939\u093E\u0908-\u0930\u0947\u091C\u093C\u093F\u0932\u093F\u090F\u0902\u0938 \u092B\u093C\u094B\u092E, \u0939\u0949\u0938\u094D\u091F\u0932 \u0914\u0930 \u092A\u0939\u0932\u0947 \u0918\u0930 \u0915\u0947 \u0932\u093F\u090F\u0964",
+  ECOLITE:"\u092F\u0947 \u0939\u092E\u093E\u0930\u0940 \u090F\u0902\u091F\u094D\u0930\u0940 \u0930\u0947\u0902\u091C \u0939\u0948\u0964",
+  SIGNATURE:"\u090F\u0915\u094D\u0938\u094D\u091F\u094D\u0930\u093E \u092B\u093C\u0930\u094D\u092E \u2014 15% Float Sense \u0939\u093E\u0908-\u0930\u0947\u091C\u093C\u093F\u0932\u093F\u090F\u0902\u0938 \u092B\u093C\u094B\u092E\u0964",
+  MAGIC:"\u092B\u093C\u0930\u094D\u092E \u2014 25% Float Sense\u0964",
+  DURO:"\u092E\u0940\u0921\u093F\u092F\u092E \u2014 50% Float Sense\u0964",
+  MAXA:"\u0938\u0949\u092B\u093C\u094D\u091F \u2014 \u092A\u0942\u0930\u093E 100% Float Sense\u0964",
+  SOVA:"\u0932\u0947\u091F\u0947\u0915\u094D\u0938, 90 \u0915\u093F\u0932\u094B \u0938\u0947 \u090A\u092A\u0930 \u0935\u093E\u0932\u094B\u0902 \u0915\u0947 \u0932\u093F\u090F\u0964 5\u00B0 \u0920\u0902\u0921\u093E \u0930\u0939\u0924\u093E \u0939\u0948\u0964 \u0939\u092E\u093E\u0930\u093E \u0938\u092C\u0938\u0947 \u091C\u093C\u094D\u092F\u093E\u0926\u093E \u092C\u093F\u0915\u0928\u0947 \u0935\u093E\u0932\u093E \u0932\u0947\u091F\u0947\u0915\u094D\u0938 \u0917\u0926\u094D\u0926\u093E\u0964",
+  RESTO:"Pro Nexa \u092B\u093C\u094B\u092E, 90 \u0915\u093F\u0932\u094B \u0938\u0947 \u0915\u092E \u0935\u093E\u0932\u094B\u0902 \u0915\u0947 \u0932\u093F\u090F\u0964 \u0927\u0901\u0938\u0928\u0947 \u0928\u0939\u0940\u0902 \u0926\u0947\u0924\u093E\u0964",
+  LUMA:"\u0939\u093E\u0907\u092C\u094D\u0930\u093F\u0921 \u092A\u0949\u0915\u0947\u091F \u0938\u094D\u092A\u094D\u0930\u093F\u0902\u0917 \u2014 90 \u0915\u093F\u0932\u094B \u0938\u0947 \u0915\u092E, \u0915\u0930\u0935\u091F \u092A\u0930 \u0938\u094B\u0928\u0947 \u0935\u093E\u0932\u094B\u0902 \u0915\u0947 \u0932\u093F\u090F\u0964",
+  ULTIMA:"\u0915\u094D\u0932\u093E\u0909\u0921 \u092B\u093C\u094B\u092E, \u092C\u0939\u0941\u0924 \u091C\u093C\u094D\u092F\u093E\u0926\u093E \u090F\u092F\u0930\u092B\u093C\u094D\u0932\u094B \u2014 \u0915\u0930\u0935\u091F \u0914\u0930 \u092A\u0947\u091F \u0915\u0947 \u092C\u0932 \u0938\u094B\u0928\u0947 \u0935\u093E\u0932\u094B\u0902 \u0915\u0947 \u0932\u093F\u090F\u0964 Luxury \u0939\u092E\u093E\u0930\u093E \u0938\u092C\u0938\u0947 \u091C\u093C\u094D\u092F\u093E\u0926\u093E \u092C\u093F\u0915\u0928\u0947 \u0935\u093E\u0932\u093E \u0915\u094D\u0932\u093E\u0909\u0921 \u0917\u0926\u094D\u0926\u093E \u0939\u0948\u0964",
+  RIVA:"\u0907\u091F\u0948\u0932\u093F\u092F\u0928 \u092B\u093C\u094B\u092E, \u0939\u0930 \u0917\u0926\u094D\u0926\u0947 \u092E\u0947\u0902 10,000 CNC \u0915\u091F, \u092C\u0947\u0939\u0926 \u091C\u093C\u094D\u092F\u093E\u0926\u093E \u090F\u092F\u0930\u092B\u093C\u094D\u0932\u094B \u0915\u0947 \u0932\u093F\u090F\u0964 \u0939\u092E\u093E\u0930\u093E \u092B\u093C\u094D\u0932\u0948\u0917\u0936\u093F\u092A \u2014 \u092B\u093C\u093E\u0909\u0902\u0921\u0930 \u0915\u093E \u0905\u092A\u0928\u093E \u0917\u0926\u094D\u0926\u093E\u0964",
+  NAT:"\u092A\u094D\u0932\u093E\u0902\u091F-\u092C\u0947\u0938\u094D\u0921 \u0928\u0948\u091A\u0941\u0930\u0932 \u0932\u0947\u091F\u0947\u0915\u094D\u0938 \u2014 7\u00B0 \u0920\u0902\u0921\u093E, \u0914\u0930 \u0938\u092C\u0938\u0947 \u0906\u0930\u093E\u092E\u0926\u0947\u0939\u0964"},
+ hr:{
+  SIGMA:"Ye hamara student gadda hai \u2014 high-resilience foam, hostel aur pehle ghar ke liye.",
+  ECOLITE:"Ye hamari entry range hai.",
+  SIGNATURE:"Extra firm \u2014 15% Float Sense high-resilience foam.",
+  MAGIC:"Firm \u2014 25% Float Sense.",
+  DURO:"Medium \u2014 50% Float Sense.",
+  MAXA:"Soft \u2014 poora 100% Float Sense.",
+  SOVA:"Latex, 90 kilo se upar walon ke liye. 5\u00B0 thanda rehta hai. Hamara sabse zyada bikne wala latex gadda.",
+  RESTO:"Pro Nexa foam, 90 kilo se kam walon ke liye. Dhansne nahi deta.",
+  LUMA:"Hybrid pocket spring \u2014 90 kilo se kam, karwat pe sone walon ke liye.",
+  ULTIMA:"Cloud foam, bahut zyada airflow \u2014 karwat aur pet ke bal sone walon ke liye. Luxury hamara sabse zyada bikne wala cloud gadda hai.",
+  RIVA:"Italian foam, har gadde mein 10,000 CNC cut, behad zyada airflow ke liye. Hamara flagship \u2014 founder ka apna gadda.",
+  NAT:"Plant-based natural latex \u2014 7\u00B0 thanda, aur sabse aaramdeh."}
+};
+const SHORT_L={
+ en:{SIGMA:"our student mattress, high-resilience foam",ECOLITE:"our entry range",
+  SIGNATURE:"extra firm, 15% Float Sense",MAGIC:"firm, 25% Float Sense",
+  DURO:"medium, 50% Float Sense",MAXA:"soft, 100% Float Sense",
+  SOVA:"our best-selling latex mattress, and it sleeps 5\u00B0 cooler",
+  RESTO:"Pro Nexa foam \u2014 responsive, and it won't let you sink in",
+  LUMA:"a hybrid pocket spring built for side sleepers",
+  ULTIMA:"cloud foam with very high airflow",
+  RIVA:"our flagship \u2014 Italian foam, extreme airflow"},
+ hi:{SIGMA:"\u0939\u092E\u093E\u0930\u093E \u0938\u094D\u091F\u0942\u0921\u0947\u0902\u091F \u0917\u0926\u094D\u0926\u093E",ECOLITE:"\u090F\u0902\u091F\u094D\u0930\u0940 \u0930\u0947\u0902\u091C",SIGNATURE:"\u090F\u0915\u094D\u0938\u094D\u091F\u094D\u0930\u093E \u092B\u093C\u0930\u094D\u092E, 15% Float Sense",
+  MAGIC:"\u092B\u093C\u0930\u094D\u092E, 25% Float Sense",DURO:"\u092E\u0940\u0921\u093F\u092F\u092E, 50% Float Sense",MAXA:"\u0938\u0949\u092B\u093C\u094D\u091F, 100% Float Sense",
+  SOVA:"\u0939\u092E\u093E\u0930\u093E \u0938\u092C\u0938\u0947 \u091C\u093C\u094D\u092F\u093E\u0926\u093E \u092C\u093F\u0915\u0928\u0947 \u0935\u093E\u0932\u093E \u0932\u0947\u091F\u0947\u0915\u094D\u0938 \u0917\u0926\u094D\u0926\u093E, 5\u00B0 \u0920\u0902\u0921\u093E",
+  RESTO:"Pro Nexa \u092B\u093C\u094B\u092E \u2014 \u0927\u0901\u0938\u0928\u0947 \u0928\u0939\u0940\u0902 \u0926\u0947\u0924\u093E",LUMA:"\u0915\u0930\u0935\u091F \u0935\u093E\u0932\u094B\u0902 \u0915\u0947 \u0932\u093F\u090F \u0939\u093E\u0907\u092C\u094D\u0930\u093F\u0921 \u092A\u0949\u0915\u0947\u091F \u0938\u094D\u092A\u094D\u0930\u093F\u0902\u0917",
+  ULTIMA:"\u0915\u094D\u0932\u093E\u0909\u0921 \u092B\u093C\u094B\u092E, \u092C\u0939\u0941\u0924 \u091C\u093C\u094D\u092F\u093E\u0926\u093E \u090F\u092F\u0930\u092B\u093C\u094D\u0932\u094B",RIVA:"\u0939\u092E\u093E\u0930\u093E \u092B\u093C\u094D\u0932\u0948\u0917\u0936\u093F\u092A \u2014 \u0907\u091F\u0948\u0932\u093F\u092F\u0928 \u092B\u093C\u094B\u092E"},
+ hr:{SIGMA:"hamara student gadda",ECOLITE:"entry range",SIGNATURE:"extra firm, 15% Float Sense",
+  MAGIC:"firm, 25% Float Sense",DURO:"medium, 50% Float Sense",MAXA:"soft, 100% Float Sense",
+  SOVA:"hamara sabse zyada bikne wala latex gadda, 5\u00B0 thanda",
+  RESTO:"Pro Nexa foam \u2014 dhansne nahi deta",LUMA:"karwat walon ke liye hybrid pocket spring",
+  ULTIMA:"cloud foam, bahut zyada airflow",RIVA:"hamara flagship \u2014 Italian foam"}
+};
+const SHORT=()=>SHORT_L[LANG]||SHORT_L.en;
+const DEVA_FAM={"\u0921\u094D\u092F\u0942\u0930\u094B":"duro","\u0921\u0941\u0930\u094B":"duro","\u0938\u094B\u0935\u093E":"sova","\u0930\u0947\u0938\u094D\u091F\u094B":"resto","\u0932\u0942\u092E\u093E":"luma","\u0932\u0941\u092E\u093E":"luma",
+ "\u0905\u0932\u094D\u091F\u093F\u092E\u093E":"ultima","\u0909\u0932\u094D\u091F\u093F\u092E\u093E":"ultima","\u0930\u0940\u0935\u093E":"riva","\u0930\u093F\u0935\u093E":"riva","\u092E\u0948\u091C\u093F\u0915":"magic","\u092E\u0948\u0915\u094D\u0938\u093E":"maxa",
+ "\u0938\u093F\u0917\u094D\u0928\u0947\u091A\u0930":"signature","\u0907\u0915\u094B\u0932\u093E\u0907\u091F":"ecolite","\u0938\u093F\u0917\u094D\u092E\u093E":"sigma","\u0938\u094B\u092B\u093E":"sofa"};
+const DEVA_MORE={"\u0915\u094D\u0935\u0940\u0928":"queen","\u0915\u093F\u0902\u0917":"king","\u0938\u093F\u0902\u0917\u0932":"single","\u0921\u092C\u0932":"double","\u092A\u094D\u0930\u0940\u092E\u093F\u092F\u092E":"premium",
+ "\u0932\u0915\u094D\u091C\u093C\u0930\u0940":"luxury","\u0932\u0917\u094D\u091C\u093C\u0930\u0940":"luxury","\u0915\u094D\u0932\u093E\u0938\u093F\u0915":"classic","\u0928\u0948\u091A\u0941\u0930\u0932":"natural","\u0928\u0947\u091A\u0941\u0930\u0932":"natural",
+ "\u0924\u0915\u093F\u092F\u093E":"pillow","\u0924\u0915\u093F\u092F\u0947":"pillow","\u0935\u093E\u0930\u0902\u091F\u0940":"warranty","\u0938\u093E\u0907\u091C\u093C":"size","\u0930\u0947\u0902\u091C":"range"};
+function deromanise(q){
+  let out=q;
+  for(const k in DEVA_FAM)  if(out.indexOf(k)>=0) out+=" "+DEVA_FAM[k];
+  for(const k in DEVA_MORE) if(out.indexOf(k)>=0) out+=" "+DEVA_MORE[k];
+  return out;
+}
+function saySpec(fam,v){
+  const M=SAY_L[LANG]||SAY_L.en;
+  if(fam==="SOVA"&&/Natural/.test(v||"")) return M.NAT;
+  return M[fam]||"";
+}
+function sayUpsell(fam,v){
+  if(fam==="SOVA"&&/Natural/.test(v||"")) return "";
+  const P=POS[fam]; if(!P) return "";
+  if(fam==="SOVA") return pick(t().sovaUp);
+  if(P.top) return pick(t().top);
+  if(!P.next||!P.next.length) return "";
+  return pick(t().stretch(P.next[0]));
+}
+const WHY_L={
+ en:{budget:"you're after something budget-friendly",premium:"you don't want to compromise",
+     heavy:k=>k?("at "+k+" kg, latex is what you want"):"over 90 kg, latex is what you want",
+     side:"you sleep on your side and you're under 90 kg",stomach:"you sleep on your stomach",
+     light:"under 90 kg, and Pro Nexa won't let you sink in",feel:"you're choosing on firmness"},
+ hi:{budget:"\u0906\u092A \u092C\u091C\u091F \u092E\u0947\u0902 \u0926\u0947\u0916 \u0930\u0939\u0947 \u0939\u0948\u0902",premium:"\u0906\u092A \u0938\u092E\u091D\u094C\u0924\u093E \u0928\u0939\u0940\u0902 \u0915\u0930\u0928\u093E \u091A\u093E\u0939\u0924\u0947",
+     heavy:k=>k?(k+" \u0915\u093F\u0932\u094B \u092A\u0930 \u0932\u0947\u091F\u0947\u0915\u094D\u0938 \u0939\u0940 \u0938\u0939\u0940 \u0939\u0948"):"90 \u0915\u093F\u0932\u094B \u0938\u0947 \u090A\u092A\u0930 \u0932\u0947\u091F\u0947\u0915\u094D\u0938 \u0939\u0940 \u0938\u0939\u0940 \u0939\u0948",
+     side:"\u0906\u092A \u0915\u0930\u0935\u091F \u092A\u0930 \u0938\u094B\u0924\u0947 \u0939\u0948\u0902 \u0914\u0930 90 \u0915\u093F\u0932\u094B \u0938\u0947 \u0915\u092E \u0939\u0948\u0902",stomach:"\u0906\u092A \u092A\u0947\u091F \u0915\u0947 \u092C\u0932 \u0938\u094B\u0924\u0947 \u0939\u0948\u0902",
+     light:"90 \u0915\u093F\u0932\u094B \u0938\u0947 \u0915\u092E, \u0914\u0930 Pro Nexa \u0927\u0901\u0938\u0928\u0947 \u0928\u0939\u0940\u0902 \u0926\u0947\u0924\u093E",feel:"\u0906\u092A \u092B\u093C\u0930\u094D\u092E\u0928\u0947\u0938 \u0926\u0947\u0916 \u0915\u0930 \u091A\u0941\u0928 \u0930\u0939\u0947 \u0939\u0948\u0902"},
+ hr:{budget:"aap budget mein dekh rahe hain",premium:"aap samjhauta nahi karna chahte",
+     heavy:k=>k?(k+" kilo pe latex hi sahi hai"):"90 kilo se upar latex hi sahi hai",
+     side:"aap karwat pe sote hain aur 90 kilo se kam hain",stomach:"aap pet ke bal sote hain",
+     light:"90 kilo se kam, aur Pro Nexa dhansne nahi deta",feel:"aap firmness dekh kar chun rahe hain"}
+};
+const why_=()=>WHY_L[LANG]||WHY_L.en;
+function saySpec(fam,v){
+  const M=SAY_L[LANG]||SAY_L.en;
+  if(fam==="SOVA"&&/Natural/.test(v||"")) return M.NAT;
+  return M[fam]||"";
+}
+function sayUpsell(fam,v){
+  if(fam==="SOVA"&&/Natural/.test(v||"")) return "";
+  const P=POS[fam]; if(!P) return "";
+  if(fam==="SOVA") return pick(t().sovaUp);
+  if(P.top) return pick(t().top);
+  if(!P.next||!P.next.length) return "";
+  return pick(t().stretch(P.next[0]));
+}
+/* three houses, three buyers */
+const HOUSE={
+ VIVOREST:{name:"Vivorest",who:"Students, hostels, PG rooms and first apartments",fams:["SIGMA"]},
+ VEDASLEEP:{name:"VedaSleep",who:"Durable mattresses, chosen purely on firmness",fams:["ECOLITE","SIGNATURE","MAGIC","DURO","MAXA"]},
+ FOAMICO:{name:"Foamico",who:"Our engineered series \u2014 chosen for how you sleep",fams:["RESTO","SOVA","LUMA","ULTIMA","RIVA"]},
+};
+const houseOf=f=>HOUSE.VIVOREST.fams.indexOf(f)>=0?"VIVOREST":
+                 HOUSE.VEDASLEEP.fams.indexOf(f)>=0?"VEDASLEEP":"FOAMICO";
+const TIERNAME={1:"Entry",2:"Hard",3:"Medium firm",4:"Medium",5:"Soft",6:"Specialist",7:"Specialist",8:"Specialist",9:"Flagship"};
+const ladderOrder=["SIGMA","ECOLITE","SIGNATURE","MAGIC","DURO","MAXA","RESTO","SOVA","LUMA","ULTIMA","RIVA"];
+const PILLOWS=[
+  ["Micro Fibre","Cloud Pillow",899],["Micro Fibre","Cloud Pro Pillow",1099],
+  ["HR Foam","Air Soft Pillow",1499],["Memory Foam","Memo-Touch Pillow",1799],
+  ["Memory Foam","Memo-Rest Pillow",1999],["Memory Foam","Memo-Rest Slim",1499],
+  ["Memory Foam","Memo-Rest Contour",1999],["Memory Foam","Memo-Rest Contour Mini",1499],
+  ["Latex Foam","Zero Gravity",1999],["Latex Foam","Zero Gravity Contour",1999],
+  ["Latex Foam","Zero Gravity Natural Latex",4999],["Protector","Water Proof Protector (King)",1499],
+];
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function inr(n){const s=String(Math.round(n));if(s.length<=3)return s;
+  const l=s.slice(-3);let r=s.slice(0,-3);r=r.replace(/\B(?=(\d{2})+(?!\d))/g,",");return r+","+l;}
+const rupee=n=>"\u20B9"+inr(n);
+const famOf=k=>k.split(" ")[0];
+const varOf =k=>k.split(" ").slice(1).join(" ");
+const isVeda=k=>DB.skus[k].brand==="VedaSleep";
+const SIZES=DB.sizes.map(s=>s.size_in);
+const SZNAME={"78x60":"Queen","78x72":"King","78x36":"Single","78x48":"Double","72x72":"6 \u00D7 6 ft"};
+const sizeTag=s=>SZNAME[s]?" ("+SZNAME[s]+")":"";
+const NAMED={single:"78x36",double:"78x48",queen:"78x60",king:"78x72"};
+const DEFAULT_SIZE="72x72";   /* quoted when the customer hasn't named a size */
+const FT={"6":72,"6.25":75,"6.5":78,"7":84,"2.5":30,"3":36,"3.5":42,"4":48,"5":60,"5.5":66};
+
+function parseSize(q){
+  for(const [w,s] of Object.entries(NAMED)) if(new RegExp("\\b"+w+"\\b").test(q)) return s;
+  let m=q.match(/(\d{2,3})\s*(?:x|by|\*)\s*(\d{2,3})/);
+  if(m){const a=+m[1],b=+m[2];
+    for(const s of SIZES){const[p,r]=s.split("x").map(Number);
+      if((p===a&&r===b)||(p===b&&r===a))return s;}}
+  m=q.match(/(\d(?:\.\d+)?)\s*(?:x|by|\*)\s*(\d(?:\.\d+)?)\s*(?:ft|feet|foot)?/);
+  if(m){const a=FT[m[1]],b=FT[m[2]];
+    if(a&&b){for(const s of SIZES){const[p,r]=s.split("x").map(Number);
+      if((p===a&&r===b)||(p===b&&r===a))return s;}}}
+  return null;
+}
+function parseFams(q){
+  const out=[];
+  for(const f of Object.keys(FAM)) if(new RegExp("\\b"+f.toLowerCase()+"\\b").test(q)) out.push(f);
+  /* families that live on the ladder but carry no rows in the price book */
+  for(const f of Object.keys(POS)) if(!FAM[f] && new RegExp("\\b"+f.toLowerCase()+"\\b").test(q)) out.push(f);
+  if(/\briva\b/.test(q)&&!out.includes("RIVA")) out.push("RIVA");
+  return out;
+}
+function parseVariants(fam,q){
+  const keys=Object.keys(FAM[fam].v);
+  const th=q.match(/(\d(?:\.\d)?)\s*(?:"|inch|inches|in\b)/);
+  const words=["classic","premium","luxury","natural"];
+  const w=words.find(x=>new RegExp("\\b"+x+"\\b").test(q));
+  const r=q.match(/\br?\s?(1000|2000|3000)\b/);
+  let hits=keys;
+  if(r) hits=hits.filter(k=>k.includes(r[1]));
+  else if(w) hits=hits.filter(k=>k.toLowerCase().startsWith(w));
+  if(th&&hits.length>1){const t=hits.filter(k=>k.includes(th[1]+'"'));if(t.length)hits=t;}
+  return hits;
+}
+const rateOf=k=>DB.skus[k].sqft_rate;   /* printed rate per sq ft */
+
+/* ---------- custom-size engine ----------
+   Rule 1  smaller than a stock size  -> bill the next size up
+   Rule 2  bigger than the whole grid -> per-sq-ft calculator
+   The per-sq-ft rate is printed on every page of the Aug-2026 list \u2014 nothing is derived. */
+const SQFT=(l,w)=>l*w/144;
+const perSqFt=k=>rateOf(k);
+const customPrice=(k,l,w)=>Math.round(SQFT(l,w)*perSqFt(k));
+function parseDims(q){
+  const m=q.match(/(\d{1,3}(?:\.\d+)?)\s*(?:x|\u00D7|by|\*)\s*(\d{1,3}(?:\.\d+)?)/);
+  if(!m) return null;
+  let a=parseFloat(m[1]),b=parseFloat(m[2]);
+  if(a<=8&&b<=8){a=Math.round(a*12);b=Math.round(b*12);}
+  if(a<10||b<10) return null;
+  return {L:Math.max(a,b),W:Math.min(a,b),rawA:a,rawB:b};
+}
+function fitSize(L,W){
+  let exact=null,best=null,bestArea=Infinity;
+  for(const s of SIZES){
+    const p=s.split("x"),a=+p[0],b=+p[1];
+    if(a===L&&b===W) exact=s;
+    if(a>=L&&b>=W&&a*b<bestArea){bestArea=a*b;best=s;}
+  }
+  if(exact) return {kind:"exact",size:exact};
+  if(best)  return {kind:"up",size:best};
+  return {kind:"over"};
+}
+const dimLabel=d=>d.rawA+" \u00D7 "+d.rawB+" in";
+
+/* ---------- renderers ---------- */
+function head(fam,varName){
+  const F=FAM[fam],veda=F.brand==="VedaSleep";
+  return {veda,html:`<div class="eyebrow">${esc(F.brand||"Foamico")}</div>
+    <h2 class="title">${fam}${varName?` <em>${esc(varName)}</em>`:""}</h2>
+    <p class="sub">${esc(F.tag)}</p>`};
+}
+function priceCard(key,size){
+  const S=DB.skus[key],fam=famOf(key),v=varOf(key),h=head(fam,v);
+  const mrp=S.mrp[size],F=FAM[fam],spec=F.v[v]||{};
+  const icons=(spec.icons||F.icons||[]).map(i=>`<span class="pill on">${esc(i)}</span>`).join("");
+  return `<div class="ans${h.veda?" veda":""}">${h.html}
+    <div class="hero tnum">${rupee(mrp)}</div>
+    <div class="herolabel">MRP incl. GST \u00B7 ${esc(size)} in${sizeTag(size)}${size===DEFAULT_SIZE?" \u00B7 standard size":""}</div>
+    <div class="pills">
+      <span class="pill">${S.warranty_years}-year warranty</span>
+      ${spec.f&&spec.f!=="\u2014"?`<span class="pill">Firmness ${esc(spec.f)}</span>`:""}
+      <span class="pill">\u20B9${inr(rateOf(key))} / sq ft</span>
+    </div>
+    <div class="pills">${icons}</div>
+    ${(!spec.L||!spec.L.length)?`<div class="warn"><b>No published construction.</b> ${esc(fam)} is priced but has no page in the 2026 catalog, so there is no documented layer breakdown. Quote the price, not a build.</div>`:""}
+    <button class="copy" data-copy="${esc(fam+" "+v+" \u2014 "+size+" in \u2014 MRP "+rupee(mrp)+" (incl. GST) \u2014 "+S.warranty_years+"yr warranty")}">Copy details</button>
+    ${pitch(fam,v)}
+  </div>`;
+}
+function famCard(fam,size){
+  const F=FAM[fam],h=head(fam,""),keys=Object.keys(DB.skus).filter(k=>famOf(k)===fam);
+  const sz=size||DEFAULT_SIZE,dflt=!size;
+  const rows=keys.map(k=>{const v=varOf(k),s=DB.skus[k],sp=F.v[v]||{};
+    return `<tr><td class="name">${esc(v)}</td><td>${esc(sp.f||"\u2014")}</td>
+      <td class="n">${s.warranty_years}y</td><td class="n">${rupee(s.mrp[sz])}</td></tr>`;}).join("");
+  const first=F.v[varOf(keys[0])];
+  return `<div class="ans${h.veda?" veda":""}">${h.html}
+    <p class="p">${keys.length} variant${keys.length>1?"s":""}. Prices shown for ${dflt?"the standard ":""}<strong>${esc(sz)} in${sizeTag(sz)}</strong> \u2014 ask for another size and I'll re-quote.</p>
+    <div class="scroll"><table><thead><tr><th>Variant</th><th>Firmness</th><th class="n">Warr.</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div>
+    ${first&&first.L.length?`<ul class="layers">${first.L.map((l,i)=>`<li><span class="num">${i+1}</span><span>${esc(l)}</span></li>`).join("")}</ul>
+    <p class="p" style="margin-top:8px">Layer stack shown for <strong>${esc(varOf(keys[0]))}</strong>. Ask for a specific variant to see its own build.</p>`:
+    fam==="ECOLITE"?`<div class="warn"><b>No published construction.</b> ECOLITE is priced but has no page in the 2026 catalog, so there is no documented layer breakdown. Don't quote one.</div>`:""}
+    ${pitch(fam,varOf(keys[0]))}
+  </div>`;
+}
+function specCard(key){
+  const fam=famOf(key),v=varOf(key),F=FAM[fam],sp=F.v[v]||{},h=head(fam,v),S=DB.skus[key];
+  if(!sp.L||!sp.L.length) return famCard(fam,null);
+  const icons=(sp.icons||F.icons||[]).map(i=>`<span class="pill on">${esc(i)}</span>`).join("");
+  return `<div class="ans${h.veda?" veda":""}">${h.html}
+    <div class="pills"><span class="pill">${S.warranty_years}-year warranty</span>
+      <span class="pill">Firmness ${esc(sp.f)}</span>
+      <span class="pill tnum">${DEFAULT_SIZE} ${rupee(S.mrp[DEFAULT_SIZE])}</span></div>
+    <ul class="layers">${sp.L.map((l,i)=>`<li><span class="num">${i+1}</span><span>${esc(l)}</span></li>`).join("")}</ul>
+    <div class="pills">${icons}</div>${pitch(fam,v)}</div>`;
+}
+function compareCard(fams,size){
+  const sz=size||DEFAULT_SIZE,dflt=!size;
+  const rows=fams.flatMap(f=>Object.keys(DB.skus).filter(k=>famOf(k)===f).map(k=>{
+    const s=DB.skus[k],sp=FAM[f].v[varOf(k)]||{};
+    return `<tr><td class="name">${esc(f)} ${esc(varOf(k))}</td><td>${esc(s.brand)}</td>
+      <td>${esc(sp.f||"\u2014")}</td><td class="n">${s.warranty_years}y</td><td class="n">${rupee(s.mrp[sz])}</td></tr>`;})).join("");
+  return `<div class="ans"><div class="eyebrow">Side by side</div>
+    <h2 class="title">${fams.map(esc).join(" vs ")}</h2>
+    <p class="sub">All variants at ${dflt?"the standard ":""}${esc(sz)} in${sizeTag(sz)} \u00B7 MRP incl. GST</p>
+    <div class="scroll"><table><thead><tr><th>Model</th><th>Brand</th><th>Firmness</th><th class="n">Warr.</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function budgetCard(limit,size){
+  const sz=size||DEFAULT_SIZE,dflt=!size;
+  const hits=Object.keys(DB.skus).filter(k=>DB.skus[k].mrp[sz]<=limit)
+    .sort((a,b)=>DB.skus[b].mrp[sz]-DB.skus[a].mrp[sz]);
+  if(!hits.length) return `<div class="ans"><div class="eyebrow">Nothing under that</div>
+    <h2 class="title">No model fits ${rupee(limit)}</h2>
+    <p class="sub">At ${esc(sz)} in, the entry point is ${rupee(Math.min(...Object.keys(DB.skus).map(k=>DB.skus[k].mrp[sz])))}.</p></div>`;
+  const rows=hits.slice(0,14).map(k=>{const s=DB.skus[k];
+    return `<tr><td class="name">${esc(famOf(k))} ${esc(varOf(k))}</td><td>${esc(s.brand)}</td>
+      <td class="n">${s.warranty_years}y</td><td class="n">${rupee(s.mrp[sz])}</td></tr>`;}).join("");
+  return `<div class="ans"><div class="eyebrow">Within budget</div>
+    <h2 class="title">${hits.length} option${hits.length>1?"s":""} under ${rupee(limit)}</h2>
+    <p class="sub">At ${dflt?"the standard ":""}${esc(sz)} in${sizeTag(sz)} \u00B7 best value first${hits.length>14?" \u00B7 top 14 shown":""}</p>
+    <div class="scroll"><table><thead><tr><th>Model</th><th>Brand</th><th class="n">Warr.</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function warrantyCard(){
+  const g={};Object.keys(DB.skus).forEach(k=>{const y=DB.skus[k].warranty_years;(g[y]=g[y]||new Set()).add(famOf(k)+" "+varOf(k));});
+  const rows=Object.keys(g).map(Number).sort((a,b)=>b-a).map(y=>
+    `<tr><td class="name n" style="text-align:left">${y} years</td><td>${[...g[y]].map(esc).join(" \u00B7 ")}</td></tr>`).join("");
+  return `<div class="ans"><div class="eyebrow">The ladder</div>
+    <h2 class="title">Warranty by model</h2>
+    <p class="sub">Every badge reads \u201C5 years full replacement\u201D around the year figure.</p>
+    <div class="scroll"><table><thead><tr><th>Warranty</th><th>Models</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="warn"><b>RIVA leads at 30 years.</b> ULTIMA and RIVA Natural carry 25.</div></div>`;
+}
+function pillowCard(){
+  const rows=PILLOWS.map(([c,n,p])=>`<tr><td class="name">${esc(n)}</td><td>${esc(c)}</td><td class="n">${rupee(p)}</td></tr>`).join("");
+  return `<div class="ans"><div class="eyebrow">Accessories</div>
+    <h2 class="title">Pillows &amp; protectors</h2><p class="sub">All 24 \u00D7 17 in \u00B7 MRP incl. GST</p>
+    <div class="scroll"><table><thead><tr><th>Product</th><th>Type</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function sizeCard(){
+  const rows=DB.sizes.map(s=>`<tr><td class="name">${esc(s.size_in)}</td><td class="n">${s.length_cm}</td><td class="n">${s.width_cm}</td></tr>`).join("");
+  return `<div class="ans"><div class="eyebrow">Size grid</div>
+    <h2 class="title">All 24 standard sizes</h2>
+    <p class="sub">Standard quote is <strong>72x72</strong> \u00B7 Single 78x36 \u00B7 Double 78x48 \u00B7 Queen 78x60 \u00B7 King 78x72</p>
+    <div class="scroll"><table><thead><tr><th>Size (in)</th><th class="n">Length (cm)</th><th class="n">Width (cm)</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="warn"><b>Off-list sizes.</b> Anything <b>smaller</b> than a stock size is charged at the <b>next size up</b> &#8212; 34 &#215; 71 in is billed as 72x36. Anything <b>larger</b> than 84x72 is priced <b>per square foot</b> at the printed rate.</div>
+    <div class="warn">Round edges and specialised shapes carry <b>no extra charge</b>.</div></div>`;
+}
+function upCard(key,d,fit){
+  const S=DB.skus[key],fam=famOf(key),v=varOf(key),h=head(fam,v),mrp=S.mrp[fit.size];
+  return '<div class="ans'+(h.veda?" veda":"")+'">'+h.html+
+    '<div class="warn" style="margin-top:0"><b>'+esc(dimLabel(d))+'</b> isn\'t a stock size. '+
+    'Anything under a listed size is billed at the <b>next size up</b> \u2014 here that\'s <b>'+esc(fit.size)+' in</b>.</div>'+
+    '<div class="hero tnum">'+rupee(mrp)+'</div>'+
+    '<div class="herolabel">MRP incl. GST \u00B7 billed as '+esc(fit.size)+' in</div>'+
+    '<div class="pills"><span class="pill">'+S.warranty_years+'-year warranty</span>'+
+    '<span class="pill">\u20B9'+inr(rateOf(key))+' / sq ft</span></div>'+
+    '<button class="copy" data-copy="'+esc(fam+" "+v+" \u2014 "+dimLabel(d)+" (billed as "+fit.size+") \u2014 MRP "+rupee(mrp)+" incl. GST")+'">Copy details</button></div>';
+}
+function overCard(key,d){
+  const S=DB.skus[key],fam=famOf(key),v=varOf(key),h=head(fam,v);
+  const a=SQFT(d.L,d.W),r=perSqFt(key),mrp=customPrice(key,d.L,d.W);
+  return '<div class="ans'+(h.veda?" veda":"")+'">'+h.html+
+    '<div class="warn" style="margin-top:0"><b>'+esc(dimLabel(d))+'</b> is larger than the biggest stock size (84x72). '+
+    'Oversize goes on the <b>per-sq-ft calculator</b>.</div>'+
+    '<div class="hero tnum">'+rupee(mrp)+'</div>'+
+    '<div class="herolabel">Custom-size MRP incl. GST</div>'+
+    '<div class="scroll"><table><tbody>'+
+    '<tr><td>Area</td><td class="n">'+d.L+' \u00D7 '+d.W+' in = '+a.toFixed(2)+' sq ft</td></tr>'+
+    '<tr><td>Rate</td><td class="n">\u20B9'+r.toFixed(2)+' / sq ft</td></tr>'+
+    '<tr><td>Printed rate</td><td class="n">\u20B9'+inr(rateOf(key))+' / sq ft</td></tr>'+
+    '<tr><td><b>MRP</b></td><td class="n"><b>'+rupee(mrp)+'</b></td></tr>'+
+    '</tbody></table></div>'+
+    '<div class="warn">Round edges and specialised shapes carry <b>no extra charge</b>.</div>'+
+    '<button class="copy" data-copy="'+esc(fam+" "+v+" \u2014 custom "+dimLabel(d)+" ("+a.toFixed(2)+" sq ft) \u2014 MRP "+rupee(mrp)+" incl. GST")+'">Copy details</button></div>';
+}
+function customFamCard(fam,d,fit){
+  const keys=Object.keys(DB.skus).filter(k=>famOf(k)===fam),veda=DB.skus[keys[0]].brand==="VedaSleep";
+  const over=fit.kind==="over";
+  const rows=keys.map(function(k){
+    const S=DB.skus[k],p=over?customPrice(k,d.L,d.W):S.mrp[fit.size];
+    return '<tr><td class="name">'+esc(varOf(k))+'</td><td class="n">'+S.warranty_years+'y</td><td class="n">'+rupee(p)+'</td></tr>';
+  }).join("");
+  return '<div class="ans'+(veda?" veda":"")+'">'+
+    '<div class="eyebrow">'+(veda?"VedaSleep":"Foamico")+'</div><h2 class="title">'+esc(fam)+' <em>at '+esc(dimLabel(d))+'</em></h2>'+
+    '<p class="sub">'+(over
+      ? 'Oversize \u2014 priced on the per-sq-ft calculator ('+SQFT(d.L,d.W).toFixed(2)+' sq ft)'
+      : 'Not a stock size \u2014 billed at the next size up, <b>'+esc(fit.size)+' in</b>')+'</p>'+
+    '<div class="scroll"><table><thead><tr><th>Variant</th><th class="n">Warr.</th><th class="n">MRP</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    (over?'<div class="warn">Special shapes carry no extra charge.</div>':'')+
+    '</div>';
+}
+function pitch(fam,v){
+  const P=POS[fam]; if(!P) return "";
+  const isNat0=fam==="SOVA"&&/Natural/.test(v||"");
+  return '<div class="pills" style="margin-top:12px">'+
+    '<span class="pill on">'+esc(isNat0?"Natural latex":P.feel)+(P.hr?" \u00B7 "+P.hr+"% Float Sense":"")+'</span>'+
+    (P.badge?'<span class="pill badgepill">'+esc(P.badge)+'</span>':'')+
+    (P.who?'<span class="pill">'+esc(isNat0?"Above 90 kg":P.who)+'</span>':'')+'</div>';
+}
+function pitchFull(fam,v){
+  const P=POS[fam]; if(!P) return "";
+  const isNat=fam==="SOVA"&&/Natural/.test(v||"");
+  const bits=[];
+  bits.push('<div class="pitch">');
+  bits.push('<div class="pitchhead">'+(P.badge?'<span class="badge">'+esc(P.badge)+'</span>':'')+
+            '<span class="feel">'+esc(P.feel)+(P.hr?" \u00B7 "+P.hr+"% HR Float Sense":"")+'</span></div>');
+  bits.push('<p class="p">'+esc(isNat
+      ? "Plant-based natural latex \u2014 7\u00B0 cooler and extremely comfortable. The top of the latex line."
+      : P.hook)+'</p>');
+  bits.push('<p class="p"><strong>Who it\u2019s for:</strong> '+esc(P.who)+'</p>');
+  if(P.warn)    bits.push('<div class="warn"><b>Careful:</b> '+esc(P.warn)+'</div>');
+  if(P.noPrice) bits.push('<div class="warn"><b>No price here:</b> '+esc(P.noPrice)+'</div>');
+  if(P.always&&!isNat) bits.push('<div class="warn upsell"><b>Upsell:</b> '+esc(P.always)+'</div>');
+  const nx=isNat?["Riva","Ultima"]:P.next;
+  if(nx&&nx.length){
+    bits.push('<div class="nextrow"><span class="nextlabel">You might also like</span>'+
+      nx.map(function(n){return '<button class="next" data-q="'+esc(n)+'">'+esc(n)+' \u203A</button>';}).join("")+'</div>');
+  } else if(P.top){
+    bits.push('<div class="nextrow"><span class="nextlabel">Top of the range \u2014 nothing to step up to. Sell the engineering.</span></div>');
+  }
+  bits.push('</div>');
+  return bits.join("");
+}
+function posCard(fam){
+  const P=POS[fam];
+  const rows=(P.variants||[]).map(function(v){
+    return '<tr><td class="name">'+esc(v[0])+'</td><td>'+esc(v[1])+'</td><td class="n">'+esc(v[2])+'</td></tr>';}).join("");
+  return '<div class="ans"><div class="eyebrow">'+esc(P.brand||"Foamico")+'</div>'+
+    '<h2 class="title">'+esc(nice(fam))+'</h2>'+
+    '<p class="sub">'+esc(P.who)+'</p>'+
+    (rows?'<div class="scroll"><table><thead><tr><th>Version</th><th>Build</th><th class="n">Firmness</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'')+
+    (P.spec?'<p class="p" style="margin-top:10px">'+esc(P.spec)+'</p>':'')+
+    (P.noPrice?'<div class="warn"><b>Price on request.</b> '+esc(P.noPrice)+'</div>':'')+
+    pitch(fam,"")+'</div>';
+}
+function housesCard(){
+  const rows=["VIVOREST","VEDASLEEP","FOAMICO"].map(function(h){
+    const H=HOUSE[h];
+    const fams=H.fams.filter(function(f){return Object.keys(DB.skus).some(function(k){return famOf(k)===f;});});
+    const from=fams.length?rupee(Math.min.apply(null,fams.map(function(f){
+      return Math.min.apply(null,Object.keys(DB.skus).filter(function(k){return famOf(k)===f;})
+        .map(function(k){return DB.skus[k].mrp[DEFAULT_SIZE];}));}))):"\u2014";
+    return '<tr><td class="name">'+esc(H.name)+(h==="FOAMICO"?' <span class="badge sm">Engineered</span>':'')+'</td>'+
+           '<td>'+esc(H.who)+'</td><td>'+H.fams.map(esc).join(" \u00B7 ")+'</td><td class="n">'+from+'</td></tr>';
+  }).join("");
+  return '<div class="ans"><div class="eyebrow">Three houses</div>'+
+    '<h2 class="title">Which range suits you</h2>'+
+    '<p class="sub">Prices from, at '+DEFAULT_SIZE+'. Vivorest is priced on request.</p>'+
+    '<div class="scroll"><table><thead><tr><th>House</th><th>Who it\u2019s for</th><th>Models</th><th class="n">From</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="warn upsell"><b>In short:</b> choose VedaSleep if you already know the firmness you want, and Foamico if you want a mattress engineered around how you actually sleep.</div></div>';
+}
+function ladderCard(){
+  const rows=ladderOrder.map(function(f){
+    const P=POS[f],keys=Object.keys(DB.skus).filter(function(k){return famOf(k)===f;});
+    const from=keys.length?rupee(Math.min.apply(null,keys.map(function(k){return DB.skus[k].mrp[DEFAULT_SIZE];}))):"\u2014";
+    return '<tr><td class="n" style="text-align:left">'+P.tier+'</td>'+
+           '<td class="name">'+esc(f)+(P.badge?' <span class="badge sm">'+esc(P.badge)+'</span>':'')+'</td>'+
+           '<td>'+esc(P.feel)+(P.hr?" \u00B7 "+P.hr+"% Float Sense":"")+'</td>'+
+           '<td>'+esc(P.who)+'</td><td class="n">'+from+'</td></tr>';
+  }).join("");
+  return '<div class="ans"><div class="eyebrow">The range</div>'+
+    '<h2 class="title">Every mattress we make</h2>'+
+    '<p class="sub">The VedaSleep beds differ by firmness alone. The Foamico beds are engineered for how you sleep. Prices from, at '+DEFAULT_SIZE+'.</p>'+
+    '<div class="scroll"><table><thead><tr><th>#</th><th>Model</th><th>Feel</th><th>Who it\u2019s for</th><th class="n">From</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="warn upsell"><b>Our best sellers:</b> Sova in latex, Ultima Luxury in cloud foam, and the Riva \u2014 our flagship, and the founder\'s own mattress.</div></div>';
+}
+function pickModel(){
+  let lead,why;
+  const W=why_();
+  if(REC.seg==="budget"){ lead="SIGMA"; why=W.budget; }
+  else if(REC.seg==="premium"){ lead="RIVA"; why=W.premium; }
+  else if(REC.seg==="feel"){
+    lead=REC.firm==="hard"?"SIGNATURE":REC.firm==="mediumfirm"?"MAGIC":REC.firm==="soft"?"MAXA":"DURO";
+    why=W.feel;
+  }
+  else if(REC.heavy){ lead="SOVA"; why=W.heavy(REC.kg); }
+  else if(REC.pos==="stomach"){ lead="ULTIMA"; why=W.stomach; }
+  else if(REC.pos==="side"){ lead="LUMA"; why=W.side; }
+  else { lead="RESTO"; why=W.light; }
+  const keys=Object.keys(DB.skus).filter(function(k){return famOf(k)===lead;});
+  return {lead:lead,why:why,house:houseOf(lead),
+          from:keys.length?rupee(Math.min.apply(null,keys.map(function(k){return DB.skus[k].mrp[DEFAULT_SIZE];}))):null};
+}
+function recommendCard(r){
+  const P=POS[r.lead],veda=r.house==="VEDASLEEP";
+  return '<div class="ans'+(veda?" veda":"")+'"><div class="eyebrow">'+esc(HOUSE[r.house].name)+' \u00b7 suggested</div>'+
+    '<h2 class="title">'+esc(nice(r.lead))+'</h2>'+
+    '<p class="sub">'+esc(P?P.who:"")+(r.from?' \u00b7 from '+r.from+' at '+DEFAULT_SIZE:'')+'</p>'+
+    pitch(r.lead,"")+'</div>';
+}
+function readProfile(q){
+  const m=q.match(/(\d{2,3})\s*(?:kg|kgs|kilo)/);
+  return {
+    kg: m?parseInt(m[1],10):null,
+    heavy: /\b(above|over|more than)\s*90\b|\bheavy|\bbulky|\bbada\b/.test(q),
+    side: /\bside sleeper|\bside\b|\bkarwat\b|\u0915\u0930\u0935\u091F/.test(q),
+    toss: /\btoss|\bturn|\bboth sides|\brestless/.test(q),
+    stomach: /\bstomach\b|\bbelly\b|\bpet ke bal\b|\u092A\u0947\u091F \u0915\u0947 \u092C\u0932|\u092A\u0947\u091F \u092A\u0930/.test(q),
+    hot:  /\bhot\b|\bsweat|\bwarm\b|\bcool(er)?\b|\bgarmi\b|\bheat\b|\bsummer\b/.test(q),
+    budget: /\bbudget|\bcheap|\bstudent|\bhostel|\baffordab|\bsasta|\blow price|\beconom|\bkam paise|\u0938\u0938\u094D\u0924\u093E|\u092C\u091C\u091F|\u091B\u093E\u0924\u094D\u0930/.test(q),
+    premium: /\bbest\b|\bpremium|\btop\b|\bluxur|\bno compromise|\bdoesn'?t compromise|\bflagship|\bmost expensive|\bsabse acha\b|\bsabse accha\b|\u0938\u092C\u0938\u0947 \u0905\u091A\u094D\u091B\u093E|\u0938\u092C\u0938\u0947 \u092C\u0922\u093C\u093F\u092F\u093E/.test(q),
+    firm: (/\bextra firm|\bvery hard|\bhard\b|\bfirm\b|\bsakht\b|\u0938\u0916\u093C\u094D\u0924|\u0938\u0916\u094D\u0924|\u0915\u0921\u093C\u093E/.test(q)&&!/medium|\u092E\u0940\u0921\u093F\u092F\u092E/.test(q)) ? "hard"
+        : /\bmedium firm|\bmedium-firm/.test(q) ? "mediumfirm"
+        : /\bmedium\b|\u092E\u0940\u0921\u093F\u092F\u092E/.test(q) ? "medium"
+        : /\bsoft\b|\bplush\b|\bnarm\b|\u0928\u0930\u092E|\u092E\u0941\u0932\u093E\u092F\u092E/.test(q) ? "soft" : null
+  };
+}
+function helpCard(){
+  return `<div class="ans"><div class="eyebrow">Try one of these</div>
+    <h2 class="title">I didn't catch a model in that</h2>
+    <p class="p">I know all <strong>35 variants across 11 model families</strong> and every one of the 24 sizes \u2014 that's 840 prices. Ask me like this:</p>
+    <ul class="layers">
+      <li><span class="num">\u203A</span><span>\u201C<strong>Ultima Luxury queen</strong>\u201D \u2014 one exact price</span></li>
+      <li><span class="num">\u203A</span><span>\u201C<strong>Riva 78x60</strong>\u201D \u2014 every variant at that size</span></li>
+      <li><span class="num">\u203A</span><span>\u201C<strong>Sova vs Resto</strong>\u201D \u2014 side by side</span></li>
+      <li><span class="num">\u203A</span><span>\u201C<strong>Under 20000</strong>\u201D \u2014 everything within budget</span></li>
+      <li><span class="num">\u203A</span><span>\u201C<strong>What's in Resto Premium</strong>\u201D \u2014 the layer stack</span></li>
+      <li><span class="num">\u203A</span><span>\u201C<strong>Help me choose</strong>\u201D \u2014 a couple of questions, then a suggestion</span></li>
+      <li><span class="num">\u203A</span><span>\u201C<strong>See the full range</strong>\u201D \u2014 every mattress we make</span></li>
+    </ul>
+    <p class="p" style="margin-top:10px">Sizes work as <strong>78x60</strong>, <strong>6.5x5 ft</strong>, or just <strong>queen</strong>. No size given? I quote the standard <strong>72x72</strong>.</p></div>`;
+}
+
+/* ---------- voice ---------- */
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function hourGreet(){
+  const h=new Date().getHours();
+  if(h<5) return "You're up late";
+  if(h<12) return "Good morning";
+  if(h<17) return "Good afternoon";
+  return "Good evening";
+}
+const OPENERS=["What are we quoting today?","What can I look up for you?","Which model do you need?","What are you pricing?"];
+
+
+/* ---------- languages ----------
+   en = English \u00B7 hi = \u0939\u093F\u0902\u0926\u0940 \u00B7 hr = Hinglish (Roman Hindi, widely typed in India).
+   Product and spec words stay English on purpose \u2014 that is the trade register. */
+const LANGS={en:"English",hi:"\u0939\u093F\u0902\u0926\u0940",hr:"Hinglish"};
+let LANG="en";
+const DEVA=/[\u0900-\u097F]/;
+const HR_WORDS=/\b(kitna|kitne|kitni|daam|bhav|keemat|batao|bata|chahiye|dikhao|kaisa|kaise|hai|kya|nahi|haan|ji|acha|accha|thik|theek|karo|dedo|de do|lena|lene|wala|wale|gadda|gadde|matress|sasta|mehnga|garmi|thanda|sona|sote|vajan|wajan|mera|meri|mujhe)\b/;
+function detectLang(q){ if(DEVA.test(q)) return "hi"; if(HR_WORDS.test(q)) return "hr"; return null; }
+const TX={
+ en:{
+  morn:"Good morning",aft:"Good afternoon",eve:"Good evening",late:"You're up late",
+  openers:["What can I help you find?","Which mattress are you looking at?","What would you like to know?"],
+  hey:["Hi! ","Hello! "],
+  intro:"I'm the Foamico mattress guide.",
+  introB:"I know the whole 2026 range \u2014 <b>every model, every size, what's inside it and what it costs</b>. Ask me anything about the mattresses.",
+  introC:"Try <b>\u201CUltima Luxury queen\u201D</b>, <b>\u201Cwhat's under 20,000\u201D</b>, or <b>\u201Chelp me choose\u201D</b>.",
+  thanks:["Happy to help.","Any time.","You're welcome \u2014 ask if anything else comes up."],
+  bye:["Sleep well!","Take care.","Come back any time you need a price."],
+  howru:["All good \u2014 the whole range is in front of me. What would you like to know?"],
+  ack:["Anything else you'd like to know?","Shall I look at another one?","I'm here if you need more."],
+  whoru:"I'm the Foamico mattress guide \u2014 an assistant, not a person. I can tell you about any model in the 2026 range and what it costs.",
+  offtopic:"I can only help with mattresses \u2014 models, sizes, what's inside them and prices. Ask me about any of those.",
+  lost:["I didn't catch a model name there.","Sorry, I didn't follow that one."],
+  ask90:["One thing first \u2014 are you over or under 90 kg? It changes what I'd suggest.",
+         "Before I suggest anything: roughly, are you over or under 90 kg?"],
+  askPos:["And how do you sleep \u2014 on your side, or on your stomach?",
+          "How do you usually sleep? On your side, or on your stomach?"],
+  a90:["Over 90 kg","Under 90 kg"], aPos:["On my side","On my stomach","Not sure"],
+  lead:(n,why)=>["I'd suggest the "+n+" \u2014 "+why+".","The "+n+" would suit you \u2014 "+why+".","Go for the "+n+". "+why.charAt(0).toUpperCase()+why.slice(1)+"."],
+  isA:w=>"It's "+w+".", from:(f,sz)=>"It starts at "+f+" for "+sz+".",
+  priceLine:(n,where,m)=>[m+" for the "+n+" "+where+".","That's "+m+" \u2014 "+n+", "+where+".",n+" "+where+" is "+m+"."],
+  range:(n,c,lo,hi,w)=>[n+" runs from "+lo+" to "+hi+" "+w+".","There are "+c+" versions of the "+n+" \u2014 "+lo+" up to "+hi+" "+w+"."],
+  atStd:sz=>"in the standard "+sz, atSz:sz=>"in "+sz,
+  redo:"Tell me a size and I'll price it for you.",
+  warr:y=>"It carries a "+y+" year warranty.",
+  stretch:n=>["If you can stretch a little, the "+n+" is worth a look.","The "+n+" is the next step up, if you're curious.","Worth comparing it with the "+n+"."],
+  sovaUp:["If you can, look at the Sova Natural \u2014 it's 7\u00B0 cooler and a good deal more comfortable.","The Sova Natural is the one to see if budget allows \u2014 7\u00B0 cooler, plant-based latex."],
+  top:["Nothing sits above it in our range.","That's the top of everything we make."],
+  langSet:n=>"Switched to "+n+". "
+ },
+ hi:{
+  morn:"\u0938\u0941\u092A\u094D\u0930\u092D\u093E\u0924",aft:"\u0928\u092E\u0938\u094D\u0924\u0947",eve:"\u0936\u0941\u092D \u0938\u0902\u0927\u094D\u092F\u093E",late:"\u0906\u091C \u0926\u0947\u0930 \u0924\u0915 \u091C\u093E\u0917 \u0930\u0939\u0947 \u0939\u0948\u0902",
+  openers:["\u092E\u0948\u0902 \u0906\u092A\u0915\u0940 \u0915\u094D\u092F\u093E \u092E\u0926\u0926 \u0915\u0930\u0942\u0901?","\u0915\u094C\u0928 \u0938\u093E \u0917\u0926\u094D\u0926\u093E \u0926\u0947\u0916 \u0930\u0939\u0947 \u0939\u0948\u0902?","\u0906\u092A \u0915\u094D\u092F\u093E \u091C\u093E\u0928\u0928\u093E \u091A\u093E\u0939\u0947\u0902\u0917\u0947?"],
+  hey:["\u0928\u092E\u0938\u094D\u0924\u0947! ","\u091C\u0940 \u0928\u092E\u0938\u094D\u0924\u0947! "],
+  intro:"\u092E\u0948\u0902 Foamico \u0915\u093E \u092E\u0948\u091F\u094D\u0930\u0947\u0938 \u0917\u093E\u0907\u0921 \u0939\u0942\u0901\u0964",
+  introB:"2026 \u0915\u0940 \u092A\u0942\u0930\u0940 \u0930\u0947\u0902\u091C \u092E\u0941\u091D\u0947 \u092A\u0924\u093E \u0939\u0948 \u2014 <b>\u0939\u0930 \u092E\u0949\u0921\u0932, \u0939\u0930 \u0938\u093E\u0907\u091C\u093C, \u0905\u0902\u0926\u0930 \u0915\u094D\u092F\u093E \u0939\u0948 \u0914\u0930 \u0915\u0940\u092E\u0924 \u0915\u094D\u092F\u093E \u0939\u0948</b>\u0964 \u0917\u0926\u094D\u0926\u094B\u0902 \u0915\u0947 \u092C\u093E\u0930\u0947 \u092E\u0947\u0902 \u0915\u0941\u091B \u092D\u0940 \u092A\u0942\u091B\u093F\u090F\u0964",
+  introC:"\u091C\u0948\u0938\u0947 <b>\u201CUltima Luxury queen\u201D</b>, <b>\u201C20,000 \u0938\u0947 \u0915\u092E \u092E\u0947\u0902 \u0915\u094D\u092F\u093E \u0939\u0948\u201D</b>, \u092F\u093E <b>\u201C\u0915\u094C\u0928 \u0938\u093E \u0932\u0942\u0901\u201D</b>\u0964",
+  thanks:["\u0916\u0941\u0936\u0940 \u0939\u0941\u0908\u0964","\u0915\u092D\u0940 \u092D\u0940\u0964","\u0914\u0930 \u0915\u0941\u091B \u091C\u093E\u0928\u0928\u093E \u0939\u094B \u0924\u094B \u092A\u0942\u091B\u093F\u090F\u0964"],
+  bye:["\u0906\u0930\u093E\u092E \u0938\u0947 \u0938\u094B\u0907\u090F!","\u0927\u094D\u092F\u093E\u0928 \u0930\u0916\u093F\u090F\u0964","\u0915\u0940\u092E\u0924 \u091C\u093E\u0928\u0928\u0940 \u0939\u094B \u0924\u094B \u092B\u093F\u0930 \u0906\u0907\u090F\u0964"],
+  howru:["\u0938\u092C \u0920\u0940\u0915 \u2014 \u092A\u0942\u0930\u0940 \u0930\u0947\u0902\u091C \u092E\u0947\u0930\u0947 \u0938\u093E\u092E\u0928\u0947 \u0939\u0948\u0964 \u0915\u094D\u092F\u093E \u091C\u093E\u0928\u0928\u093E \u091A\u093E\u0939\u0947\u0902\u0917\u0947?"],
+  ack:["\u0914\u0930 \u0915\u0941\u091B \u091C\u093E\u0928\u0928\u093E \u0939\u0948?","\u0915\u094B\u0908 \u0914\u0930 \u092E\u0949\u0921\u0932 \u0926\u0947\u0916\u0942\u0901?","\u092A\u0942\u091B\u093F\u090F, \u092E\u0948\u0902 \u092F\u0939\u0940\u0902 \u0939\u0942\u0901\u0964"],
+  whoru:"\u092E\u0948\u0902 Foamico \u0915\u093E \u092E\u0948\u091F\u094D\u0930\u0947\u0938 \u0917\u093E\u0907\u0921 \u0939\u0942\u0901 \u2014 \u0907\u0902\u0938\u093E\u0928 \u0928\u0939\u0940\u0902\u0964 2026 \u0915\u0940 \u092A\u0942\u0930\u0940 \u0930\u0947\u0902\u091C \u0914\u0930 \u0915\u0940\u092E\u0924\u0947\u0902 \u092C\u0924\u093E \u0938\u0915\u0924\u093E \u0939\u0942\u0901\u0964",
+  offtopic:"\u092E\u0948\u0902 \u0938\u093F\u0930\u094D\u092B\u093C \u0917\u0926\u094D\u0926\u094B\u0902 \u092E\u0947\u0902 \u092E\u0926\u0926 \u0915\u0930 \u0938\u0915\u0924\u093E \u0939\u0942\u0901 \u2014 \u092E\u0949\u0921\u0932, \u0938\u093E\u0907\u091C\u093C, \u0905\u0902\u0926\u0930 \u0915\u094D\u092F\u093E \u0939\u0948 \u0914\u0930 \u0915\u0940\u092E\u0924\u0964",
+  lost:["\u092E\u0949\u0921\u0932 \u0915\u093E \u0928\u093E\u092E \u0938\u092E\u091D \u0928\u0939\u0940\u0902 \u0906\u092F\u093E\u0964","\u092E\u093E\u092B\u093C \u0915\u0940\u091C\u093F\u090F, \u0935\u0939 \u092E\u0948\u0902 \u0938\u092E\u091D\u093E \u0928\u0939\u0940\u0902\u0964"],
+  ask90:["\u090F\u0915 \u092C\u093E\u0924 \u092A\u0939\u0932\u0947 \u2014 \u0906\u092A\u0915\u093E \u0935\u091C\u093C\u0928 90 \u0915\u093F\u0932\u094B \u0938\u0947 \u090A\u092A\u0930 \u0939\u0948 \u092F\u093E \u0928\u0940\u091A\u0947? \u0938\u0941\u091D\u093E\u0935 \u0909\u0938\u0940 \u092A\u0930 \u092C\u0926\u0932\u0924\u093E \u0939\u0948\u0964"],
+  askPos:["\u0914\u0930 \u0906\u092A \u0938\u094B\u0924\u0947 \u0915\u0948\u0938\u0947 \u0939\u0948\u0902 \u2014 \u0915\u0930\u0935\u091F \u092A\u0930 \u092F\u093E \u092A\u0947\u091F \u0915\u0947 \u092C\u0932?"],
+  a90:["90 kg \u0938\u0947 \u090A\u092A\u0930","90 kg \u0938\u0947 \u0915\u092E"], aPos:["\u0915\u0930\u0935\u091F \u092A\u0930","\u092A\u0947\u091F \u0915\u0947 \u092C\u0932","\u092A\u0924\u093E \u0928\u0939\u0940\u0902"],
+  lead:(n,why)=>[n+" \u0932\u0940\u091C\u093F\u090F \u2014 "+why+"\u0964",n+" \u0906\u092A\u0915\u0947 \u0932\u093F\u090F \u0938\u0939\u0940 \u0930\u0939\u0947\u0917\u093E \u2014 "+why+"\u0964"],
+  isA:w=>"\u092F\u0947 "+w+"\u0964", from:(f,sz)=>sz+" \u092E\u0947\u0902 "+f+" \u0938\u0947 \u0936\u0941\u0930\u0942\u0964",
+  priceLine:(n,where,m)=>[n+" "+where+" \u0915\u093E "+m+"\u0964",m+" \u2014 "+n+", "+where+"\u0964"],
+  range:(n,c,lo,hi,w)=>[n+" "+w+" "+lo+" \u0938\u0947 "+hi+" \u0924\u0915\u0964",n+" \u0915\u0947 "+c+" \u0935\u0930\u094D\u091C\u093C\u0928 \u0939\u0948\u0902 \u2014 "+w+" "+lo+" \u0938\u0947 "+hi+"\u0964"],
+  atStd:sz=>"\u0938\u094D\u091F\u0948\u0902\u0921\u0930\u094D\u0921 "+sz+" \u092E\u0947\u0902", atSz:sz=>sz+" \u092E\u0947\u0902",
+  redo:"\u0938\u093E\u0907\u091C\u093C \u092C\u0924\u093E\u0907\u090F, \u0915\u0940\u092E\u0924 \u0928\u093F\u0915\u093E\u0932 \u0926\u0947\u0924\u093E \u0939\u0942\u0901\u0964",
+  warr:y=>y+" \u0938\u093E\u0932 \u0915\u0940 \u0935\u093E\u0930\u0902\u091F\u0940 \u0939\u0948\u0964",
+  stretch:n=>["\u0925\u094B\u0921\u093C\u093E \u092C\u091C\u091F \u092C\u0922\u093C\u093E \u0938\u0915\u0947\u0902 \u0924\u094B "+n+" \u091C\u093C\u0930\u0942\u0930 \u0926\u0947\u0916\u093F\u090F\u0964",n+" \u0907\u0938\u0938\u0947 \u090F\u0915 \u0915\u0926\u092E \u090A\u092A\u0930 \u0939\u0948\u0964"],
+  sovaUp:["\u0939\u094B \u0938\u0915\u0947 \u0924\u094B Sova Natural \u0926\u0947\u0916\u093F\u090F \u2014 7\u00B0 \u091C\u093C\u094D\u092F\u093E\u0926\u093E \u0920\u0902\u0921\u093E \u0914\u0930 \u0915\u093E\u092B\u093C\u0940 \u0906\u0930\u093E\u092E\u0926\u0947\u0939\u0964"],
+  top:["\u0907\u0938\u0938\u0947 \u090A\u092A\u0930 \u0939\u092E\u093E\u0930\u0940 \u0930\u0947\u0902\u091C \u092E\u0947\u0902 \u0915\u0941\u091B \u0928\u0939\u0940\u0902\u0964"],
+  langSet:n=>n+" \u092E\u0947\u0902 \u0915\u0930 \u0926\u093F\u092F\u093E\u0964 "
+ },
+ hr:{
+  morn:"Good morning",aft:"Namaste",eve:"Good evening",late:"Kaafi raat ho gayi",
+  openers:["Main aapki kya madad karun?","Kaunsa gadda dekh rahe hain?","Aap kya jaanna chahenge?"],
+  hey:["Namaste! ","Ji namaste! "],
+  intro:"Main Foamico ka mattress guide hoon.",
+  introB:"2026 ki poori range mujhe pata hai \u2014 <b>har model, har size, andar kya hai aur keemat kya hai</b>. Gaddon ke baare mein kuch bhi poochhiye.",
+  introC:"Jaise <b>\u201CUltima Luxury queen\u201D</b>, <b>\u201C20,000 se kam mein kya hai\u201D</b>, ya <b>\u201Ckaunsa loon\u201D</b>.",
+  thanks:["Khushi hui.","Kabhi bhi.","Aur kuch jaanna ho toh poochhiye."],
+  bye:["Aaram se soyiye!","Dhyan rakhiye.","Keemat jaanni ho toh phir aaiye."],
+  howru:["Sab theek \u2014 poori range saamne hai. Kya jaanna chahenge?"],
+  ack:["Aur kuch jaanna hai?","Koi aur model dekhun?","Poochhiye, main yahin hoon."],
+  whoru:"Main Foamico ka mattress guide hoon \u2014 insaan nahi. 2026 ki poori range aur keematein bata sakta hoon.",
+  offtopic:"Main sirf gaddon mein madad kar sakta hoon \u2014 model, size, andar kya hai aur keemat.",
+  lost:["Model ka naam samajh nahi aaya.","Maaf kijiye, wo main samjha nahi."],
+  ask90:["Ek baat pehle \u2014 aapka wajan 90 kilo se upar hai ya neeche? Sujhav usi pe badalta hai."],
+  askPos:["Aur aap sote kaise hain \u2014 karwat pe ya pet ke bal?"],
+  a90:["90 kg se upar","90 kg se kam"], aPos:["Karwat pe","Pet ke bal","Pata nahi"],
+  lead:(n,why)=>[n+" lijiye \u2014 "+why+".",n+" aapke liye sahi rahega \u2014 "+why+"."],
+  isA:w=>"Ye "+w+".", from:(f,sz)=>sz+" mein "+f+" se shuru.",
+  priceLine:(n,where,m)=>[n+" "+where+" ka "+m+".",m+" \u2014 "+n+", "+where+"."],
+  range:(n,c,lo,hi,w)=>[n+" "+w+" "+lo+" se "+hi+" tak.",n+" ke "+c+" version hain \u2014 "+w+" "+lo+" se "+hi+"."],
+  atStd:sz=>"standard "+sz+" mein", atSz:sz=>sz+" mein",
+  redo:"Size bataiye, keemat nikal deta hoon.",
+  warr:y=>y+" saal ki warranty hai.",
+  stretch:n=>["Thoda budget badha saken toh "+n+" zaroor dekhiye.",n+" isse ek kadam upar hai."],
+  sovaUp:["Ho sake toh Sova Natural dekhiye \u2014 7\u00B0 zyada thanda aur kaafi aaramdeh."],
+  top:["Isse upar hamari range mein kuch nahi."],
+  langSet:n=>n+" mein kar diya. "
+ }
+};
+const t=()=>TX[LANG]||TX.en;
+function hourGreetL(){
+  const h=new Date().getHours(),T=t();
+  return h<5?T.late:h<12?T.morn:h<17?T.aft:T.eve;
+}
+const SMALLTALK=[
+  {re:/\b(namaste|namaskar|salaam)\b|\u0928\u092E\u0938\u094D\u0924\u0947|\u0928\u092E\u0938\u094D\u0915\u093E\u0930|\u092A\u094D\u0930\u0923\u093E\u092E/,
+   r:()=>(LANG==="en"?"Namaste! ":pick(t().hey))+pick(t().openers)},
+  {re:/\b(good\s*(morning|afternoon|evening|night))\b|\u0938\u0941\u092A\u094D\u0930\u092D\u093E\u0924/,
+   r:()=>hourGreetL()+"! "+pick(t().openers)},
+  {re:/\b(hi|hii+|hello+|hey+|heya|hlo|yo|hola|sup|haan ji|hanji)\b|\u0939\u093E\u092F|\u0939\u0948\u0932\u094B|\u0939\u0947\u0932\u094B/,
+   r:()=>pick([hourGreetL()+"! ",pick(t().hey)])+pick(t().openers)},
+  {re:/\b(how are you|how'?s it going|kaise ho|kaise hain|kya haal)\b|\u0915\u0948\u0938\u0947 \u0939\u094B|\u0915\u0948\u0938\u0947 \u0939\u0948\u0902/,
+   r:()=>pick(t().howru)},
+  {re:/\b(thank you|thanks|thanx|thx|ty|shukriya|dhanyavaad|dhanyawad)\b|\u0927\u0928\u094D\u092F\u0935\u093E\u0926|\u0936\u0941\u0915\u094D\u0930\u093F\u092F\u093E/,
+   r:()=>pick(t().thanks)},
+  {re:/\b(bye|goodbye|see you|see ya|tata|alvida|good night)\b|\u0905\u0932\u0935\u093F\u0926\u093E/,
+   r:()=>pick(t().bye)},
+  {re:/\b(who are you|what are you|are you a bot|are you real|are you human|tum kaun|aap kaun)\b|\u0924\u0941\u092E \u0915\u094C\u0928|\u0906\u092A \u0915\u094C\u0928/,
+   r:()=>t().whoru},
+  {re:/\b(what can you do|how does this work|how to use|how do i use|kaise use)\b/,
+   r:()=>null, card:()=>helpCard()},
+  {re:/^\s*(ok|okay|okey|thik hai|theek hai|sahi|hmm+|hm|k|kk|cool|nice|great|got it|acha|accha|haan|ha|ji)\s*[.!]?\s*$|^\s*(\u0920\u0940\u0915|\u0939\u093E\u0901|\u0905\u091A\u094D\u091B\u093E)\s*$/,
+   r:()=>pick(t().ack)},
+  {re:/\b(sorry|my bad|maaf)\b/, r:()=>LANG==="en"?"No trouble at all. What do you need?":pick(t().ack)},
+  {re:/\b(love|awesome|brilliant|superb|bahut badhiya|zabardast|badhiya)\b|\u092C\u0922\u093C\u093F\u092F\u093E|\u091C\u093C\u092C\u0930\u0926\u0938\u094D\u0924/,
+   r:()=>LANG==="en"?pick(["Glad it helps!","Appreciate that \u2014 what's next?"]):pick(t().ack)},
+];
+/* jokes and language switching */
+const LANG_RE=/\b(hindi|\u0939\u093F\u0902\u0926\u0940|\u0939\u093F\u0928\u094D\u0926\u0940)\b|\b(english|angrezi|\u0905\u0902\u0917\u094D\u0930\u0947\u091C\u093C\u0940)\b|\b(hinglish|roman)\b/;
+function setLangFrom(q){
+  if(/\b(english|angrezi|\u0905\u0902\u0917\u094D\u0930\u0947\u091C\u093C\u0940)\b/.test(q)) return "en";
+  if(/\b(hinglish|roman)\b/.test(q)) return "hr";
+  if(/\b(hindi)\b|\u0939\u093F\u0902\u0926\u0940|\u0939\u093F\u0928\u094D\u0926\u0940/.test(q)) return /\broman\b/.test(q)?"hr":"hi";
+  return null;
+}
+/* what to say above each kind of card */
+const LINE={
+  price:(f,v,sz)=>pick([
+    "Here's "+f+" "+v+" in "+sz+".",
+    "Sure \u2014 "+f+" "+v+", "+sz+":",
+    f+" "+v+" it is.",
+    "Got it. "+f+" "+v+", "+sz+":"]),
+  fam:f=>pick([
+    "Here's the whole "+f+" line.",
+    f+" \u2014 all the variants, side by side.",
+    "Sure, here's every "+f+"."]),
+  spec:(f,v)=>pick([
+    "Here's what's inside "+f+" "+v+".",
+    "Layer by layer, "+f+" "+v+":",
+    "This is how "+f+" "+v+" is built."]),
+  compare:(a,b)=>pick([
+    "Good pair to compare. "+nice(a)+" against "+nice(b)+":",
+    "Right \u2014 "+nice(a)+" versus "+nice(b)+". Here they are together.",
+    "Let's put them side by side."]),
+  budget:(l,n)=>pick([
+    n+" beds come in under "+l+". Best ones first:",
+    "You've got "+n+" options under "+l+" \u2014 richest first, so start at the top and work down.",
+    "Here's what fits "+l+". Always start them at the top of this list."]),
+  warranty:()=>pick([
+    "Here's the full warranty ladder.",
+    "Warranty runs from 3 years up to 30. The whole picture:"]),
+  pillow:()=>pick(["Here's the pillow and protector list.","Sure \u2014 accessories:"]),
+  size:()=>pick(["Here's the full size grid.","All 24 standard sizes:"]),
+  up:(f,v,sz)=>pick([
+    "That one's not a stock size, so it bills at "+sz+". Here's "+f+" "+v+" at that.",
+    "Next size up is "+sz+" \u2014 here's "+f+" "+v+" on that."]),
+  over:(f,v)=>pick([
+    "That's bigger than anything on the list, so it goes on the sq-ft calculator.",
+    "Oversize, so I've worked "+f+" "+v+" out per square foot."]),
+  custom:f=>pick(["Here's "+f+" at that size.","Sure \u2014 "+f+", at that size:"]),
+  ladder:()=>pick([
+    "Here's the whole range, cheapest to dearest. Rule of thumb \u2014 always try to move them up one rung.",
+    "Top to bottom, this is where everything sits. Never sell the bottom rung if the next one's in reach."]),
+  suggest:()=>pick([
+    "Right \u2014 here's what I'd put them on.",
+    "Based on that, here's my pick.",
+    "Going on what you've told me:"]),
+  stdPrice:(f,v)=>pick([
+    "Here's "+f+" "+v+" at the standard 72x72.",
+    f+" "+v+", standard 72x72 \u2014 tell me a size and I'll re-quote.",
+    "Standard 72x72 for "+f+" "+v+":"]),
+};
+const NUDGE=[
+  "Want it in another size?",
+  "Need me to compare it with something?",
+  "Shall I pull up what's inside it?",
+  "Anything else on this one?",
+];
+
+const nice=f=>f.charAt(0)+f.slice(1).toLowerCase();
+const joinSay=a=>a.filter(Boolean).join(" ");
+const nextOf=(fam,v)=>{
+  if(fam==="SOVA"&&/Natural/.test(v||"")) return ["Riva","Ultima"];
+  const P=POS[fam]; return (P&&P.next)?P.next:[];
+};
+function talkPrice(fam,v,size,mrp,dflt){
+  const S=DB.skus[fam+" "+v],T=t();
+  const where=dflt?T.atStd(size):T.atSz(sizeLabel(size));
+  return joinSay([
+    pick(T.priceLine(nice(fam)+" "+v,where,rupee(mrp))),
+    saySpec(fam,v),
+    S?pick([T.warr(S.warranty_years),""]):"",
+    dflt?T.redo:"",
+    sayUpsell(fam,v)
+  ]);
+}
+function talkFam(fam,sz,dflt){
+  const keys=Object.keys(DB.skus).filter(k=>famOf(k)===fam),T=t();
+  const lo=Math.min.apply(null,keys.map(k=>DB.skus[k].mrp[sz]));
+  const hi=Math.max.apply(null,keys.map(k=>DB.skus[k].mrp[sz]));
+  const where=dflt?T.atStd(sz):T.atSz(sizeLabel(sz));
+  return joinSay([pick(T.range(nice(fam),keys.length,rupee(lo),rupee(hi),where)),
+                  saySpec(fam,""), sayUpsell(fam,"")]);
+}
+function talkSpec(fam,v){
+  return joinSay([pick(["Here's what's in it.","Layer by layer:","This is how it's built."]),
+                  saySpec(fam,v), sayUpsell(fam,v)]);
+}
+function talkRec(lead,why,from,sz){
+  const T=t(),what=SHORT()[lead];
+  return joinSay([pick(T.lead(nice(lead),why)), what?T.isA(what):"",
+                  from?T.from(from,sz):"", sayUpsell(lead,"")]);
+}
+/* ---------- qualifying the customer ----------
+   Rule: ask before recommending. Gather weight, then sleeping position,
+   then land on a Foamico model unless they've been pinned to budget or feel. */
+let REC={kg:null,heavy:null,pos:null,seg:null,firm:null};
+function resetRec(){ REC={kg:null,heavy:null,pos:null,seg:null,firm:null}; }
+function feedRec(pr){
+  const q=REC._q||"";
+  /* "over 90" / "under 90" are thresholds, not a weight reading */
+  const over  = /\b(over|above|more than|\+)\s*90\b/.test(q)
+              || /90\s*(kg|kgs|kilo|\u0915\u093F\u0932\u094B)?\s*(se|\u0938\u0947)\s*(upar|zyada|jyada|\u090A\u092A\u0930|\u091C\u093C\u094D\u092F\u093E\u0926\u093E|\u091C\u094D\u092F\u093E\u0926\u093E|\u0905\u0927\u093F\u0915)/.test(q);
+  const under = /\b(under|below|less than)\s*90\b/.test(q)
+              || /90\s*(kg|kgs|kilo|\u0915\u093F\u0932\u094B)?\s*(se|\u0938\u0947)\s*(kam|km|neeche|niche|\u0915\u092E|\u0928\u0940\u091A\u0947)/.test(q);
+  if(over)       { REC.heavy=true;  REC.kg=null; }
+  else if(under) { REC.heavy=false; REC.kg=null; }
+  else if(pr.kg!=null){ REC.kg=pr.kg; REC.heavy=pr.kg>=90; }
+  else if(pr.heavy)   { REC.heavy=true; }
+  if(pr.stomach) REC.pos="stomach";
+  else if(pr.side) REC.pos="side";
+  if(pr.toss) REC.pos=REC.pos||"stomach";
+  if(/\bnot sure\b|\bdon'?t know\b|\bno idea\b|\bboth\b|\bpata nahi\b|\u092A\u0924\u093E \u0928\u0939\u0940\u0902|\u092E\u093E\u0932\u0942\u092E \u0928\u0939\u0940\u0902/.test(q)) REC.pos=REC.pos||"any";
+  if(pr.budget) REC.seg="budget";
+  if(pr.premium) REC.seg="premium";
+  if(pr.firm){ REC.seg="feel"; REC.firm=pr.firm; }
+}
+function recNeeds(){
+  if(REC.seg==="budget"||REC.seg==="premium"||REC.seg==="feel") return null;
+  if(REC.heavy===null) return "weight";
+  if(REC.heavy===false&&!REC.pos) return "position";
+  return null;
+}
+function askWeight(){   return {say:pick(t().ask90),  next:t().a90.slice()}; }
+function askPosition(){ return {say:pick(t().askPos), next:t().aPos.slice()}; }
+/* ---------- conversation memory ---------- */
+let CTX={fam:null,v:null,size:null};
+const sizeLabel=s=>s+sizeTag(s);
+
+/* ---------- router ---------- */
+function route(raw){
+  let q=" "+raw.toLowerCase().replace(/[\u20B9,]/g,"")+" ";
+  q=deromanise(q);   /* fold Devanagari model and size words into the Latin the parsers know */
+  const greeted=/\b(hi|hii+|hello+|hey+|namaste|good\s*(morning|afternoon|evening))\b/.test(q);
+  const priceWord=/\b(price|rate|mrp|cost|how much|kitna|kitne|kitni|daam|bhav|keemat|quote)\b/.test(q);
+  const specQ=/\blayer|what'?s in|whats in|inside|construction|made of|spec|build|foam\b/.test(q);
+
+  let fams=parseFams(q);
+  const dims=parseDims(q);
+  const fit=dims?fitSize(dims.L,dims.W):null;
+  const custom=(fit&&fit.kind!=="exact")?fit:null;
+  let size=(fit&&fit.kind==="exact")?fit.size:parseSize(q);
+  const bud=q.match(/(?:under|below|less than|upto|up to|within|budget of|max)\s*(\d{4,7})/);
+  const variantWord=/\b(classic|premium|luxury|natural)\b/.test(q)||/\br?\s?(1000|2000|3000)\b/.test(q);
+
+  /* follow-ups: "and in king?", "what about premium", "how much" */
+  if(!fams.length && CTX.fam && (size||custom||variantWord||priceWord||specQ)) fams=[CTX.fam];
+  /* "how does it compare to riva" -> compare against what we were just discussing */
+  const cmpWord=/\b(vs|versus|compare|compared|comparison|difference|differs|better)\b/.test(q);
+  if(cmpWord && fams.length===1 && CTX.fam && CTX.fam!==fams[0]) fams=[CTX.fam,fams[0]];
+
+  let out=null;
+  const wantsLadder=((/\bladder\b|\bupsell\b|\brange\b|\bline ?up\b|\ball models\b|\bwhole range\b|\bpositioning\b/.test(q))||/\u092A\u0942\u0930\u0940 \u0930\u0947\u0902\u091C|\u0938\u093E\u0930\u0947 \u092E\u0949\u0921\u0932/.test(q))
+                    && !/\bwarrant/.test(q);
+  /* follow the visitor into their language, and remember it */
+  const forced=setLangFrom(q), sniffed=detectLang(q);
+  if(forced) LANG=forced; else if(sniffed&&sniffed!==LANG) LANG=sniffed;
+  try{localStorage.setItem("fg-lang",LANG)}catch(e){}
+  if(forced&&!parseFams(q).length&&!/\b(price|rate|mrp|kitna)\b/.test(q))
+    return {say:t().langSet(LANGS[LANG])+pick(t().openers)};
+  const prof=readProfile(q); REC._q=q;
+  const wantsHouses=/\bbrands?\b|\bhouses?\b|\bvivo\b|\bvivorest\b|\bwhich brand|\bveda vs|\bdifference between (the )?brands/.test(q);
+  const answeringQ=/\b(over|under|above|below)\s*90\b|\bon my (side|stomach)\b|\bside sleeper\b|\bstomach\b|\bnot sure\b|\bkarwat\b|\bpet ke bal\b|\bpata nahi\b/.test(q)
+        || /90\s*(kg|kilo|\u0915\u093F\u0932\u094B)?\s*(se|\u0938\u0947)\s*(upar|kam|\u090A\u092A\u0930|\u0915\u092E)/.test(q)
+        || /\u0915\u0930\u0935\u091F|\u092A\u0947\u091F \u0915\u0947 \u092C\u0932|\u092A\u0924\u093E \u0928\u0939\u0940\u0902/.test(q);
+  const wantsRec=/\brecommend|\bsuggest|\bwhich (one|mattress|model)|\bwhat should|\bbest for|\bcustomer\b|\bclient\b|\bbatao\b|\bbataiye\b|\bkaunsa\b|\bkaun sa\b|\bsujhav\b|\bchoose\b|\bchoosing\b|\bhelp me\b|\bwhich should\b|\bkaunsa loon\b|\bchunna\b/.test(q)
+                 || /\u0938\u091C\u0947\u0938\u094D\u091F|\u0938\u0941\u091D\u093E\u0935|\u0915\u094C\u0928 ?\u0938\u093E|\u092C\u0924\u093E\u0913|\u092C\u0924\u093E\u0907\u090F|\u0938\u0932\u093E\u0939|\u091A\u0941\u0928\u0942\u0901|\u091A\u0941\u0928\u0928\u093E|\u092E\u0926\u0926/.test(q)
+                 || prof.kg!=null || prof.heavy || prof.side || prof.toss || prof.budget || prof.premium || prof.firm;
+  if(wantsHouses&&!fams.length) out={say:pick(["We make three ranges \u2014 here's who each one is for.",
+                                               "Three ranges. Here's how they differ."]),card:housesCard()};
+  else if(wantsLadder&&!fams.length) out={say:LINE.ladder(),card:ladderCard()};
+  else if((wantsRec||answeringQ)&&!fams.length){
+    feedRec(prof);
+    const need=recNeeds();
+    if(need==="weight")        out=askWeight();
+    else if(need==="position") out=askPosition();
+    else {
+      const r=pickModel();
+      out={say:talkRec(r.lead,r.why,r.from,DEFAULT_SIZE),card:recommendCard(r),next:nextOf(r.lead,"")};
+      if(r.house!=="FOAMICO")
+        out.say=joinSay([out.say,r.house==="VIVOREST"
+          ? "That's the Vivorest student range \u2014 no price for it in this book. The moment budget allows, move them onto Foamico."
+          : "That's VedaSleep. If they'll listen, walk them across to the Foamico engineered range."]);
+      resetRec();
+    }
+  }
+  else if(/\bpillow|protector|accessor/.test(q)) out={say:LINE.pillow(),card:pillowCard()};
+  else if(/\bwarrant/.test(q)&&!fams.length) out={say:LINE.warranty(),card:warrantyCard()};
+  else if(/\bsizes?\b|size grid|dimension/.test(q)&&!fams.length&&!size) out={say:LINE.size(),card:sizeCard()};
+  else if(bud&&!fams.length){
+    const sz0=size||DEFAULT_SIZE;
+    const n=Object.keys(DB.skus).filter(k=>DB.skus[k].mrp[sz0]<=+bud[1]).length;
+    out={say:LINE.budget(rupee(+bud[1]),n),card:budgetCard(+bud[1],size)};
+  }
+  else if(fams.length>=2) out={say:LINE.compare(fams[0],fams[1]),card:compareCard(fams,size)};
+  else if(fams.length===1&&!FAM[fams[0]]){
+    resetRec();
+    CTX={fam:null,v:null,size:CTX.size};
+    out={say:joinSay([saySpec(fams[0],""),sayUpsell(fams[0],"")]),card:posCard(fams[0]),next:nextOf(fams[0],"")};
+  }
+  else if(fams.length===1){
+    resetRec();
+    const fam=fams[0];
+    let hits=parseVariants(fam,q);
+    if(hits.length>1&&CTX.fam===fam&&CTX.v&&!variantWord&&hits.indexOf(CTX.v)>=0) hits=[CTX.v];
+    if(hits.length===1&&DB.skus[fam+" "+hits[0]]){
+      const v=hits[0],key=fam+" "+v;
+      if(custom){
+        CTX={fam:fam,v:v,size:CTX.size};
+        out=custom.kind==="over"
+          ? {say:joinSay([LINE.over(fam,v),saySpec(fam,v)]),card:overCard(key,dims)}
+          : {say:joinSay([LINE.up(fam,v,custom.size),saySpec(fam,v)]),card:upCard(key,dims,custom)};
+      } else {
+        const dflt=!size&&!CTX.size;
+        CTX={fam:fam,v:v,size:size||CTX.size||DEFAULT_SIZE};
+        if(specQ&&!size&&!priceWord) out={say:talkSpec(fam,v),card:specCard(key)};
+        else out={say:talkPrice(fam,v,CTX.size,DB.skus[key].mrp[CTX.size],dflt),card:priceCard(key,CTX.size)};
+      }
+      out.next=nextOf(fam,v);
+    } else {
+      CTX={fam:fam,v:null,size:size||CTX.size};
+      out=custom?{say:joinSay([LINE.custom(fam),saySpec(fam,"")]),card:customFamCard(fam,dims,custom)}
+                :{say:talkFam(fam,size||DEFAULT_SIZE,!size),card:famCard(fam,size)};
+      out.next=nextOf(fam,"");
+    }
+  }
+  else if(bud) out={say:LINE.budget(rupee(+bud[1])),card:budgetCard(+bud[1],size)};
+
+  if(out){
+    if(greeted) out.say=pick([pick(t().hey),hourGreetL()+"! "])+out.say;
+    if(!out.next && Math.random()<0.25) out.nudge=pick(NUDGE);
+    return out;
+  }
+
+  /* nothing product-shaped \u2014 try small talk */
+  for(const s of SMALLTALK){
+    if(s.re.test(q)) return {say:s.r(),card:s.card?s.card():null};
+  }
+  if((size||custom)&&!fams.length){
+    const lbl=custom?dimLabel(dims):sizeLabel(size);
+    const note=custom?(custom.kind==="over"
+        ? " That's oversize, so it'll go on the sq-ft calculator."
+        : " That's under a stock size, so it'll bill at "+custom.size+".")
+      :"";
+    return {say:"I've got the size \u2014 <b>"+lbl+"</b> \u2014 but which model?"+note+" Try \u201CRiva "+lbl+"\u201D or \u201CSova "+lbl+"\u201D."};
+  }
+  if(/\b(weather|cricket|news|time|date|joke|jokes|funny|song|movie|politics|recipe)\b|\u091A\u0941\u091F\u0915\u0941\u0932\u093E|\u092E\u091C\u093C\u093E\u0915/.test(q)) return {say:t().offtopic};
+  return {say:pick(t().lost),card:helpCard()};
+}
+/* kept for tests: flatten a turn to one html string */
+function answer(t){const r=route(t);return (r.say?"<p>"+r.say+"</p>":"")+(r.card||"");}
+
+/* ---------- chat ---------- */
+const inner=document.getElementById("inner"),stream=document.getElementById("stream"),qEl=document.getElementById("q");
+const AV='<div class="av" aria-hidden="true"></div>';
+function el(cls,html){const d=document.createElement("div");d.className=cls;d.innerHTML=html;
+  inner.appendChild(d);stream.scrollTop=stream.scrollHeight;return d;}
+const sayMsg=t=>el("msg",'<div class="say">'+AV+"<p>"+t+"</p></div>");
+const cardMsg=h=>el("msg cardturn",h);
+const meMsg=t=>el("msg me",'<div class="bubble">'+esc(t)+"</div>");
+const nextMsg=a=>el("msg cardturn",'<div class="nextrow"><span class="nextlabel">You might also like</span>'+
+  a.map(function(n){return '<button class="next" data-q="'+esc(n)+'">'+esc(n)+' \u203A</button>';}).join("")+'</div>');
+function typingMsg(){return el("msg typing",'<div class="say">'+AV+'<div class="dots"><span></span><span></span><span></span></div></div>');}
+
+let busy=false;
+function ask(t){
+  t=t.trim(); if(!t||busy) return;
+  busy=true; meMsg(t); qEl.value="";
+  const r=route(t);
+  const dots=typingMsg();
+  const wait=380+Math.min(520,(r.card?260:0)+(r.say?r.say.length*7:0));
+  setTimeout(function(){
+    dots.remove();
+    if(r.say) sayMsg(r.say);
+    if(r.card) cardMsg(r.card);
+    if(r.next&&r.next.length) nextMsg(r.next);
+    if(r.nudge) setTimeout(function(){sayMsg(r.nudge);busy=false;},420);
+    else busy=false;
+  },wait);
+}
+document.getElementById("send").onclick=function(){ask(qEl.value)};
+qEl.addEventListener("keydown",function(e){if(e.key==="Enter")ask(qEl.value)});
+inner.addEventListener("click",function(e){
+  const n=e.target.closest(".next");
+  if(n){ ask(n.dataset.q); return; }
+  const b=e.target.closest(".copy"); if(!b) return;
+  const done=function(){const o=b.textContent;b.textContent="Copied";setTimeout(function(){b.textContent=o},1400);};
+  if(navigator.clipboard) navigator.clipboard.writeText(b.dataset.copy).then(done).catch(function(){b.textContent="Press \u2318C"});
+  else b.textContent="Press \u2318C";
+});
+const CHIPS_L={
+ en:["Help me choose","Which range suits me?","See the full range","Ultima Luxury queen","Riva 78x60","Under 20000","Pillows","All sizes"],
+ hi:["\u092e\u0948\u091f\u094d\u0930\u0947\u0938 \u0938\u091c\u0947\u0938\u094d\u091f \u0915\u0930\u094b","\u0915\u094c\u0928 \u0938\u093e \u092c\u094d\u0930\u093e\u0902\u0921 \u0915\u093f\u0938\u0915\u0947 \u0932\u093f\u090f","Ultima Luxury queen","Riva 78x60","20000 \u0938\u0947 \u0915\u092e","\u090f\u0915 \u091a\u0941\u091f\u0915\u0941\u0932\u093e","Pillows","\u0938\u092d\u0940 \u0938\u093e\u0907\u091c\u093c"],
+ hr:["Mattress suggest karo","Kaunsa brand kiske liye","Ultima Luxury queen","Riva 78x60","20000 se kam","Pillows","Sabhi size"]
+};
+const PLACEHOLDER={en:"Ask a price, size or spec\u2026",
+  hi:"\u0930\u0947\u091f, \u0938\u093e\u0907\u091c\u093c \u092f\u093e \u0938\u094d\u092a\u0947\u0915 \u092a\u0942\u091b\u093f\u090f\u2026",
+  hr:"Rate, size ya spec poochhiye\u2026"};
+let CHIPS=CHIPS_L.en;
+const chips=document.getElementById("chips");
+function drawChips(){chips.innerHTML="";
+  CHIPS.forEach(function(c){const b=document.createElement("button");b.className="chip";b.textContent=c;
+    b.onclick=function(){ask(c)};chips.appendChild(b);});}
+drawChips();
+
+/* language */
+const ls=document.getElementById("lang");
+ls.value=LANG;
+ls.onchange=function(){
+  LANG=ls.value; try{localStorage.setItem("fg-lang",LANG)}catch(e){}
+  CHIPS=CHIPS_L[LANG]||CHIPS_L.en; drawChips();
+  qEl.placeholder=PLACEHOLDER[LANG]||PLACEHOLDER.en;
+  opening();
+};
+
+/* theme */
+const tb=document.getElementById("theme");
+let stored=null; try{stored=localStorage.getItem("fg-theme")}catch(e){}
+if(stored) document.documentElement.setAttribute("data-theme",stored);
+tb.onclick=function(){
+  const cur=document.documentElement.getAttribute("data-theme");
+  const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  const next=dark?"light":"dark";
+  document.documentElement.setAttribute("data-theme",next);
+  try{localStorage.setItem("fg-theme",next)}catch(e){}
+};
+
+/* opening \u2014 staggered, like someone typing */
+function opening(){
+  inner.innerHTML="";
+  sayMsg(hourGreetL()+"! "+t().intro);
+  setTimeout(function(){sayMsg(t().introB)},700);
+  setTimeout(function(){sayMsg(t().introC)},1600);
+}
+try{const st=localStorage.getItem("fg-lang"); if(st&&LANGS[st]) LANG=st;}catch(e){}
+opening();
+</script>
+</body>
+</html>
