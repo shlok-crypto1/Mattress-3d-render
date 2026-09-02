@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { products } from '../data/products';
-import ProductCard from '../components/ProductCard';
+import ProductLineup from '../components/ProductLineup';
 import { publicUrl } from '../lib/publicUrl';
 import {
   useSourceRecede,
@@ -10,7 +10,6 @@ import {
   useRouteEntranceRevealed,
   enterStyle,
   REVEAL,
-  REVEAL_STEP,
 } from '../transition/ProductTransition';
 import { preloadAllIn, preloadImage } from '../routePreload';
 
@@ -39,6 +38,10 @@ const CARD = {
   badgeBg: 'rgba(24,32,26,0.78)',
 };
 
+// The inactive position mark on a phone. Veda Chrome's secondary ink, held
+// well back: the marks measure the row, they are not a control beside it.
+const DOT_IDLE = 'rgba(147,161,151,0.32)';
+
 export default function CatalogPage() {
   // Source when a card is clicked; destination when arriving from the brand
   // selector, where the lotus mark is the shared element landing in the header.
@@ -56,7 +59,6 @@ export default function CatalogPage() {
     elRef: logoRef,
     toImageUrl: publicUrl('/brand/vedasleep-logo.png'),
   });
-  const [hovered, setHovered] = useState(null);
 
   // The dark mark, for the flight back to the Paper selector. That swap is
   // instant by design (see ProductTransition.jsx), which only works if the
@@ -82,6 +84,9 @@ export default function CatalogPage() {
         // rather than a darker grey.
         background:
           'radial-gradient(ellipse 70% 50% at 50% 20%, rgba(199,125,17,0.08) 0%, rgba(199,125,17,0) 60%), #1F2A22',
+        // The 24px is also what the phone lineup aligns its first card to and
+        // bleeds past - see --lineup-gutter in src/index.css. Change one and
+        // the other has to follow.
         padding: '48px 24px 64px',
         ...recede,
       }}
@@ -136,27 +141,16 @@ export default function CatalogPage() {
           </div>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: 20,
-            alignItems: 'stretch',
-          }}
-        >
-          {products.map((product, i) => (
-            <div key={product.slug} style={{ display: 'flex', ...enterStyle(revealed, REVEAL.controls + i * REVEAL_STEP) }}>
-              <ProductCard
-                product={product}
-                basePath="/vedasleep"
-                theme={CARD}
-                accent={ACCENT}
-                hovered={hovered}
-                onHover={setHovered}
-              />
-            </div>
-          ))}
-        </div>
+        <ProductLineup
+          products={products}
+          basePath="/vedasleep"
+          theme={CARD}
+          accent={ACCENT}
+          dotIdle={DOT_IDLE}
+          minCardWidth={200}
+          revealed={revealed}
+          label="VedaSleep products"
+        />
       </div>
     </div>
   );
