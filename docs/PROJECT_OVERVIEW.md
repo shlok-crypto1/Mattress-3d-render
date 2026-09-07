@@ -4,8 +4,21 @@
 Mattress 3D Render is an interactive web experience for presenting mattress products through 3D visualization.
 
 ## Current deployment
-Published through GitHub Pages:
-https://shlok-crypto1.github.io/Mattress-3d-render/
+Published to Hostinger, on the domain:
+https://myfoamico.com/
+
+`.github/workflows/deploy.yml` uploads the site over FTPS on every push to
+`main`. It deploys the repository root - which is kept as a mirror of
+`app/dist/` - and excludes everything that is repository-only, so only the
+built site reaches the web server.
+
+Because the site is served from the domain root rather than a subdirectory,
+the Vite base path is `/` (see `app/vite.config.js`).
+
+GitHub Pages still builds the repository at
+`shlok-crypto1.github.io/Mattress-3d-render/`, but that URL no longer works:
+a project site is published under the repository name, and the base path is
+now `/`. Treat the domain as the only deployment.
 
 ## Core system areas
 The project should be understood as five connected layers:

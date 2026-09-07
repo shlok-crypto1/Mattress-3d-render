@@ -57,7 +57,7 @@ Each rule above lives in exactly one file. If you find the same rule stated in t
 
 ## Important
 The deployed page is available at:
-https://shlok-crypto1.github.io/Mattress-3d-render/
+https://myfoamico.com/
 
 The published page should be treated as a reference for the current visual/interaction result. The source repository remains the implementation source of truth.
 

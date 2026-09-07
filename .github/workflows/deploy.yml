@@ -22,9 +22,29 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
-          server-dir: /public_html/
+          # The FTP account signs in at the home directory, where `public_html`
+          # belongs to the account's primary domain. myfoamico.com is served
+          # from its own directory under `domains/`, so uploading to
+          # `/public_html/` put the site somewhere the domain never reads - the
+          # first run reported success and the domain still answered 403.
+          server-dir: /domains/myfoamico.com/public_html/
+          # Only the built site belongs on the web server: index.html and the
+          # asset directories the build emits (assets, brand, chatbot,
+          # products, textures), which the repo root is kept as a mirror of.
+          #
+          # Everything below is repository-only. `source/` alone is 250 MB of
+          # raw product imagery, which is what turned the first deployment into
+          # a 19-minute, 298 MB upload of material no page ever requests.
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
             **/.github/**
+            **/.claude/**
+            app/**
+            source/**
+            docs/**
+            guidelines/**
+            information bot/**
+            *.md
+            *.code-workspace
