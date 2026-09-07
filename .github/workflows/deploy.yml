@@ -27,6 +27,13 @@ jobs:
           # the account and looks like the obvious candidate, but nothing
           # served from it is reachable - do not "correct" this to that.
           server-dir: /public_html/
+          # The action tracks what it has uploaded in a state file beside the
+          # site. The original one described the first deployment, whose files
+          # were then moved by hand into `Mattress-3d-render/`, so every run
+          # after that failed on a 550 for a file the state said was there and
+          # the directory no longer held. This name starts from an accurate
+          # record. Deleting it from the server forces a full re-upload.
+          state-name: .deploy-state.json
           # Only the built site belongs on the web server: index.html and the
           # asset directories the build emits (assets, brand, chatbot,
           # products, textures), which the repo root is kept as a mirror of.
