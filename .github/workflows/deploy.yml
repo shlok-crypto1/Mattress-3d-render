@@ -22,12 +22,11 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
-          # The FTP account signs in at the home directory, where `public_html`
-          # belongs to the account's primary domain. myfoamico.com is served
-          # from its own directory under `domains/`, so uploading to
-          # `/public_html/` put the site somewhere the domain never reads - the
-          # first run reported success and the domain still answered 403.
-          server-dir: /domains/myfoamico.com/public_html/
+          # This is the directory myfoamico.com serves, confirmed against the
+          # live domain. `domains/myfoamico.com/public_html/` also exists on
+          # the account and looks like the obvious candidate, but nothing
+          # served from it is reachable - do not "correct" this to that.
+          server-dir: /public_html/
           # Only the built site belongs on the web server: index.html and the
           # asset directories the build emits (assets, brand, chatbot,
           # products, textures), which the repo root is kept as a mirror of.

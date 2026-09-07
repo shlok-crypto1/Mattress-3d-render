@@ -8,9 +8,10 @@ Published to Hostinger, on the domain:
 https://myfoamico.com/
 
 `.github/workflows/deploy.yml` uploads the site over FTPS on every push to
-`main`. It deploys the repository root - which is kept as a mirror of
-`app/dist/` - and excludes everything that is repository-only, so only the
-built site reaches the web server.
+`main`, into `/public_html/`, which is the document root the domain serves.
+It deploys the repository root - which is kept as a mirror of `app/dist/` -
+and excludes everything that is repository-only, so only the built site
+reaches the web server.
 
 Because the site is served from the domain root rather than a subdirectory,
 the Vite base path is `/` (see `app/vite.config.js`).
