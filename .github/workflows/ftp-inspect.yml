@@ -1,0 +1,27 @@
+# Temporary diagnostic. Lists the FTP account's directory layout so the
+# deployment can be pointed at the directory myfoamico.com actually serves.
+# Manual trigger only - it never runs on a push, and it only reads.
+# Delete this file once server-dir in deploy.yml is confirmed.
+name: Inspect FTP layout
+
+on:
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List directories
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          lftp -u "$USER","$PASS" "ftps://$SERVER" \
+            -e "set ssl:verify-certificate no; \
+                echo '=== home ==='; ls; \
+                echo '=== domains ==='; ls domains || echo '(no domains dir)'; \
+                echo '=== public_html ==='; ls public_html || echo '(no public_html)'; \
+                echo '=== domains/myfoamico.com ==='; ls domains/myfoamico.com || echo '(none)'; \
+                bye"
+        env:
+          SERVER: ${{ secrets.FTP_SERVER }}
+          USER: ${{ secrets.FTP_USERNAME }}
+          PASS: ${{ secrets.FTP_PASSWORD }}
