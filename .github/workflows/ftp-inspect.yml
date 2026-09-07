@@ -10,17 +10,33 @@ on:
 jobs:
   inspect:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: List directories
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq lftp
-          lftp -u "$USER","$PASS" "ftps://$SERVER" \
-            -e "set ssl:verify-certificate no; \
-                echo '=== home ==='; ls; \
-                echo '=== domains ==='; ls domains || echo '(no domains dir)'; \
-                echo '=== public_html ==='; ls public_html || echo '(no public_html)'; \
-                echo '=== domains/myfoamico.com ==='; ls domains/myfoamico.com || echo '(none)'; \
-                bye"
+          # The data channel has to be TLS-protected and passive, or the
+          # control connection authenticates and every listing then hangs.
+          cat > /tmp/cmds <<'CMDS'
+          set ssl:verify-certificate no
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ftp:passive-mode true
+          set net:timeout 20
+          set net:max-retries 2
+          echo "=== home ==="
+          cls -1
+          echo "=== domains/ ==="
+          cls -1 domains/
+          echo "=== domains/myfoamico.com/ ==="
+          cls -1 domains/myfoamico.com/
+          echo "=== domains/myfoamico.com/public_html/ ==="
+          cls -1 domains/myfoamico.com/public_html/
+          echo "=== public_html/ ==="
+          cls -1 public_html/
+          bye
+          CMDS
+          timeout 180 lftp -u "$USER","$PASS" "ftps://$SERVER" -f /tmp/cmds || true
         env:
           SERVER: ${{ secrets.FTP_SERVER }}
           USER: ${{ secrets.FTP_USERNAME }}
