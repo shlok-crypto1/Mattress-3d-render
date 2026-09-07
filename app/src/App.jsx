@@ -167,11 +167,11 @@ function RouteFallback() {
 class RouteErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { failed: false };
+    this.state = { failed: false, error: null };
   }
 
-  static getDerivedStateFromError() {
-    return { failed: true };
+  static getDerivedStateFromError(error) {
+    return { failed: true, error };
   }
 
   componentDidCatch(error) {
@@ -180,13 +180,41 @@ class RouteErrorBoundary extends Component {
 
   render() {
     if (!this.state.failed) return this.props.children;
-    return <RouteError onRetry={() => this.setState({ failed: false })} />;
+    // The error is passed on rather than swallowed: the screen below says what
+    // actually happened, and a screenshot of it is enough to diagnose from.
+    return (
+      <RouteError
+        error={this.state.error}
+        onRetry={() => this.setState({ failed: false, error: null })}
+      />
+    );
   }
 }
 
-function RouteError({ onRetry }) {
+/** Whether this browser can give a page a 3D context at all. */
+function webglAvailable() {
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * What a failed route says.
+ *
+ * It used to say "the 3D view needs a browser with WebGL enabled" whatever had
+ * gone wrong, which is a diagnosis rather than a report - and for the fault it
+ * was actually shown for most often, a page that had run out of drawing
+ * contexts, it was the wrong one. It now checks whether WebGL is the problem
+ * before blaming it, and shows what did happen when it is not.
+ */
+function RouteError({ error, onRetry }) {
   const { pathname } = useLocation();
   const { chrome } = routeIdentity(pathname);
+  const noWebgl = !webglAvailable();
+  const detail = error?.message ? String(error.message).slice(0, 160) : null;
   return (
     <div
       style={{
@@ -204,9 +232,25 @@ function RouteError({ onRetry }) {
       }}
     >
       <div style={{ fontSize: 15, fontWeight: 500 }}>This mattress could not be displayed.</div>
-      <div style={{ fontSize: 13, color: chrome.dim, maxWidth: 320, lineHeight: 1.5 }}>
-        The 3D view needs a browser with WebGL enabled.
+      <div style={{ fontSize: 13, color: chrome.dim, maxWidth: 340, lineHeight: 1.5 }}>
+        {noWebgl
+          ? 'The 3D view needs WebGL, which this browser is not providing. In Chrome it is usually Settings > System > "Use graphics acceleration when available".'
+          : 'The 3D view did not start. Reloading the page usually clears it.'}
       </div>
+      {!noWebgl && detail ? (
+        <div
+          style={{
+            fontSize: 11,
+            color: chrome.dim,
+            opacity: 0.75,
+            maxWidth: 340,
+            lineHeight: 1.45,
+            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          }}
+        >
+          {detail}
+        </div>
+      ) : null}
       <button
         type="button"
         onClick={onRetry}
@@ -225,6 +269,24 @@ function RouteError({ onRetry }) {
         }}
       >
         Try again
+      </button>
+      {/* Retrying re-renders the same page in the same document; reloading is
+          what a page that has run out of drawing contexts actually needs. */}
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        style={{
+          border: 'none',
+          background: 'transparent',
+          color: chrome.dim,
+          fontSize: 12,
+          letterSpacing: '0.04em',
+          textDecoration: 'underline',
+          cursor: 'pointer',
+          padding: '2px 6px',
+        }}
+      >
+        Reload the page
       </button>
     </div>
   );

@@ -165,6 +165,15 @@ export default function MattressViewer({
   const variantRef = useRef(null);
   const variantButtonRef = useRef(null);
   const [view, setView] = useState(CORNER_VIEW.key);
+  // Bumped when the browser takes the drawing context away, which rebuilds the
+  // scene from scratch below. A laptop loses one for ordinary reasons - a
+  // driver reset, waking from sleep, switching between an integrated and a
+  // discrete GPU, the GPU process being restarted - and until this existed the
+  // viewer simply stopped, on a canvas that would never draw again.
+  const [glGeneration, setGlGeneration] = useState(0);
+  // Two attempts, then stop asking. A context that will not come back means the
+  // GPU is genuinely gone, and rebuilding forever would spin on it.
+  const glRetries = useRef(0);
   // Layer explode is driven entirely by product.layers. Without it none of the
   // code below runs and the viewer behaves exactly as it always has. Read off
   // the product rather than off the selected grade's bands: whether there is a
@@ -252,6 +261,18 @@ export default function MattressViewer({
     renderer.toneMappingExposure = 0.92;
     mount.appendChild(renderer.domElement);
     s.renderer = renderer;
+
+    // A lost context is only recoverable if the page says it still wants one:
+    // without preventDefault the browser makes the loss permanent, and the
+    // canvas stays blank until a reload.
+    const onContextLost = (event) => {
+      event.preventDefault();
+      cancelAnimationFrame(s.raf);
+      if (glRetries.current >= 2) return;
+      glRetries.current += 1;
+      setGlGeneration((g) => g + 1);
+    };
+    renderer.domElement.addEventListener('webglcontextlost', onContextLost);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 1000);
@@ -1579,7 +1600,17 @@ export default function MattressViewer({
       el.removeEventListener('pointercancel', onPointerUp);
       el.removeEventListener('pointerleave', onPointerLeave);
       el.removeEventListener('wheel', onWheel);
+      renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
       renderer.dispose();
+      // dispose() frees what three.js allocated; it does not give the drawing
+      // context itself back, and a browser allows only so many of those per
+      // page - Chrome around sixteen. Every mattress opened built one more and
+      // handed none back, so a laptop that browsed enough of the range ran the
+      // page out of contexts and every product page after that failed to start
+      // - which is exactly what "this mattress could not be displayed" was
+      // reporting. A phone rarely got there in one session, which is why it
+      // looked like a desktop-only fault.
+      renderer.forceContextLoss();
       // box.geometry, not the `geometry` built above: once the sculpted cap has
       // swapped in, that original is already disposed and this is the live one.
       box.geometry.dispose();
@@ -1607,8 +1638,11 @@ export default function MattressViewer({
     // Re-run whenever the product (and hence its textures/dimensions) changes.
     // Not on variant height - that goes through s.applyHeight, which rebuilds
     // the geometry without tearing the scene down.
+    // glGeneration is how a lost context re-enters here: it changes, this whole
+    // effect tears down and runs again, and the scene is rebuilt on a context
+    // the browser has just given back.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product]);
+  }, [product, glGeneration]);
 
   // Mirrored onto the scene the same way autoRotate is. The first run after a
   // mount is a no-op: the scene was built at exactly this height, from exactly
