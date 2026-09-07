@@ -36,7 +36,7 @@ jobs:
           cls -1 public_html/
           bye
           CMDS
-          timeout 180 lftp -u "$USER","$PASS" "ftps://$SERVER" -f /tmp/cmds || true
+          timeout 180 lftp -u "$USER","$PASS" "ftps://$SERVER" -e "source /tmp/cmds" || true
         env:
           SERVER: ${{ secrets.FTP_SERVER }}
           USER: ${{ secrets.FTP_USERNAME }}
