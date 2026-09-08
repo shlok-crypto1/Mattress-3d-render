@@ -47,6 +47,18 @@ frame the route table built from its own product data, and then only honours a
 path it recognises from that same list, so the guide can offer a product but
 never invent a destination.
 
+**On a phone the guide owns the browser's own furniture too.** iOS Safari tints
+its status bar and its bottom toolbar from `theme-color`, which `PageGround` in
+`src/App.jsx` keeps set to the route's ground. That is right for a page and
+wrong for a chat that has become the screen: the two strips came out the site's
+black above and below a guide that is its own green-black, framing it in bands
+of a colour nothing on screen was using. The frame reports its own ground over
+the same message channel - it owns the light/dark choice, so only it can say
+what that colour is - and while the panel is full screen, `ChatWidget` paints
+both the panel and `theme-color` with it, putting back whatever was there when
+the panel closes. Desktop is untouched: the panel is a card in the corner and
+the browser chrome still belongs to the page behind it.
+
 **A product answer ends with a way to see the product.** Every product card the
 guide draws closes with the same pill row, so the offer to open that mattress in
 3D is written once, in `pitch()`, and appears on all of them - and only for a

@@ -14,6 +14,21 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-09-08 — The full-screen guide stops being framed in bands of another colour
+
+- **Fixed — a pale strip above the guide's header and a mismatched band below its composer, on a phone.** Two separate causes, both of them the same mistake in two places: something other than the guide deciding what colour the guide's surroundings are.
+- **`theme-color` followed the route, not the chat.** iOS Safari tints its status bar and its bottom toolbar from it, and `PageGround` keeps it set to the route's ground - Key Black on FOAMICO, Veda Green-Black on VedaSleep. Correct for a page; wrong for a chat that has become the whole screen, which is its own `#131610` or `#FBFCF8`. While the panel is full screen it now carries the frame's ground instead, and puts back whatever was there when it closes. Phone only - on a desktop the panel is a corner card and the chrome still belongs to the page behind it.
+- **The panel behind the frame was a hard-coded `#FBFCF8`** - the guide's *light* ground, painted regardless of which theme the guide was actually in. Anything the frame did not cover was therefore cream behind a dark chat: the safe-area padding under it, the rounded corners on a desktop, and the moment between the panel opening and the frame painting.
+- **Added — `ground` on the guide's message channel.** The frame owns its own light/dark choice - a toggle in its header, remembered in `localStorage`, falling back to the system - so the page it sits in cannot derive that colour and has to be told it. Reported on load, on the toggle, and when the system scheme changes with no stored override, read off the document's own `--bg` so the two themes stay defined in exactly one place.
+- **Changed — the frame is pinned to the panel's box (`position: absolute; inset: 0`) rather than sized at `100%` of it.** A percentage height has to resolve against a parent height, and that parent's comes from `inset: 0`; iOS Safari has historically resolved that late or not at all for a framed document, leaving the frame short and a strip of panel showing beneath it.
+- **Reason:** Reported from an iPhone, 2026-09-08, with the guide open full screen.
+- **Files/areas:** `app/src/components/ChatWidget.jsx`, `information bot/information bot.html` (and its generated copy via `npm run sync:bot`), `docs/INTERACTIONS.md`.
+- **Impact:** No layout, type, control or copy change; the guide's own document is untouched except for the three lines that report its ground. Desktop behaviour is unchanged, verified rather than assumed.
+- **Not done, deliberately:** the site still does not set `viewport-fit=cover`, so `env(safe-area-inset-*)` remain zero and the layout viewport still stops short of the status bar and the home indicator - which is exactly why tinting that strip is the fix rather than painting into it. Opting in would change how every page in the site lays out, not just this one, for no gain here.
+- **Validation:** `npm run build` and `npm run lint` clean. Driven over CDP at 390x844 with no console errors: in dark, `theme-color` becomes `#131610` and the panel with it; in light, `#FBFCF8`; the guide's own theme toggle flips both together, and closing restores the route's ground (`#1A1A1A` on FOAMICO, `#1F2A22` on VedaSleep). At 1280x800 `theme-color` is left alone at the route ground, open and closed.
+
+---
+
 ### 2026-09-08 — Every 5″ grade becomes a tight top, and Resto gains one
 
 - **Added — a second mattress construction.** `src/lib/mattressGeometry.js` gains `buildTightTopGeometry`: one upholstered border running the full height of the mattress, with the quilted panel sewn straight onto its top edge, self-bound tape and a corded welt at each end of the border, and shallow vertical channelling between them. `buildEuroTopGeometry` is unchanged and is still the default. The quilted cap - the puff, the taper into the bound edge, the pull into the binding - was lifted out of the Euro-top builder into a shared `emitQuiltCap` rather than written a second time, so the two constructions cannot drift apart on the one piece they genuinely share.

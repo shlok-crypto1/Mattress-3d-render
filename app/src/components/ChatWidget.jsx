@@ -56,8 +56,28 @@ const PHONE = '(max-width: 620px)';
  * `minimize` hides the panel with the conversation intact - which is what the
  * frame staying mounted has always been for. `close` ends the conversation as
  * well, and is the frame's own job to carry out; this side only hides.
+ *
+ * `ground` is the frame telling this page what colour it is standing on. The
+ * bot owns its own light/dark choice - it has a toggle in its header and it
+ * remembers it - so this side cannot derive that colour, only be told it.
  */
 const BRIDGE = 'foamico-guide';
+
+/**
+ * The bot's own light ground, and the only colour here that is a copy of one
+ * of its values rather than a value of this page's own.
+ *
+ * It is the panel's colour for the moment before the frame has said what theme
+ * it is in, which is a real moment: the panel is painted as soon as it opens
+ * and the frame answers a beat later. A wrong guess here is a flash of the
+ * wrong colour behind a chat, so this deliberately matches `--bg` in the bot's
+ * light theme; if that value moves, move this. Everything after the first
+ * message comes from the frame.
+ */
+const GROUND_FALLBACK = '#FBFCF8';
+
+/** A colour this page is willing to paint, having been handed it by a frame. */
+const isColour = (v) => typeof v === 'string' && /^#[0-9a-f]{3,8}$/i.test(v.trim());
 
 export default function ChatWidget() {
   const { pathname } = useLocation();
@@ -76,6 +96,9 @@ export default function ChatWidget() {
   // dock is hidden. Someone who asks about Resto, opens Resto to look at it,
   // and comes back should find their conversation still there.
   const [loaded, setLoaded] = useState(false);
+  // What the frame says it is standing on. See GROUND_FALLBACK above for why
+  // there is a starting value at all.
+  const [ground, setGround] = useState(GROUND_FALLBACK);
   const frameRef = useRef(null);
   // The product table this page has told the frame about, and the whole of what
   // the frame is allowed to ask for. Filled when the frame loads.
@@ -128,6 +151,10 @@ export default function ChatWidget() {
         setOpen(false);
         return;
       }
+      if (data.type === 'ground' && isColour(data.ground)) {
+        setGround(data.ground.trim());
+        return;
+      }
       // The frame never gets to pick an arbitrary destination: it can only name
       // a path this page handed it in the first place, from the product data.
       if (data.type === 'open-product' && typeof data.path === 'string') {
@@ -154,6 +181,36 @@ export default function ChatWidget() {
       body.style.overflow = previous;
     };
   }, [showPanel, phone]);
+
+  // While the chat is the screen, it is also what the browser's own furniture
+  // should be coloured from.
+  //
+  // iOS Safari tints its status bar and its bottom toolbar from `theme-color`,
+  // which PageGround in src/App.jsx keeps set to the route's ground. That is
+  // right for a page and wrong for this: a full-screen chat is not the page it
+  // opened over, so those two strips came out a different colour from the thing
+  // filling the screen between them - a band above the chat's header and one
+  // below its composer, framing it in the site's black instead of continuing
+  // it. The frame's own ground goes there instead, for exactly as long as the
+  // frame is the screen.
+  //
+  // Phone only. On a desktop the panel is a card in the corner and the browser
+  // chrome belongs to the page behind it, which is still the page.
+  //
+  // What was there before is captured and put back rather than recomputed, so
+  // this cannot hold a second, disagreeing copy of PageGround's table. The
+  // route is a dependency because PageGround writes on every navigation: this
+  // effect is mounted below it, so React runs it second and it lands last.
+  useEffect(() => {
+    if (!showPanel || !phone) return undefined;
+    const meta = document.head.querySelector('meta[name="theme-color"]');
+    if (!meta) return undefined;
+    const previous = meta.getAttribute('content');
+    meta.setAttribute('content', ground);
+    return () => {
+      if (previous !== null) meta.setAttribute('content', previous);
+    };
+  }, [showPanel, phone, ground, pathname]);
 
   // Both brands' products, handed to the frame so it can offer to open one.
   //
@@ -206,12 +263,24 @@ export default function ChatWidget() {
           height: min(620px, calc(100dvh - ${SIZE + 72}px));
           border-radius: 16px;
           overflow: hidden;
-          background: #FBFCF8;
           border: 1px solid rgba(0,0,0,0.12);
           /* It grows out of the launcher it was opened from. */
           transform-origin: 100% 100%;
         }
-        .chatdock__frame { display: block; width: 100%; height: 100%; border: 0; }
+        /* Pinned to the panel's own box rather than sized at 100% of it.
+           A percentage height has to resolve against a parent height, and this
+           parent's is set by inset:0 on a phone - which iOS Safari has
+           historically resolved late or not at all for a framed document,
+           leaving the frame short and a strip of the panel showing through
+           beneath it. Absolute insets need nothing resolved. */
+        .chatdock__frame {
+          display: block;
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          border: 0;
+        }
         .chatdock__btn {
           position: absolute;
           right: 20px;
@@ -249,7 +318,6 @@ export default function ChatWidget() {
                today - the site does not opt into viewport-fit cover - and
                correct the moment it does, which is the point of asking. */
             padding-bottom: env(safe-area-inset-bottom);
-            background: #FBFCF8;
             transform-origin: 50% 100%;
           }
           /* The launcher's close duty passes to the frame's own header: a disc
@@ -280,6 +348,12 @@ export default function ChatWidget() {
             visibility: showPanel ? 'visible' : 'hidden',
             pointerEvents: showPanel ? 'auto' : 'none',
             boxShadow: phone ? 'none' : `0 18px 48px -12px ${theme?.shadow ?? 'rgba(0,0,0,0.5)'}`,
+            // The frame's own ground. Anything of this panel the frame does not
+            // cover - the safe-area padding below it on a phone, the rounded
+            // corners on a desktop, and the moment before the frame has painted
+            // at all - was a fixed light cream, which is the bot's light theme
+            // and half the time the wrong one. A dark chat sat on a cream card.
+            background: ground,
             transition: motion,
           }}
         >
