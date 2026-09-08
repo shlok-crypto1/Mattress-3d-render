@@ -1,4 +1,5 @@
 import { vedasleepLayersBySlug } from './layers/vedasleepLayers';
+import { TIGHT_TOP } from '../lib/mattressConstruction';
 
 // VedaSleep line.
 //
@@ -21,6 +22,14 @@ import { vedasleepLayersBySlug } from './layers/vedasleepLayers';
 // why the height is a number and not a label. `dimensions.height` is filled in
 // from the baseline below rather than written out here, so the thickness the
 // viewer renders and the thickness the card quotes cannot drift apart.
+//
+// A variant may also carry `construction: TIGHT_TOP` - how it is finished on
+// the outside, as against what it is built from. Every 5" grade in the
+// catalogue does, in both lines: a Euro-top's cushion is 30% of the mattress,
+// which on a 5" slab is an inch and a half of pillow over three of foam, and no
+// real mattress that thin is made that way. Taller grades keep the Euro-top,
+// which is why Duro declares it on Classic and not on the product. See
+// src/lib/mattressConstruction.js.
 
 const catalog = [
   {
@@ -46,7 +55,7 @@ const catalog = [
       // against Classic's and Premium's five. Confirmed by the product owner on
       // 2026-08-31 and shown by all three renders in source/Layers/.
       { variant: 'Luxury', height: 6, omitLayers: ['float-sense'] },
-      { variant: 'Classic', height: 5 },
+      { variant: 'Classic', height: 5, construction: TIGHT_TOP },
       { variant: 'Premium', height: 6 },
     ],
   },
@@ -72,7 +81,7 @@ const catalog = [
     },
     placeholder: false,
     variants: [
-      { variant: 'Classic', height: 5 },
+      { variant: 'Classic', height: 5, construction: TIGHT_TOP },
     ],
   },
   {
@@ -103,7 +112,7 @@ const catalog = [
     },
     placeholder: false,
     variants: [
-      { variant: 'Classic', height: 5 },
+      { variant: 'Classic', height: 5, construction: TIGHT_TOP },
     ],
   },
 ];

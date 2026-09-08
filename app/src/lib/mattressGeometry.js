@@ -253,6 +253,107 @@ export function buildMattressGeometry(W, H, L, Rc, Rt, cornerSegs, tileWidth, op
 }
 
 /**
+ * The quilted top panel, emitted onto whatever outline the caller hands it.
+ *
+ * Shared by both constructions below. A Euro-top's cushion cap and a tight
+ * top's panel are the same piece of upholstery sewn to two different borders -
+ * the puff, the taper into the bound edge and the pull into the binding are one
+ * behaviour, so they are solved once here rather than twice with two sets of
+ * constants free to drift apart.
+ *
+ * `capIn` is the outline the panel is sewn to, `hy` the height it sits at,
+ * `uvAt(x, z)` its own UV frame, and `push` / `idxTop` the caller's vertex sink
+ * and top-face index list.
+ */
+function emitQuiltCap({ capIn, N, hy, displace, capRings, edgeCompression, uvAt, push, idxTop }) {
+  // The panel is mapped across its own extent, so the quilt photo lands on
+  // the piece it belongs to rather than being sampled out of the middle of a
+  // full-footprint projection.
+  //
+  // With no `displace` this stays the single flat fan it always was. Given
+  // one, it becomes `capRings` concentric rings so the quilt's puffed cells
+  // are real geometry: a normal map alone leaves the silhouette flat, and a
+  // flat silhouette is what makes a quilt read as printed on rather than sewn
+  // in.
+  const rings = displace ? Math.max(3, capRings) : 1;
+  // Displacement fades out over the last slice of the cap so the panel meets
+  // the bound edge flush, exactly as the sculpted foam caps do.
+  //
+  // 0.1 of the cap's radius is three and a half inches on a 72" mattress -
+  // a dead-flat border ring right where a viewer reads the silhouette, and
+  // wider than the strip a real panel is actually pulled flat over. Narrowed
+  // to the band the ring count can still resolve: `capRings` sets the ramp's
+  // step, so this cannot be tightened further without more of them.
+  const TAPER = 0.07;
+  const taperAt = (t) => {
+    const k = Math.min(1, Math.max(0, (1 - t) / TAPER));
+    return k * k * (3 - 2 * k);
+  };
+  // ...and just inside that, it is drawn slightly under. A quilt panel is
+  // pulled tight where it is sewn to the border tape, so the fabric dips into
+  // the seam instead of running out flat to it. Zero at both ends of the
+  // band, so the cap still meets the bevel exactly.
+  const dipAt = (t) => {
+    const k = Math.min(1, Math.max(0, (t - 0.72) / 0.28));
+    const s = Math.sin(Math.PI * k);
+    return s * s;
+  };
+  const dipAmp = edgeCompression * (displace ? (displace.amp ?? Math.abs(displace(0, 0))) * 0.5 + 0.06 : 0);
+  const heightAt = (x, z, t) =>
+    displace ? hy + displace(x, z) * taperAt(t) - dipAmp * dipAt(t) : hy;
+
+  // Positions first, normals from the finished surface: differencing the
+  // tessellation itself keeps the puff, the taper and the edge dip all
+  // accounted for, where differencing `displace` alone would miss the last
+  // two and shade the seam as though it were flat.
+  const pos = [];
+  for (let j = 0; j <= rings; j++) {
+    const t = j / rings;
+    const ring = [];
+    for (let i = 0; i < N; i++) {
+      const b = capIn.pts[i];
+      const x = b.x * t, z = b.z * t;
+      ring.push([x, heightAt(x, z, t), z]);
+    }
+    pos.push(ring);
+  }
+  const capIdx = [];
+  for (let j = 0; j <= rings; j++) {
+    const row = [];
+    for (let i = 0; i < N; i++) {
+      const [x, y, z] = pos[j][i];
+      let nx = 0, ny = 1, nz = 0;
+      if (rings > 1 && j > 0) {
+        const a = pos[j][(i + 1) % N], b2 = pos[j][(i - 1 + N) % N];
+        const o = pos[Math.min(rings, j + 1)][i], u = pos[Math.max(0, j - 1)][i];
+        const t1 = [a[0] - b2[0], a[1] - b2[1], a[2] - b2[2]];
+        const t2 = [o[0] - u[0], o[1] - u[1], o[2] - u[2]];
+        nx = t1[1] * t2[2] - t1[2] * t2[1];
+        ny = t1[2] * t2[0] - t1[0] * t2[2];
+        nz = t1[0] * t2[1] - t1[1] * t2[0];
+        const len = Math.hypot(nx, ny, nz) || 1;
+        nx /= len; ny /= len; nz /= len;
+        if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
+      }
+      const uv = uvAt(x, z);
+      row.push(push(x, y, z, nx, ny, nz, uv[0], uv[1]));
+    }
+    capIdx.push(row);
+  }
+  // Ring 0 collapsed to a point: fan it, then quad-strip the rest.
+  for (let i = 0; i < N; i++) {
+    idxTop.push(capIdx[0][0], capIdx[1] ? capIdx[1][i] : capIdx[0][i], capIdx[1] ? capIdx[1][(i + 1) % N] : capIdx[0][(i + 1) % N]);
+  }
+  for (let j = 1; j < rings; j++) {
+    const a = capIdx[j], b2 = capIdx[j + 1];
+    for (let i = 0; i < N; i++) {
+      const i1 = (i + 1) % N;
+      idxTop.push(a[i], b2[i], b2[i1], a[i], b2[i1], a[i1]);
+    }
+  }
+}
+
+/**
  * Euro-top silhouette: a firm base box with a separate cushion sewn on top,
  * divided by a piping band that runs the whole perimeter. Standard mattress
  * construction, so it is shared by every product rather than switched on per
@@ -441,89 +542,7 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
       }
       prev = ring;
     }
-    // Quilt cap, mapped across the cushion's own extent.
-    //
-    // With no `displace` this stays the single flat fan it always was. Given
-    // one, it becomes `capRings` concentric rings so the quilt's puffed cells
-    // are real geometry: a normal map alone leaves the silhouette flat, and a
-    // flat silhouette is what makes a quilt read as printed on rather than sewn
-    // in.
-    const rings = displace ? Math.max(3, capRings) : 1;
-    // Displacement fades out over the last slice of the cap so the panel meets
-    // the bound edge flush, exactly as the sculpted foam caps do.
-    //
-    // 0.1 of the cap's radius is three and a half inches on a 72" mattress -
-    // a dead-flat border ring right where a viewer reads the silhouette, and
-    // wider than the strip a real panel is actually pulled flat over. Narrowed
-    // to the band the ring count can still resolve: `capRings` sets the ramp's
-    // step, so this cannot be tightened further without more of them.
-    const TAPER = 0.07;
-    const taperAt = (t) => {
-      const k = Math.min(1, Math.max(0, (1 - t) / TAPER));
-      return k * k * (3 - 2 * k);
-    };
-    // ...and just inside that, it is drawn slightly under. A quilt panel is
-    // pulled tight where it is sewn to the border tape, so the fabric dips into
-    // the seam instead of running out flat to it. Zero at both ends of the
-    // band, so the cap still meets the bevel exactly.
-    const dipAt = (t) => {
-      const k = Math.min(1, Math.max(0, (t - 0.72) / 0.28));
-      const s = Math.sin(Math.PI * k);
-      return s * s;
-    };
-    const dipAmp = edgeCompression * (displace ? (displace.amp ?? Math.abs(displace(0, 0))) * 0.5 + 0.06 : 0);
-    const heightAt = (x, z, t) =>
-      displace ? hy + displace(x, z) * taperAt(t) - dipAmp * dipAt(t) : hy;
-
-    // Positions first, normals from the finished surface: differencing the
-    // tessellation itself keeps the puff, the taper and the edge dip all
-    // accounted for, where differencing `displace` alone would miss the last
-    // two and shade the seam as though it were flat.
-    const pos = [];
-    for (let j = 0; j <= rings; j++) {
-      const t = j / rings;
-      const ring = [];
-      for (let i = 0; i < N; i++) {
-        const b = capIn.pts[i];
-        const x = b.x * t, z = b.z * t;
-        ring.push([x, heightAt(x, z, t), z]);
-      }
-      pos.push(ring);
-    }
-    const capIdx = [];
-    for (let j = 0; j <= rings; j++) {
-      const row = [];
-      for (let i = 0; i < N; i++) {
-        const [x, y, z] = pos[j][i];
-        let nx = 0, ny = 1, nz = 0;
-        if (rings > 1 && j > 0) {
-          const a = pos[j][(i + 1) % N], b2 = pos[j][(i - 1 + N) % N];
-          const o = pos[Math.min(rings, j + 1)][i], u = pos[Math.max(0, j - 1)][i];
-          const t1 = [a[0] - b2[0], a[1] - b2[1], a[2] - b2[2]];
-          const t2 = [o[0] - u[0], o[1] - u[1], o[2] - u[2]];
-          nx = t1[1] * t2[2] - t1[2] * t2[1];
-          ny = t1[2] * t2[0] - t1[0] * t2[2];
-          nz = t1[0] * t2[1] - t1[1] * t2[0];
-          const len = Math.hypot(nx, ny, nz) || 1;
-          nx /= len; ny /= len; nz /= len;
-          if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
-        }
-        const uv = cushUV(x, z);
-        row.push(push(x, y, z, nx, ny, nz, uv[0], uv[1]));
-      }
-      capIdx.push(row);
-    }
-    // Ring 0 collapsed to a point: fan it, then quad-strip the rest.
-    for (let i = 0; i < N; i++) {
-      idxTop.push(capIdx[0][0], capIdx[1] ? capIdx[1][i] : capIdx[0][i], capIdx[1] ? capIdx[1][(i + 1) % N] : capIdx[0][(i + 1) % N]);
-    }
-    for (let j = 1; j < rings; j++) {
-      const a = capIdx[j], b2 = capIdx[j + 1];
-      for (let i = 0; i < N; i++) {
-        const i1 = (i + 1) % N;
-        idxTop.push(a[i], b2[i], b2[i1], a[i], b2[i1], a[i1]);
-      }
-    }
+    emitQuiltCap({ capIn, N, hy, displace, capRings, edgeCompression, uvAt: cushUV, push, idxTop });
   }
 
   // ---- bottom -----------------------------------------------------------
@@ -559,5 +578,317 @@ export function buildEuroTopGeometry(W, H, L, opts = {}) {
   // decide where it starts and stops are solved here, so a caller placing one
   // should read them off rather than re-deriving them from H.
   geo.userData.baseWall = { yBottom: yBot, yTop: yChamfer };
+  return geo;
+}
+
+/**
+ * Tight-top silhouette: one upholstered border running the full height of the
+ * mattress, with the quilted panel sewn straight onto its top edge.
+ *
+ * The difference from `buildEuroTopGeometry` above is one of construction, not
+ * of decoration. A Euro-top is two pieces - a base box and a cushion - with a
+ * piping band declaring the join, so the eye reads a soft layer sitting on a
+ * firm one. A tight top has no such join: the border is a single panel from
+ * floor to binding, and the quilt is the mattress's own face rather than
+ * something resting on it. Removing the mid-height seam is what removes the
+ * pillow; flattening the cushion while that seam is still drawn does not.
+ *
+ * It is also the only construction that is honest on a thin grade. A 5" slab
+ * has no room for a cushion at 30% of its height that still reads as a
+ * mattress rather than as a folded quilt, which is why the thin grades are the
+ * ones built this way.
+ *
+ * Stacked bottom to top:
+ *
+ *      ____________________     quilt panel        group 0
+ *     /                    \    bound top edge     group 1 (border fabric)
+ *   [======================]    binding tape/welt  group 3  <- stands proud
+ *   | | | | | | | | | | | |     border wall        group 1, channel-quilted
+ *   [======================]    foot tape/welt     group 3
+ *    \____________________/     bottom             group 2
+ *
+ * Groups keep the meanings the other builders set - 0 top, 1 wall, 2 bottom,
+ * 3 trim - so the viewer's existing four materials carry over untouched.
+ *
+ * The border carries shallow vertical channels between its two tapes. They are
+ * real geometry rather than a pattern laid over the product's own border
+ * photograph, which is deliberate: a procedural overlay would put a lattice
+ * belonging to no product on top of fabric that already has its own weave (see
+ * the note in MattressViewer), whereas channel quilting is a shape the border
+ * genuinely has and one that reads on the silhouette. `channelDepth: 0` drops
+ * it for a product whose border is plainly flat.
+ */
+export function buildTightTopGeometry(W, H, L, opts = {}) {
+  const {
+    // Tailored, not pillowy - the same footprint radius the Euro-top's base
+    // carries, for the same reason.
+    cornerRadius = 1.15,
+    // The bound roll where the panel turns over onto the border. This is the
+    // one soft edge on the whole product.
+    topEdgeRadius = 0.34,
+    // Just enough relief that the mattress does not meet the floor on a razor.
+    bottomEdgeRadius = 0.18,
+    // Binding tape at each end of the border, with a corded welt in it.
+    tapeHeight = 0.34,
+    weltProud = 0.09,
+    // The quilted panel's own thickness - the wadding sewn into it, not the
+    // mattress under it. Reported as `cushionH` so `quiltDisplacer` scales the
+    // relief against the panel exactly as it does on a Euro-top; a tight top's
+    // panel is thin, and that is what keeps its quilt flat without a second
+    // set of quilt constants to tune.
+    panelLoft = 0.5,
+    // Vertical channel quilting in the border. Depth is in inches; the pitch is
+    // snapped to a whole number of channels around the perimeter, so the
+    // pattern closes on itself wherever the walk began.
+    channelDepth = 0.12,
+    channelPitch = 3.8,
+    // How far the channels are eased back out to the flat border where they
+    // meet a tape, in inches. A stitch line stops at a binding; it does not run
+    // under one.
+    channelEase = 0.18,
+    // Which slice of the product's side.png is the plain border, as v.
+    //
+    // This is the one thing a tight top cannot inherit from the Euro-top: every
+    // border photograph in the set is a photograph of a Euro-top border, so it
+    // has that construction's piping and quilted cushion band printed into its
+    // upper part. Mapped across a single wall, the picture puts back exactly
+    // the seam the geometry just removed - the mattress reads as a pillow-top
+    // again, in paint rather than in shape.
+    //
+    // Every photo in the set is authored the same way round, with the plain
+    // base band at the bottom, so the fix is a window rather than a per-product
+    // asset: the default is the widest slice that is plain fabric in all of
+    // them, measured across both lines (Sova is the tightest at v 0.46, Duro
+    // the lowest-starting at 0.05). A product whose border is photographed
+    // differently can say so rather than being special-cased in code.
+    borderBand = [0.08, 0.44],
+    cornerSegs = 10,
+    sideSegs = 1,
+    tileWidth: tileWidthReq = L / 3.3,
+    seamTile = L / 6,
+    displace = null,
+    capRings = 1,
+    edgeCompression = 0,
+  } = opts;
+
+  const hy = H / 2;
+  // Every band is clamped against the mattress it is on, so one set of
+  // constants stays plausible at 5" and at 10" alike: the trim stays trim.
+  const edgeTop = Math.min(topEdgeRadius, H * 0.14);
+  const edgeBot = Math.min(bottomEdgeRadius, H * 0.07);
+  const tape = Math.min(tapeHeight, H * 0.1);
+  const panelH = Math.min(panelLoft, H * 0.14);
+
+  const yBot = -hy;
+  const yBotRoll = yBot + edgeBot;
+  const yBotTape = yBotRoll + tape;
+  const yTopRoll = hy - edgeTop;
+  const yTopTape = yTopRoll - tape;
+
+  const Rc = Math.max(0.35, cornerRadius);
+  const base = roundedRectPerimeter(W, L, Rc, cornerSegs, sideSegs);
+  const bottomIn = roundedRectPerimeter(
+    W - 2 * edgeBot, L - 2 * edgeBot, Math.max(0.2, Rc - edgeBot), cornerSegs, sideSegs
+  );
+  // The welt stands outside the border, the way a cord sewn into a tape does.
+  const proud = roundedRectPerimeter(
+    W + 2 * weltProud, L + 2 * weltProud, Rc + weltProud, cornerSegs, sideSegs
+  );
+  const capIn = roundedRectPerimeter(
+    W - 2 * edgeTop, L - 2 * edgeTop, Math.max(0.2, Rc - edgeTop), cornerSegs, sideSegs
+  );
+  const N = base.pts.length;
+
+  // Whole number of tiles around the perimeter, for the reason spelled out in
+  // buildEuroTopGeometry: the wall's u has to meet itself at the closure.
+  const wallTiles = Math.max(1, Math.round(base.total / tileWidthReq));
+  const tileWidth = base.total / wallTiles;
+
+  const positions = [], normals = [], uvs = [];
+  const idxTop = [], idxWall = [], idxBottom = [], idxSeam = [];
+  const push = (x, y, z, nx, ny, nz, u, v) => {
+    positions.push(x, y, z);
+    normals.push(nx, ny, nz);
+    uvs.push(u, v);
+    return positions.length / 3 - 1;
+  };
+
+  /**
+   * One quad strip between two outlines held at two heights.
+   *
+   * The Euro-top builder needs two helpers for this - a vertical band and a
+   * horizontal ring - because those are the only two cases it has. A tight top
+   * is mostly slants: rolled edges, corded welts, the ease out of a channel.
+   * Solving the normal from the profile's own run and rise covers all three in
+   * one, and gives the vertical wall and the flat ledge exactly the normals the
+   * two special-cased helpers produce.
+   *
+   * `u` is taken from `ringA` throughout, so the border texture stays
+   * continuous across a strip whose two outlines have different perimeters.
+   */
+  const strip = (ringA, yA, vA, ringB, yB, vB, tile, idx) => {
+    const a = [], b = [];
+    const dy = yB - yA;
+    for (let i = 0; i <= N; i++) {
+      const pa = ringA.pts[i % N], pb = ringB.pts[i % N];
+      const u = i === N ? ringA.total / tile : ringA.arcLen[i] / tile;
+      // Outward run between the two outlines, measured along pa's own normal.
+      const dr = (pb.x - pa.x) * pa.nx + (pb.z - pa.z) * pa.nz;
+      const len = Math.hypot(dr, dy) || 1;
+      const ny = -dr / len, k = dy / len;
+      a.push(push(pa.x, yA, pa.z, pa.nx * k, ny, pa.nz * k, u, vA));
+      b.push(push(pb.x, yB, pb.z, pb.nx * k, ny, pb.nz * k, u, vB));
+    }
+    for (let i = 0; i < N; i++) {
+      idx.push(a[i], a[i + 1], b[i + 1], a[i], b[i + 1], b[i]);
+    }
+  };
+
+  /** `f` of the way from outline A to outline B, keeping A's arc length. */
+  const lerpRing = (A, B, f) => ({
+    pts: A.pts.map((p, i) => {
+      const q = B.pts[i];
+      return { x: p.x + (q.x - p.x) * f, z: p.z + (q.z - p.z) * f, nx: p.nx, nz: p.nz };
+    }),
+    arcLen: A.arcLen,
+    total: A.total,
+  });
+
+  // ---- border channels ---------------------------------------------------
+  // Snapped to whole channels around the perimeter so the last one meets the
+  // first, and phased on arc length so the run carries around the corners the
+  // way stitching on a real border does.
+  const channelCount = Math.max(1, Math.round(base.total / channelPitch));
+  const channelled = (depth) => {
+    if (!(depth > 0)) return base;
+    const pts = base.pts.map((p, i) => {
+      const phase = (base.arcLen[i] / base.total) * channelCount * Math.PI * 2;
+      // 1 on a stitch line, 0 midway between two. Raised to a power so the
+      // groove stays narrow and the fabric between two of them reads as a full
+      // panel rather than as corrugation.
+      const crest = 0.5 + 0.5 * Math.cos(phase);
+      const d = -depth * Math.pow(crest, 2.4);
+      return { x: p.x + p.nx * d, z: p.z + p.nz * d, nx: p.nx, nz: p.nz };
+    });
+    // Horizontal normals re-solved from the displaced outline. Without this the
+    // channels exist on the silhouette and nowhere in the shading, which is the
+    // half of the effect a viewer actually reads at a three-quarter angle.
+    const out = pts.map((p, i) => {
+      const nxt = pts[(i + 1) % N], prv = pts[(i - 1 + N) % N];
+      let nx = nxt.z - prv.z, nz = -(nxt.x - prv.x);
+      const len = Math.hypot(nx, nz) || 1;
+      nx /= len; nz /= len;
+      // Outward is whichever of the two perpendiculars agrees with the
+      // undisplaced outline's own normal.
+      if (nx * base.pts[i].nx + nz * base.pts[i].nz < 0) { nx = -nx; nz = -nz; }
+      return { x: p.x, z: p.z, nx, nz };
+    });
+    return { pts: out, arcLen: base.arcLen, total: base.total };
+  };
+  const wall = channelled(channelDepth);
+
+  // The border photo's plain band, divided between the pieces that wear it. The
+  // rolls take a sliver at each end and the wall takes the rest, so the fabric
+  // runs continuously from the floor to the binding at one scale.
+  const [bandLo, bandHi] = borderBand;
+  const bandSpan = bandHi - bandLo;
+  const V_FLOOR = bandLo + bandSpan * 0.06;   // top of the bottom roll
+  const V_BINDING = bandHi - bandSpan * 0.10; // where the bound top edge starts
+  // The tapes are cut from the same cloth: self-binding, which is what a tight
+  // top is finished with and what keeps the trim from picking up a stripe that
+  // belongs to some other product's piping.
+  const V_TAPE = bandLo + bandSpan * 0.25;
+  const V_CORD = bandLo + bandSpan * 0.55;
+
+  // ---- bottom edge and foot tape ----------------------------------------
+  {
+    const rollSegs = 3;
+    let prevRing = bottomIn, prevY = yBot;
+    for (let j = 1; j <= rollSegs; j++) {
+      const theta = (j / rollSegs) * (Math.PI / 2);
+      const ring = lerpRing(bottomIn, base, Math.sin(theta));
+      const y = yBot + edgeBot * (1 - Math.cos(theta));
+      const vA = bandLo + (V_FLOOR - bandLo) * ((j - 1) / rollSegs);
+      const vB = bandLo + (V_FLOOR - bandLo) * (j / rollSegs);
+      strip(prevRing, prevY, vA, ring, y, vB, tileWidth, idxWall);
+      prevRing = ring;
+      prevY = y;
+    }
+  }
+  // Corded welt: out to the proud outline and back, so it catches light as a
+  // raised cord instead of reading as a printed stripe.
+  strip(base, yBotRoll, V_TAPE, proud, yBotRoll + tape / 2, V_CORD, seamTile, idxSeam);
+  strip(proud, yBotRoll + tape / 2, V_CORD, base, yBotTape, V_TAPE, seamTile, idxSeam);
+
+  // ---- border wall -------------------------------------------------------
+  // The channels ease out to the flat border at each tape rather than running
+  // under it, which is what a stitch line does when it terminates in a binding.
+  {
+    const span = yTopTape - yBotTape;
+    const ease = Math.min(channelEase, span * 0.25);
+    const vAt = (y) => V_FLOOR + (V_BINDING - V_FLOOR) * ((y - yBotTape) / span);
+    const yA = yBotTape + ease, yB = yTopTape - ease;
+    strip(base, yBotTape, vAt(yBotTape), wall, yA, vAt(yA), tileWidth, idxWall);
+    strip(wall, yA, vAt(yA), wall, yB, vAt(yB), tileWidth, idxWall);
+    strip(wall, yB, vAt(yB), base, yTopTape, vAt(yTopTape), tileWidth, idxWall);
+  }
+
+  // ---- head tape and bound top edge --------------------------------------
+  strip(base, yTopTape, V_TAPE, proud, yTopTape + tape / 2, V_CORD, seamTile, idxSeam);
+  strip(proud, yTopTape + tape / 2, V_CORD, base, yTopRoll, V_TAPE, seamTile, idxSeam);
+  {
+    // Bound in border fabric, not quilt - the same reasoning as the Euro-top's
+    // bevel: this edge spans a hundredth of the top photo's width, and
+    // projecting the quilt across it would magnify two or three texels into a
+    // band around the entire perimeter. Border fabric is UV'd by arc length, so
+    // it lands at its true scale.
+    const rollSegs = 4;
+    let prevRing = base, prevY = yTopRoll;
+    for (let j = 1; j <= rollSegs; j++) {
+      const theta = (j / rollSegs) * (Math.PI / 2);
+      const ring = lerpRing(base, capIn, Math.sin(theta));
+      const y = yTopRoll + edgeTop * (1 - Math.cos(theta));
+      const vA = V_BINDING + (bandHi - V_BINDING) * ((j - 1) / rollSegs);
+      const vB = V_BINDING + (bandHi - V_BINDING) * (j / rollSegs);
+      strip(prevRing, prevY, vA, ring, y, vB, tileWidth, idxWall);
+      prevRing = ring;
+      prevY = y;
+    }
+  }
+
+  // ---- quilt panel -------------------------------------------------------
+  const panelW = W - 2 * edgeTop, panelL = L - 2 * edgeTop;
+  emitQuiltCap({
+    capIn, N, hy, displace, capRings, edgeCompression, push, idxTop,
+    uvAt: (x, z) => [(x + panelW / 2) / panelW, (z + panelL / 2) / panelL],
+  });
+
+  // ---- bottom ------------------------------------------------------------
+  {
+    const centre = push(0, yBot, 0, 0, -1, 0, 0.5, 0.5);
+    const ring = bottomIn.pts.map((p) => push(p.x, yBot, p.z, 0, -1, 0, (p.x + W / 2) / W, (p.z + L / 2) / L));
+    for (let i = 0; i < N; i++) idxBottom.push(centre, ring[(i + 1) % N], ring[i]);
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(orientFaces(positions, normals, [...idxTop, ...idxWall, ...idxBottom, ...idxSeam]));
+  let at = 0;
+  geo.addGroup(at, idxTop.length, 0); at += idxTop.length;
+  geo.addGroup(at, idxWall.length, 1); at += idxWall.length;
+  geo.addGroup(at, idxBottom.length, 2); at += idxBottom.length;
+  geo.addGroup(at, idxSeam.length, 3);
+  // Same userData contract as buildEuroTopGeometry, so every caller - the edge
+  // stitch, the quilt displacer, the woven badge - reads one shape whichever
+  // construction it was handed.
+  geo.userData.quiltEdge = capIn.pts.map((p) => ({ x: p.x, y: hy, z: p.z }));
+  geo.userData.cushW = panelW;
+  geo.userData.cushL = panelL;
+  geo.userData.cushionH = panelH;
+  // The plain band a woven badge belongs on: here it is the border itself,
+  // between its two tapes.
+  geo.userData.baseWall = { yBottom: yBotTape, yTop: yTopTape };
   return geo;
 }

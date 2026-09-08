@@ -6,6 +6,7 @@
 // best version of the product it can show, and every product does the same, so
 // which grade that is is a data question rather than a per-product decision.
 
+import { TIGHT_TOP } from '../lib/mattressConstruction';
 import {
   foamicoLayersBySlug,
   ultimaNaturalLayers,
@@ -38,6 +39,13 @@ const tex = (slug) => ({
 // figure the code can use directly. A label like "4\"/5\"" would have to be
 // parsed back into a number and there is no honest way to turn a pair into one
 // - such a range is listed as the two variants it actually is.
+//
+// A variant may also carry `construction: TIGHT_TOP`, which is how it is
+// finished on the outside rather than what it is built from. Every 5" grade in
+// the catalogue does: a Euro-top's cushion is 30% of the mattress, which on a
+// 5" slab is an inch and a half of pillow over three of foam, and no real
+// mattress that thin is made that way. Taller grades keep the Euro-top.
+// See src/lib/mattressConstruction.js.
 //
 // The spec line and `dimensions.height` are both derived from the baseline
 // rather than passed in beside it, so a product's thickness is written down
@@ -124,6 +132,13 @@ export const foamicoProducts = [
   product('resto', 'Resto', 'Firm', '10-Year Warranty + 5-Year Full Replacement', [
     { variant: 'Luxury', height: 7 },
     { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
+    // A second Classic at 5", added on the product owner's instruction
+    // (2026-09-08). Same bands as the 6" Classic - one rule was given for
+    // "resto classic" and Resto now presents two of them, exactly as Sova and
+    // Ultima already do - so the grade is the 6" one cut thinner, not a
+    // different build. Resto holds its upholstery, so the inch comes off the
+    // foam rather than off the cover and the base; see src/lib/variantLayers.js.
+    { variant: 'Classic', height: 5, omitLayers: ['foam-3', 'foam-4'], construction: TIGHT_TOP },
     { variant: 'Premium', height: 6.5, omitLayers: ['foam-3'] },
   ], {
     holdUpholstery: true,
@@ -134,7 +149,7 @@ export const foamicoProducts = [
   product('sova', 'Sova', 'Firm', '15-Year Warranty + 5-Year Full Replacement', [
     { variant: 'Luxury', height: 7 },
     { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
-    { variant: 'Classic', height: 5, omitLayers: ['foam-3', 'foam-4'] },
+    { variant: 'Classic', height: 5, omitLayers: ['foam-3', 'foam-4'], construction: TIGHT_TOP },
     { variant: 'Premium', height: 6.5, omitLayers: ['foam-3'] },
     // Natural is a different build, not this stack thinned: a perforated latex
     // slab sits under the purple comfort foam where the standard grade carries
@@ -160,7 +175,7 @@ export const foamicoProducts = [
     // Classic and Premium are both 6" here and are still different builds:
     // Premium keeps layer 4, Classic does not. Same height, different stack.
     { variant: 'Classic', height: 6, omitLayers: ['foam-3', 'foam-4'] },
-    { variant: 'Classic', height: 5, omitLayers: ['foam-3', 'foam-4'] },
+    { variant: 'Classic', height: 5, omitLayers: ['foam-3', 'foam-4'], construction: TIGHT_TOP },
     { variant: 'Premium', height: 6, omitLayers: ['foam-3'] },
     // Natural is 6" across all three products that offer it, per the product
     // owner; the catalog's 7" for Ultima was superseded on 2026-08-26. Its

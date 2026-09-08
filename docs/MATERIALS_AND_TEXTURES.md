@@ -61,6 +61,18 @@ Exact material claims must come from approved product data.
   puffed 0.24″ on a 6″ grade and 0.40″ on a 10″ one: one product, two different
   quilts, and the difference showed on the silhouette every time a grade
   changed.
+- **A border photograph carries a construction, and only one construction can
+  wear it whole.** Every `side.png` in the set is a photograph of a Euro-top
+  border: its piping and its quilted cushion band are printed into the upper
+  part of the image, with the plain base band below. Mapped across a tight
+  top's single wall, the picture puts back exactly the seam that construction
+  does not have - the mattress reads as a pillow-top again, in paint rather
+  than in shape. A tight top therefore maps only the plain lower band
+  (`borderBand` in `src/lib/mattressGeometry.js`, default v 0.08-0.44, the
+  widest slice that is plain fabric in every product of both lines). The
+  convention that the plain band sits at the bottom of the image holds for the
+  whole set, so this is a window rather than a second asset per product; a
+  border photographed differently declares its own.
 
 ## Asset naming
 Use stable, descriptive names and document mappings in `ASSET_MANAGEMENT.md`.

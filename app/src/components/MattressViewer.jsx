@@ -2,7 +2,8 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
 import { publicUrl } from '../lib/publicUrl';
-import { buildEuroTopGeometry } from '../lib/mattressGeometry';
+import { buildEuroTopGeometry, buildTightTopGeometry } from '../lib/mattressGeometry';
+import { constructionFor, TIGHT_TOP } from '../lib/mattressConstruction';
 import { makeStudioEnvironment, makeWovenNormal } from '../lib/foamSurfaces';
 import { QUILT_DEFAULTS, quiltMaps, quiltDisplacer, buildEdgeStitch, averageColor } from '../lib/quiltSurface';
 import { MOTION, EASE, REVEAL } from '../lib/motion';
@@ -199,6 +200,11 @@ export default function MattressViewer({
   const activeIndex = variants.length ? Math.min(variantIndex, variants.length - 1) : -1;
   const activeVariant = variants.length ? variants[activeIndex] : null;
   const currentHeight = activeVariant?.height ?? product.dimensions?.height ?? 5;
+  // How the selected grade is finished on the outside. A grade-level fact for
+  // the same reason its height is: the thin grades of several products are
+  // tight tops while their taller siblings are Euro-tops, so this cannot be
+  // settled once per product. See src/lib/mattressConstruction.js.
+  const currentConstruction = constructionFor(product, activeVariant);
   const hasVariantChoice = variants.length > 1;
   const variantMenuId = useId();
   // Which bands the selected grade is actually built from. For every product
@@ -370,9 +376,13 @@ export default function MattressViewer({
     // below rebuilds the parts that depend on it. Read once here, from the
     // render that mounted this scene, which is always the baseline variant.
     let H = currentHeight;
+    // Mutable for the same reason and through the same path: a grade may change
+    // the silhouette as well as the thickness, and `s.applyVariant` rebuilds
+    // the box either way.
+    let construction = currentConstruction;
     const L = product.dimensions?.length ?? 72;
     // The exploded slabs keep their own soft top edge; only the solid box is
-    // built as a Euro-top.
+    // built as a mattress construction.
     let topBevel = Math.min(1.3, H * 0.26);
     // ~6 tiles around the perimeter rather than the old ~13. Halving the
     // repetition costs texel density (about 19/in down to 9/in, on par with the
@@ -496,27 +506,40 @@ export default function MattressViewer({
     if (sideTex.image?.width) buildSeamProfile();
     else onSideReady = buildSeamProfile;
 
-    // Euro-top silhouette: firm base box, separate cushion inset on top, piping
-    // where they meet. Shared by every product - this is a construction style,
-    // not a per-product trait.
-    const euroOpts = {
+    // The solid silhouette. Which of the two constructions a grade is built as
+    // is a data question - see src/lib/mattressConstruction.js - and everything
+    // downstream of here reads the same geometry contract either way, so this
+    // is the only place in the viewer that has to know there are two.
+    const boxCommon = {
       cornerSegs: Math.max(6, Math.round(10 * quality)),
       tileWidth: wallTile,
       seamTile: wallTile / 2,
     };
+    // A tight top's border carries channel quilting, and that is real geometry
+    // rather than a map, so the perimeter has to be sampled finely enough to
+    // resolve its pitch. It is applied to the flat build as well as the
+    // sculpted one: the two are swapped in front of the viewer, and a border
+    // that gained its channels on the swap would pop.
+    const channelSegs = Math.max(28, Math.round(88 * quality));
+    const flatOpts = () =>
+      (construction === TIGHT_TOP ? { ...boxCommon, sideSegs: channelSegs } : boxCommon);
     // Sculpting the cap needs enough perimeter samples to resolve the quilt's
     // cell pitch, and enough rings to resolve it inward; below that the puff
     // aliases into long diagonal creases. Both ride the device quality dial,
     // like every other tessellation choice here.
-    const sculptOpts = {
-      ...euroOpts,
-      sideSegs: Math.max(8, Math.round(26 * quality)),
+    const sculptOpts = () => ({
+      ...flatOpts(),
+      sideSegs: construction === TIGHT_TOP ? channelSegs : Math.max(8, Math.round(26 * quality)),
       // Raised with the narrowed edge taper in mattressGeometry.js: the ramp
       // into the binding is only as smooth as the rings that carry it.
       capRings: Math.max(12, Math.round(44 * quality)),
       edgeCompression: quiltCfg.edgeCompression,
-    };
-    const geometry = buildEuroTopGeometry(W, H, L, euroOpts);
+    });
+    const buildBox = (opts) =>
+      (construction === TIGHT_TOP
+        ? buildTightTopGeometry(W, H, L, opts)
+        : buildEuroTopGeometry(W, H, L, opts));
+    const geometry = buildBox(flatOpts());
     const box = new THREE.Mesh(geometry, [topMat, wallMat, bottomMat, seamMat]);
     group.add(box);
     s.box = box;
@@ -602,7 +625,7 @@ export default function MattressViewer({
       if (!quiltMapsReady || disposed) return;
       const { cushW, cushL, cushionH } = box.geometry.userData;
       const displace = quiltDisplacer(quiltMapsReady, cushW, cushL, cushionH);
-      const sculpted = buildEuroTopGeometry(W, H, L, { ...sculptOpts, displace });
+      const sculpted = buildBox({ ...sculptOpts(), displace });
       if (stitch) {
         box.remove(stitch);
         stitch.geometry.dispose();
@@ -626,7 +649,7 @@ export default function MattressViewer({
      * they do, which is the same order a fresh mount goes through.
      */
     const rebuildBox = () => {
-      swapGeometry(buildEuroTopGeometry(W, H, L, euroOpts));
+      swapGeometry(buildBox(flatOpts()));
       applySculpt();
     };
 
@@ -844,8 +867,8 @@ export default function MattressViewer({
     };
 
     /**
-     * Change the grade in place: a new thickness, and on Resto a new set of
-     * bands.
+     * Change the grade in place: a new thickness, on Resto a new set of bands,
+     * and on a product whose thin grade is a tight top a new silhouette.
      *
      * Everything else in this scene - renderer, lights, environment, textures,
      * materials, camera - is grade-independent, so a variant change rebuilds
@@ -857,14 +880,15 @@ export default function MattressViewer({
      * The rebuild itself is handed to the morph rather than run here, so it
      * lands at the point in the gesture where nothing is on screen to pop.
      */
-    s.applyVariant = (nextH, nextDefs) => {
+    s.applyVariant = (nextH, nextDefs, nextConstruction) => {
       if (disposed) return;
-      if (nextH === H && nextDefs === appliedDefs) return;
+      if (nextH === H && nextDefs === appliedDefs && nextConstruction === construction) return;
       // Measured against what is drawn, not against the last grade asked for,
       // so a change during a gesture still starts from the thickness on screen.
       const fromScale = shownH / nextH;
       H = nextH;
       appliedDefs = nextDefs;
+      construction = nextConstruction;
       topBevel = Math.min(1.3, H * 0.26);
       beginMorph(() => {
         shadow.position.y = -H / 2 - 1.5;
@@ -1646,10 +1670,10 @@ export default function MattressViewer({
 
   // Mirrored onto the scene the same way autoRotate is. The first run after a
   // mount is a no-op: the scene was built at exactly this height, from exactly
-  // these bands.
+  // these bands, in exactly this construction.
   useEffect(() => {
-    s.applyVariant?.(currentHeight, layerDefs);
-  }, [currentHeight, layerDefs, s]);
+    s.applyVariant?.(currentHeight, layerDefs, currentConstruction);
+  }, [currentHeight, layerDefs, currentConstruction, s]);
 
   useEffect(() => {
     s.autoRotate = autoRotate && !s.reduced;

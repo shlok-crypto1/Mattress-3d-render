@@ -22,6 +22,17 @@ This file is the sole authority for product facts (names, layer construction, ma
 
 ---
 
+## Mattress construction (both lines)
+
+| Field | Value | Status |
+|---|---|---|
+| Constructions presented | **Euro-top** — base box with a separate cushion sewn on, divided by a piping band — and **tight top** — one border from floor to binding with the quilted panel sewn straight onto it. | Confirmed (product owner, 2026-09-08) |
+| Which grade gets which | **Every Classic 5″ grade is a tight top. Every other grade is a Euro-top.** This is a grade fact, not a product one: Duro's Classic 5″ is a tight top while its Premium 6″ and Luxury 6″ are not, and the same holds for Sova, Ultima and Resto. Maxa and Magic present a Classic 5″ and nothing else, so both are tight tops throughout. | Confirmed (product owner, 2026-09-08) |
+| Why | A Euro-top's cushion is 30% of the mattress. On a 5″ slab that is an inch and a half of pillow over three inches of foam, which no mattress that thin is built as. | Confirmed (product owner, 2026-09-08) |
+| Border channelling | The tight top's border carries shallow vertical channelling. It is **shaping, not stitching** — the border photography for every product shows flat woven fabric with no channel seams, so nothing here asserts a stitched channel-quilted border. Whether any product's border is genuinely channel-quilted is **TBD**; if one is, its depth can be raised where it is declared rather than invented in code. | Confirmed as a presentation choice; the underlying construction is TBD |
+
+---
+
 ## FOAMICO Products
 
 ### Resto
@@ -33,8 +44,9 @@ This file is the sole authority for product facts (names, layer construction, ma
 | Spec line (as shown on grid) | "Classic · 6″ Firm · 10-Year Warranty + 5-Year Full Replacement" | Confirmed |
 | Layer construction | Fabric cover (grey/white patterned quilted fabric) → 6 foam layers of varying thickness (yellow, blue, purple, white, grey, orange transition — thin-to-thick order visually confirmed from reference photo) → fabric-wrapped base | Confirmed (order/relative-thickness only — exact layer names and thicknesses TBD) |
 | Coil layer | None | Confirmed |
-| Variants | Classic 6″, Premium 6.5″, Luxury 7″ | Confirmed |
+| Variants | Classic 5″, Classic 6″, Premium 6.5″, Luxury 7″ | Confirmed — **Classic 5″ added 2026-09-08** on the product owner's instruction, giving Resto two Classic heights as Sova and Ultima already have |
 | Foam split | **Layer 6 30% / Layer 5 30% / Layer 4 20% / Layer 3 20%** of the product's foam. The cover, the convoluted top band and the bonded base are outside this split - they are upholstery and a base, not foam a percentage is quoted of - and keep the proportions they had, so the four foam bands divide their existing combined share. | Confirmed (product owner, 2026-08-26) |
+| Classic 5″ composition | **The same bands as Classic 6″ — layers 1, 2, 5, 6 + base — at 5″.** The product owner gave one rule for "resto classic" and Resto now presents two of them, exactly as Sova does. Under Resto's per-grade thickness rule the cover and the base hold their baseline thickness, so the inch comes off the foam rather than off the upholstery. | Confirmed (product owner, 2026-09-08) |
 | Per-grade layer composition | Resto is the one product whose grades are built from **different stacks**, not one stack cut to different thicknesses. Luxury 7″ is the full seven-band build and the grades below it drop comfort foam. **Luxury 7″ — layers 1, 2, 3, 4, 5, 6 + base. Premium 6.5″ — layers 1, 2, 4, 5, 6 + base (drops layer 3). Classic 6″ — layers 1, 2, 5, 6 + base (drops layers 3 and 4).** The base is present in every grade. | Confirmed (product owner, 2026-08-27; independently corroborated by `RESTO CLASSIC.png` and `RESTO PREMIUM.png` in the per-grade render set, which show exactly these band sets) |
 | Per-grade thickness rule | The cover and the bonded base keep the real thickness they have at the baseline grade — they are the same components at every grade — and the surviving foam bands divide the rest of the declared height between them in proportion to the foam split above. A thinner Resto is therefore less foam rather than a puffier cover and a deeper base. This also governs Classic and Premium in the places where no band is dropped: their cover and base no longer scale down with the mattress the way they did before 2026-08-27. | Confirmed (product owner, 2026-08-27) |
 | Per-layer names | **1 AirKnit Fabric → 2 AeroFlex Foam → 3 Memorest Foam → 4 Cosmic Foam → 5 Pro Nexa Foam → 6 Enduro HR Foam → Base Quilted Foam** | Confirmed (product owner, 2026-08-31) |

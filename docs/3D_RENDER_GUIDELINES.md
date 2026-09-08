@@ -10,6 +10,40 @@ Present mattresses as physically credible products while keeping interaction fas
 - Avoid unnecessary geometry complexity.
 - Keep hidden/internal geometry out of the render when it is not needed.
 
+## Mattress construction
+
+The viewer builds a solid mattress in one of two constructions, and which one a
+grade gets is data, not a per-product decision in code
+(`src/lib/mattressConstruction.js`).
+
+- **Euro-top** — a firm base box with a separate cushion sewn on top, divided by
+  a piping band that runs the whole perimeter. The default, and what every grade
+  had before 2026-09-08.
+- **Tight top** — one upholstered border from floor to binding, with the quilted
+  panel sewn straight onto its top edge. Self-bound tape and a corded welt at
+  each end of the border; shallow vertical channelling between them.
+
+**Every 5″ grade is a tight top.** A Euro-top's cushion is 30% of the mattress:
+on a 5″ slab that is an inch and a half of pillow over three inches of foam, and
+no mattress that thin is made that way. The rule is about the grade, not the
+product — Duro's Classic 5″ is a tight top while its Premium and Luxury 6″ stay
+Euro-tops, and switching grades on the page rebuilds the silhouette along with
+the thickness.
+
+Two things follow for anyone adding a construction:
+
+- **Removing the seam is what removes the pillow.** Flattening the cushion while
+  the mid-height piping band is still drawn leaves the eye reading a soft layer
+  on a firm one. The join is the whole signal.
+- **The border photograph has a construction printed into it**, so a new
+  construction has to say which part of that photograph it wears — see
+  `docs/MATERIALS_AND_TEXTURES.md`.
+
+Both builders report the same `userData` contract (`quiltEdge`, `cushW`,
+`cushL`, `cushionH`, `baseWall`), so the edge stitch, the quilt displacer and
+the woven badge read one shape whichever construction they were handed. A third
+construction must do the same rather than teach its callers about itself.
+
 ## Layer / construction views
 If the experience exposes internal construction:
 - Layers must retain their real order, per `docs/PRODUCT_CATALOG.md`.
@@ -127,7 +161,8 @@ Any 3D interaction should have a clear purpose: inspect, compare, understand con
 ## Products that are not mattresses
 
 Not every product in the catalogue is a slab. `MattressViewer` is built around
-one — a euro-top box, a quilt reconstructed from a top-face photo, an explodable
+one — an upholstered box in one of the two constructions above, a quilt
+reconstructed from a top-face photo, an explodable
 layer stack — and a product with a different form gets its own model and viewer
 rather than being forced through it, because a slab wearing another product's
 fabric misrepresents the shape (see Asset integrity below). Sofa cum Bed is the
