@@ -1406,6 +1406,19 @@ const BRIDGE="foamico-guide";
 function tell(msg){ if(FRAMED) window.parent.postMessage(Object.assign({source:BRIDGE},msg),"*"); }
 if(FRAMED) document.documentElement.setAttribute("data-framed","");
 
+/* What colour this document is standing on, told to the page hosting it.
+   On a phone the frame is the whole screen, and everything the frame does not
+   itself cover is painted by that page: the panel behind it, and - through the
+   host's theme-color - the browser's own status bar and bottom toolbar. Those
+   surfaces have to be this document's ground or they read as bands of some
+   other colour framing the chat. Only this side knows which theme is in force,
+   because the theme is this side's to choose, so only this side can say.
+   Read off the custom property rather than repeated as a literal, so the two
+   themes stay defined in exactly one place. */
+function tellGround(){
+  try{ tell({type:"ground",ground:getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()}); }catch(e){}
+}
+
 /* The site answers with its own product routes, and they are the only
    destinations this document can offer: a family the site did not name gets no
    button rather than a guessed URL that 404s. Keyed by the name in capitals,
@@ -1414,6 +1427,9 @@ let ROUTES={};
 window.addEventListener("message",function(e){
   const d=e.data;
   if(!d||d.source!==BRIDGE||d.type!=="products"||!Array.isArray(d.routes)) return;
+  /* The host has spoken, so it is certainly listening - which a message sent
+     while this document was still parsing might not have been. */
+  tellGround();
   const map={};
   d.routes.forEach(function(r){
     if(r&&r.family&&r.path) map[String(r.family).toUpperCase()]={path:r.path,name:r.name||r.family};
@@ -1484,13 +1500,20 @@ ls.onchange=function(){
 const tb=document.getElementById("theme");
 let stored=null; try{stored=localStorage.getItem("fg-theme")}catch(e){}
 if(stored) document.documentElement.setAttribute("data-theme",stored);
+tellGround();
 tb.onclick=function(){
   const cur=document.documentElement.getAttribute("data-theme");
   const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
   const next=dark?"light":"dark";
   document.documentElement.setAttribute("data-theme",next);
   try{localStorage.setItem("fg-theme",next)}catch(e){}
+  tellGround();
 };
+/* With no stored choice this document follows the system, so the system
+   changing under it changes its ground without anyone touching the toggle. */
+try{ matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){
+  if(!document.documentElement.getAttribute("data-theme")) tellGround();
+}); }catch(e){}
 
 /* opening \u2014 staggered, like someone typing */
 function opening(){
