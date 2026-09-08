@@ -1,0 +1,1 @@
+var e=`tight-top`;function t(e,t){return t?.construction??e?.construction??`euro-top`}export{t as n,e as t};

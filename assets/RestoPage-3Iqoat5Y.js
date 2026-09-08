@@ -1,1 +1,0 @@
-import{l as e}from"./index-C65EWzY5.js";import{getFoamicoProductBySlug as t}from"./foamicoProducts-BAjoUzSu.js";import{t as n}from"./ProductPage-D-dZFkYC.js";var r=e();function i(){return(0,r.jsx)(n,{product:t(`resto`),backTo:`/foamico`,brand:`foamico`,transitionId:`product-foamico-resto`})}export{i as default};
