@@ -79,7 +79,12 @@ export default function FoamicoCatalogPage() {
         // The 24px is also what the phone lineup aligns its first card to and
         // bleeds past - see --lineup-gutter in src/index.css. Change one and
         // the other has to follow.
-        padding: '48px 24px 64px',
+        // The page's own margins plus whatever the screen is putting over its
+        // edges. The gradient behind them still runs to the very edge - see
+        // --safe-top in src/index.css.
+        padding:
+          'calc(48px + var(--safe-top)) calc(24px + var(--safe-right))'
+          + ' calc(64px + var(--safe-bottom)) calc(24px + var(--safe-left))',
         ...recede,
       }}
     >
@@ -88,8 +93,8 @@ export default function FoamicoCatalogPage() {
         onClick={back.onClick}
         style={{
           position: 'absolute',
-          top: 18,
-          left: 18,
+          top: 'calc(18px + var(--safe-top))',
+          left: 'calc(18px + var(--safe-left))',
           zIndex: 10,
           fontSize: 12,
           fontWeight: 500,

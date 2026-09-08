@@ -107,6 +107,47 @@ What the sizing is solved for, in order:
 
 The gesture and the position marks under the row are `docs/INTERACTIONS.md`.
 
+### The document is the whole screen, and the edges are held off by hand
+
+`viewport-fit=cover` in `app/index.html`. Without it a phone lays the page out
+inside the safe area and paints the strip above and below it in a colour of its
+own choosing, so a full-screen page arrives bracketed by two blocks that belong
+to nothing on it. With it the page's own ground runs edge to edge and the
+browser's furniture floats over it.
+
+That is the whole of the benefit and the whole of the cost. Anything anchored to
+an edge is now under whatever is over that edge unless it holds itself off, and
+the four insets are named once at the top of `src/index.css`:
+
+```
+--safe-top  --safe-right  --safe-bottom  --safe-left
+```
+
+They alias `env(safe-area-inset-*)` with a `0px` fallback, which is every
+desktop and every phone without a notch. Aliasing rather than using `env()`
+directly buys two things: the fallback is written once, and a layout can be
+checked at a notch's dimensions by setting four custom properties instead of
+being taken to a phone.
+
+**Everything at an edge takes them.** The viewer's back link, header and control
+row; the catalog pages' padding and their back link; the brand selector's two
+panels; the guide's launcher and its full-screen frame. The rule is that the
+*surface* bleeds and its *content* insets - never the other way round, because a
+surface that stops short of the edge is the band this was meant to remove.
+
+**A framed document cannot see an edge.** Safe-area insets are measured against
+the top-level viewport, so inside the guide's iframe they are all zero whatever
+shape the screen is. The page hosting the frame is the only side that can inset
+it, which is why the guide's panel bleeds and the frame inside it is held off
+all four edges by `ChatWidget`, not by the guide's own stylesheet.
+
+**The insets go on the frame, not as padding on the panel.** The frame is
+positioned absolutely, and an absolutely positioned box is laid out against its
+container's *padding* box - padding on the panel moves it not at all. The frame
+is also sized explicitly rather than stretched between offsets: an iframe is a
+replaced element, and an auto width between a left and a right offset resolves
+to its intrinsic 300x150 with the offsets ignored.
+
 ## Breakpoints
 Taken from the implementation, not chosen: these are the values in the source.
 

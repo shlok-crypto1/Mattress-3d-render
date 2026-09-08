@@ -283,8 +283,8 @@ export default function ChatWidget() {
         }
         .chatdock__btn {
           position: absolute;
-          right: 20px;
-          bottom: 20px;
+          right: calc(20px + var(--safe-right));
+          bottom: calc(20px + var(--safe-bottom));
           width: ${SIZE}px;
           height: ${SIZE}px;
           border: 0;
@@ -314,11 +314,35 @@ export default function ChatWidget() {
             max-height: 100dvh;
             border-radius: 0;
             border: 0;
-            /* The ground continues under the browser's own furniture. Zero
-               today - the site does not opt into viewport-fit cover - and
-               correct the moment it does, which is the point of asking. */
-            padding-bottom: env(safe-area-inset-bottom);
             transform-origin: 50% 100%;
+          }
+          /* The panel bleeds to every edge; the frame is held off them.
+             That is what puts the guide's own ground - the panel is painted
+             with it, see the note on GROUND_FALLBACK - behind the status bar
+             and the browser's bottom furniture, while the guide's header and
+             its composer stay clear of both.
+
+             The insets go on the frame rather than as padding on the panel
+             because the frame is positioned absolutely, and an absolutely
+             positioned box is laid out against its container's padding box:
+             padding on the panel would have moved nothing at all.
+
+             It also has to happen on this side rather than inside the guide's
+             own document. Safe-area insets are measured against the top-level
+             viewport, and a framed document has no such thing, so they resolve
+             to zero in there whatever shape the screen is. The page hosting
+             the frame is the only side that can see an edge. */
+          .chatdock__frame {
+            top: var(--safe-top);
+            left: var(--safe-left);
+            right: auto;
+            bottom: auto;
+            /* Sized, not stretched. An iframe is a replaced element: give it
+               an auto width between a left and a right offset and it takes its
+               intrinsic 300x150 and ignores the offsets entirely, which is a
+               quietly wrong little chat rather than an obviously broken one. */
+            width: calc(100% - var(--safe-left) - var(--safe-right));
+            height: calc(100% - var(--safe-top) - var(--safe-bottom));
           }
           /* The launcher's close duty passes to the frame's own header: a disc
              floating over a full-screen chat sits on top of the composer, which

@@ -25,7 +25,11 @@ const panelStyle = (background) => ({
   alignItems: 'center',
   justifyContent: 'center',
   gap: 14,
-  padding: '72px 32px',
+  // Each panel is the ground here, so it runs under the status bar and the
+  // home indicator and its centred column is held off them instead.
+  padding:
+    'calc(72px + var(--safe-top)) calc(32px + var(--safe-right))'
+    + ' calc(72px + var(--safe-bottom)) calc(32px + var(--safe-left))',
   minHeight: 'min(50dvh, 340px)',
   background,
   textDecoration: 'none',

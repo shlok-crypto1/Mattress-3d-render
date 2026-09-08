@@ -24,6 +24,24 @@
    * at the top of the selector, which is where a cold load lands.
    */
   --page-ground: #1A1A1A;
+
+  /* The screen's own edges, named once.
+   *
+   * The document covers the whole screen (viewport-fit=cover in index.html),
+   * which is what lets the ground above run behind the status bar and the
+   * browser's bottom furniture instead of stopping short of them in a band of
+   * some other colour. The other half of that bargain is that anything
+   * anchored to an edge has to hold itself clear of what is over that edge,
+   * and these are what it holds itself clear by.
+   *
+   * Aliased rather than used directly so the fallback is written once and a
+   * layout can be checked at a notch's dimensions by setting four properties.
+   * Zero everywhere that has no notch, which is every desktop.
+   */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }
 
 * {
@@ -82,8 +100,8 @@ button {
 }
 .mv-back {
   position: absolute;
-  top: calc(18px + env(safe-area-inset-top));
-  left: calc(18px + env(safe-area-inset-left));
+  top: calc(18px + var(--safe-top));
+  left: calc(18px + var(--safe-left));
   font-size: 12px;
   padding: 6px 12px;
   border-radius: 100px;
@@ -93,7 +111,7 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: calc(28px + env(safe-area-inset-top)) 20px 0;
+  padding: calc(28px + var(--safe-top)) 20px 0;
   text-align: center;
 }
 .mv-title {
@@ -304,7 +322,7 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  padding: 0 20px calc(26px + env(safe-area-inset-bottom));
+  padding: 0 20px calc(26px + var(--safe-bottom));
 }
 .mv-btnrow { display: flex; gap: 8px; align-items: center; }
 .mv-btn-sep {
@@ -339,18 +357,18 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
    scrolls sideways instead of wrapping into a ragged block or pushing
    the canvas off-screen. */
 @media (max-width: 620px) {
-  .mv-head { gap: 7px; padding-top: calc(16px + env(safe-area-inset-top)); }
+  .mv-head { gap: 7px; padding-top: calc(16px + var(--safe-top)); }
   .mv-title { font-size: clamp(20px, 6.4vw, 30px); letter-spacing: 0.13em; text-indent: 0.13em; }
   .mv-variant-pill { font-size: 10.5px; padding: 5px 12px; }
   .mv-hint { font-size: 10.5px; }
-  .mv-controls { gap: 10px; padding: 0 0 calc(14px + env(safe-area-inset-bottom)); }
+  .mv-controls { gap: 10px; padding: 0 0 calc(14px + var(--safe-bottom)); }
   .mv-btnrow {
     width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
-    padding: 2px calc(16px + env(safe-area-inset-left)) 2px calc(16px + env(safe-area-inset-right));
+    padding: 2px calc(16px + var(--safe-left)) 2px calc(16px + var(--safe-right));
     justify-content: flex-start;
   }
   .mv-btnrow::-webkit-scrollbar { display: none; }
@@ -367,12 +385,12 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
 /* Landscape phones: almost no vertical room, so the header collapses to
    the wordmark and the stage keeps the rest. */
 @media (max-height: 480px) and (orientation: landscape) {
-  .mv-head { padding-top: calc(10px + env(safe-area-inset-top)); gap: 4px; }
+  .mv-head { padding-top: calc(10px + var(--safe-top)); gap: 4px; }
   .mv-head img { height: 22px; }
   .mv-title { font-size: 20px; letter-spacing: 0.1em; text-indent: 0.1em; }
   .mv-variant-pill { font-size: 10px; padding: 5px 11px; }
   .mv-hint { display: none; }
-  .mv-controls { padding-bottom: calc(8px + env(safe-area-inset-bottom)); gap: 8px; }
+  .mv-controls { padding-bottom: calc(8px + var(--safe-bottom)); gap: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

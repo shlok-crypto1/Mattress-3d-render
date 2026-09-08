@@ -14,6 +14,19 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-09-08 — The page becomes the whole screen
+
+- **Changed — `viewport-fit=cover`.** The site laid itself out inside the safe area, so a phone painted the strip above and below it itself and every full-screen page arrived bracketed by two blocks that belonged to nothing on it. The document now covers the screen: the page's own ground runs behind the status bar and the browser's bottom furniture, and that furniture floats over the page instead of walling it in.
+- **Added — `--safe-top` and its three siblings**, at the top of `src/index.css`, aliasing `env(safe-area-inset-*)` with a `0px` fallback. Every existing raw `env()` in that file now goes through them, so the fallback is written once - and a layout can be checked at a notch's dimensions by setting four custom properties, which is how this change was verified without a phone.
+- **Changed — everything anchored to an edge holds itself off it.** The viewer's chrome already did, in CSS written in anticipation of exactly this; what did not were the catalog pages' padding and back link, the brand selector's two panels, the guide's launcher, and the guide's full-screen frame. The rule throughout is that the *surface* bleeds to the edge and its *content* insets, never the reverse: a surface that stops short is the band this was meant to remove.
+- **Fixed, twice, in the guide's frame.** Padding on the panel moved the frame not at all - it is positioned absolutely, and an absolutely positioned box is laid out against its container's padding box - so the insets go on the frame itself. And stretching that frame between a left and a right offset with an auto width gave a 300x150 chat in the corner of the screen: an iframe is a replaced element, and an auto width there resolves to the intrinsic size with the offsets ignored. It is sized explicitly instead.
+- **Reason:** Product owner, 2026-09-08 - the background should be seamless, with nothing blocking it.
+- **Files/areas:** `app/index.html`, `app/src/index.css`, `app/src/components/ChatWidget.jsx`, `app/src/pages/CatalogPage.jsx`, `app/src/pages/FoamicoCatalogPage.jsx`, `app/src/pages/BrandSelectPage.jsx`, `docs/RESPONSIVE_BEHAVIOUR.md`.
+- **Impact:** Nothing moves on a device with no notch - every inset is `0px` there and every rule is an addition to the value it already had, so desktop is unchanged and was checked rather than assumed. On a notched phone every page gains the strip it used to concede, and the content on it sits where it did relative to what a viewer can actually see.
+- **Validation:** `npm run build` and `npm run lint` clean. Driven over CDP with the insets forced to an iPhone's 59px/34px and the two bands drawn over the render, with no console errors: on the brand selector, the FOAMICO catalog, the Sova viewer and the guide open full screen, the element painting the topmost and bottommost pixel of the screen is the page's own surface in every case, and every control clears both bands. The guide's frame lands at exactly 59px to 810px of an 844px screen. Repeated at 1440x900 with the insets at zero - layout, framing and the guide's corner panel all unchanged - and at 844x390 landscape.
+
+---
+
 ### 2026-09-08 — The full-screen guide stops being framed in bands of another colour
 
 - **Fixed — a pale strip above the guide's header and a mismatched band below its composer, on a phone.** Two separate causes, both of them the same mistake in two places: something other than the guide deciding what colour the guide's surroundings are.
