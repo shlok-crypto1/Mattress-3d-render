@@ -3,7 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/brand/vedasleep-logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: the document is the whole screen, not the part of
+         it the browser is not standing on. Without it iOS lays the page out
+         inside the safe area and paints the strip above and below in a flat
+         colour of its own choosing, which reads as two blocks bracketing the
+         page. With it the page's own ground runs edge to edge and the
+         browser's furniture floats over it.
+
+         The cost is that content anchored to an edge can end up under the
+         status bar or the home indicator, so everything that sits at one takes
+         env(safe-area-inset-*) - see --safe-top and its siblings in
+         src/index.css, which is where those are named once. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!-- What iOS Safari tints its status bar and toolbar with. Kept in step
          with the route by PageGround in src/App.jsx; this is the cold-load
          value. Without it Safari samples the page background instead, which is
@@ -16,10 +27,10 @@
       rel="stylesheet"
     />
     <title>Legend Product Deck 2026</title>
-    <script type="module" crossorigin src="/assets/index-Bu4vTqKl.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DSfCKMjz.css">
+    <script type="module" crossorigin src="/assets/index-CkQmFVk-.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CyBVcTw-.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>
