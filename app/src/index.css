@@ -356,9 +356,19 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
   color: var(--mv-btn-active-color);
 }
 
-/* Phones. Six view buttons never fit one line at 390px, so the row
-   scrolls sideways instead of wrapping into a ragged block or pushing
-   the canvas off-screen. */
+/* Phones. The whole button row fits on one line at every phone width.
+ *
+ * It used to scroll sideways at a fixed 12.5px/17px, which put Layers - the
+ * control that opens the stack, and the reason the page exists - past the
+ * right edge of a 340px screen with nothing to say it was there. The type,
+ * padding and gaps now scale with the screen instead, solved so that the
+ * longest row (four views, the divider and Layers) fits from 320px up, and
+ * reach their old desktop-phone size by about 390px.
+ *
+ * The row sizes to its content and is centred by its column, and it keeps
+ * its sideways scroll only as a fallback: were a row ever wider than the
+ * screen, it overflows from its start and scrolls rather than being cut off
+ * at both ends, which is what centring an overflowing row would do. */
 @media (max-width: 620px) {
   .mv-head { gap: 7px; padding-top: calc(16px + var(--safe-top)); }
   .mv-title { font-size: clamp(20px, 6.4vw, 30px); letter-spacing: 0.13em; text-indent: 0.13em; }
@@ -366,22 +376,23 @@ button.mv-variant-pill[aria-expanded="true"] .mv-variant-caret { transform: rota
   .mv-hint { font-size: 10.5px; }
   .mv-controls { gap: 10px; padding: 0 0 calc(14px + var(--safe-bottom)); }
   .mv-btnrow {
-    width: 100%;
+    max-width: 100%;
+    gap: clamp(4px, 1.5vw, 8px);
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
-    padding: 2px calc(16px + var(--safe-left)) 2px calc(16px + var(--safe-right));
-    justify-content: flex-start;
+    padding-block: 2px;
+    padding-inline: calc(12px + var(--safe-left)) calc(12px + var(--safe-right));
   }
   .mv-btnrow::-webkit-scrollbar { display: none; }
   .mv-view-btn {
-    scroll-snap-align: center;
-    /* Comfortable thumb target - 8px/15px lands well under 44px. */
+    flex: none;
+    /* Comfortable thumb target - the row's type is small, its targets are not. */
     min-height: 44px;
-    padding: 8px 17px;
-    font-size: 12.5px;
+    padding: 8px clamp(9px, 3.2vw, 17px);
+    font-size: clamp(11px, 3.4vw, 12.5px);
   }
+  .mv-btn-sep { margin: 4px clamp(2px, 0.8vw, 4px); }
   .mv-label { font-size: 9.5px; letter-spacing: 0.07em; padding: 3px 9px !important; }
 }
 

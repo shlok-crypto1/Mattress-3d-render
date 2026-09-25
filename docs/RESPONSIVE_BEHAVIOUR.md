@@ -135,6 +135,21 @@ panels. The rule is that the
 *surface* bleeds and its *content* insets - never the other way round, because a
 surface that stops short of the edge is the band this was meant to remove.
 
+## The viewer's button row on a phone
+Front, Side, Top, Bottom, the divider and Layers stay on one line at every phone width,
+with no sideways scroll. Below 620px the row's type (11-12.5px), button padding (9-17px)
+and gaps scale with the screen width, sized so that this longest row fits from 320px up.
+It reaches full size by about 390px. The buttons keep a 44px touch height throughout.
+
+It used to scroll sideways at a fixed size. On a 340px screen that put Layers, the
+control that opens the stack, past the right edge with nothing to show it was there.
+The scroll remains only as a fallback, for a row that is ever wider than the screen:
+the row sizes to its content and is centred, so an overflowing row starts at its first
+button and scrolls, instead of being cut off at both ends.
+
+Measured in headless Chrome at 320, 340, 360, 375, 390, 412, 430, 480 and 620px wide,
+and in landscape at 844x390 and 932x430. No row overflowed.
+
 ## Breakpoints
 Taken from the implementation, not chosen: these are the values in the source.
 
