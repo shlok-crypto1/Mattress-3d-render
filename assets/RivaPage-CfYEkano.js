@@ -1,1 +1,0 @@
-import{l as e}from"./index-CkQmFVk-.js";import{getFoamicoProductBySlug as t}from"./foamicoProducts-Cb37ANDl.js";import{t as n}from"./ProductPage-TvuYMjCW.js";var r=e();function i(){return(0,r.jsx)(n,{product:t(`riva`),backTo:`/foamico`,brand:`foamico`,transitionId:`product-foamico-riva`})}export{i as default};
