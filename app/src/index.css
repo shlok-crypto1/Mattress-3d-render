@@ -1,3 +1,6 @@
+/* Montserrat and Poppins, served from this origin - see the note in the file. */
+@import './fonts/fonts.css';
+
 :root {
   --paper: #f7f5f0;
   --egg: #fefefe;

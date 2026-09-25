@@ -1,0 +1,69 @@
+# myfoamico.com - response headers and caching.
+#
+# Hostinger serves /public_html/ with LiteSpeed, which reads Apache .htaccess
+# directives. This file is the source of record: it lives in app/public/, the
+# build copies it into dist/, and the deployment uploads it with the rest of the
+# published set. If hPanel's own settings ever write an .htaccess (Force HTTPS
+# does), fold what they add into this file, or the next deploy overwrites it.
+
+Options -Indexes
+
+# ------------------------------------------------------------------- HTTPS --
+# The same rule hPanel's "Force HTTPS" writes, carried here so that uploading
+# this file cannot remove it. The X-Forwarded-Proto condition keeps a request
+# that reached the CDN over HTTPS from being redirected again at the origin.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# -------------------------------------------------------------- MIME types --
+# The module entry script must be served as JavaScript for nosniff and module
+# loading alike; the server's default was application/x-javascript.
+<IfModule mod_mime.c>
+  AddType text/javascript .js .mjs
+  AddType image/webp .webp
+  AddType font/woff2 .woff2
+</IfModule>
+
+# ----------------------------------------------------------------- Caching --
+<IfModule mod_headers.c>
+  # Build output under /assets/ carries a content hash in its name
+  # (index-CkQmFVk-.js), so a changed file is always a new URL and the old one
+  # can be kept for a year without ever going stale.
+  <FilesMatch "-[A-Za-z0-9_-]{8}\.(js|css|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # The document is what points at the current hashes, so it is revalidated on
+  # every visit - otherwise a deploy is invisible until a cache expires.
+  <Files "index.html">
+    Header set Cache-Control "no-cache"
+  </Files>
+
+  # Everything else (brand/, textures/, products/) keeps the host's 7-day
+  # default: those names do not change when their contents do.
+</IfModule>
+
+# ---------------------------------------------------------------- Security --
+<IfModule mod_headers.c>
+  # Everything the site loads comes from this origin: its scripts, styles,
+  # fonts, images and textures. style-src allows inline styles because React
+  # renders <style> elements and style attributes; scripts get no such
+  # allowance. blob:/data: cover the images three.js creates while building
+  # textures. Nothing is framed and nothing may frame this site.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-src 'none'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+
+  # HTTPS is already enforced above. Deliberately without includeSubDomains or
+  # preload: this file speaks for myfoamico.com only, and the domain's other
+  # subdomains have not been checked for HTTPS.
+  Header always set Strict-Transport-Security "max-age=31536000"
+
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set X-Frame-Options "DENY"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+</IfModule>

@@ -59,7 +59,7 @@ export default function CatalogPage() {
     toPath: '/',
     variant: 'logo',
     elRef: logoRef,
-    toImageUrl: publicUrl('/brand/vedasleep-logo.png'),
+    toImageUrl: publicUrl('/brand/vedasleep-logo.webp'),
   });
 
   // The dark mark, for the flight back to the Paper selector. That swap is
@@ -69,7 +69,7 @@ export default function CatalogPage() {
   // here from the selector means it is cached already; landing here from a
   // direct link or a reload does not, and that is the case this covers.
   useEffect(() => {
-    preloadImage(publicUrl('/brand/vedasleep-logo.png'));
+    preloadImage(publicUrl('/brand/vedasleep-logo.webp'));
   }, []);
 
   useEffect(() => {
@@ -135,8 +135,10 @@ export default function CatalogPage() {
         >
           <img
             ref={logoRef}
-            src={publicUrl('/brand/vedasleep-logo-light.png')}
+            src={publicUrl('/brand/vedasleep-logo-light.webp')}
             alt="Veda Sleep"
+            width={505}
+            height={196}
             style={{ height: 62, width: 'auto', ...enterStyle(revealed, REVEAL.mark) }}
           />
           <div

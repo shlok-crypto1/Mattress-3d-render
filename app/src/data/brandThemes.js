@@ -11,7 +11,7 @@ export const BRAND_THEMES = {
     // on this stage. Same file, same alpha, only the black ink moved to Paper -
     // exactly what foamico-logo-light.png does. The brand selector keeps the
     // original, because its VedaSleep panel is still Paper.
-    logo: '/brand/vedasleep-logo-light.png',
+    logo: '/brand/vedasleep-logo-light.webp',
     logoAlt: 'Veda Sleep',
     logoHeight: 32,
     // Veda Green-Black. Paper (#F7F5F0) still grounds the brand selector and
@@ -74,7 +74,7 @@ export const BRAND_THEMES = {
     cardShadow: '0 10px 34px rgba(0,0,0,0.45)',
   },
   foamico: {
-    logo: '/brand/foamico-logo-light.png',
+    logo: '/brand/foamico-logo-light.webp',
     logoAlt: 'Foamico',
     logoHeight: 54,
     surface:

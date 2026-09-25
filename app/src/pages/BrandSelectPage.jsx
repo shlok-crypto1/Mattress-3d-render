@@ -50,6 +50,24 @@ const markSlot = {
   height: MARK_SLOT,
 };
 
+// The page's heading, for assistive tech only. The two marks are the visible
+// title and the screen already says what it is; a screen reader has only the
+// link names to go on without it.
+const visuallyHidden = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  margin: -1,
+  padding: 0,
+  overflow: 'hidden',
+  clip: 'rect(0 0 0 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+  // A heading is bold by default, and that alone would fetch a Poppins weight
+  // nothing visible on this page uses. Set in the weight the page already has.
+  fontWeight: 400,
+};
+
 const cueStyle = (color) => ({
   marginTop: 10,
   fontSize: 11,
@@ -70,12 +88,12 @@ export default function BrandSelectPage() {
     setHoverCapable(canHover() && !prefersReducedMotion());
   }, []);
 
-  // The light VedaSleep mark is 81KB and is not otherwise fetched on this page,
+  // The light VedaSleep mark is not otherwise fetched on this page,
   // so on a first visit the cross-fade below would have nothing to fade into
   // and the mark would thin out in mid-flight. Warmed at idle rather than on
   // hover, so a touch device - which never hovers - gets it too.
   useEffect(() => {
-    preloadImage(publicUrl('/brand/vedasleep-logo-light.png'));
+    preloadImage(publicUrl('/brand/vedasleep-logo-light.webp'));
   }, []);
 
   const foamico = useSharedSource({ id: 'logo-foamico', toPath: '/foamico', variant: 'logo' });
@@ -89,7 +107,7 @@ export default function BrandSelectPage() {
     id: 'logo-vedasleep',
     toPath: '/vedasleep',
     variant: 'logo',
-    toImageUrl: publicUrl('/brand/vedasleep-logo-light.png'),
+    toImageUrl: publicUrl('/brand/vedasleep-logo-light.webp'),
   });
   useElementEntranceTarget('logo-foamico', foamico.ref);
   useElementEntranceTarget('logo-vedasleep', veda.ref);
@@ -106,7 +124,10 @@ export default function BrandSelectPage() {
   const markMotion = reduced ? 'none' : `transform ${MOTION.normal}ms ${EASE.enter}`;
 
   return (
-    <div className="brand-select" style={recede}>
+    // <main> rather than a div: this split is the whole of the page's content,
+    // and a landmark is how a screen reader user gets straight to it.
+    <main id="main-content" className="brand-select" style={recede}>
+      <h1 style={visuallyHidden}>FOAMICO and VedaSleep mattress collections</h1>
       <style>{`
         .brand-select {
           min-height: 100dvh;
@@ -149,8 +170,19 @@ export default function BrandSelectPage() {
         <div style={markSlot}>
           <img
             ref={foamico.ref}
-            src={publicUrl('/brand/foamico-logo-light.png')}
+            src={publicUrl('/brand/foamico-logo-light.webp')}
+            // Each screen density gets a file drawn at its own size. Keep in
+            // step with the preloads in index.html, which must name the same
+            // candidates or the browser fetches the mark twice.
+            srcSet={`${publicUrl('/brand/foamico-logo-light@1x.webp')} 1x, ${publicUrl('/brand/foamico-logo-light.webp')} 2x`}
             alt="Foamico - Luxury Mattress"
+            // Intrinsic size, so the box is reserved before the file arrives;
+            // the style below still sets the rendered height. The two marks
+            // are this page's largest paint, and index.html preloads both.
+            width={473}
+            height={321}
+            fetchPriority="high"
+            decoding="async"
             style={{
               height: 172,
               width: 'auto',
@@ -188,8 +220,15 @@ export default function BrandSelectPage() {
         <div style={markSlot}>
           <img
             ref={veda.ref}
-            src={publicUrl('/brand/vedasleep-logo.png')}
+            src={publicUrl('/brand/vedasleep-logo.webp')}
+            // The 3x file keeps the lockup as sharp as the original artwork on
+            // a 3x phone.
+            srcSet={`${publicUrl('/brand/vedasleep-logo@1x.webp')} 1x, ${publicUrl('/brand/vedasleep-logo.webp')} 2x, ${publicUrl('/brand/vedasleep-logo@3x.webp')} 3x`}
             alt="VedaSleep"
+            width={505}
+            height={196}
+            fetchPriority="high"
+            decoding="async"
             style={{
               height: 98,
               width: 'auto',
@@ -203,6 +242,6 @@ export default function BrandSelectPage() {
           View collection &rarr;
         </div>
       </Link>
-    </div>
+    </main>
   );
 }

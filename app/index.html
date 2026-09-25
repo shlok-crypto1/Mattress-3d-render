@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/brand/vedasleep-logo.png" />
+    <link rel="icon" type="image/png" href="/brand/vedasleep-favicon.png" />
     <!-- viewport-fit=cover: the document is the whole screen, not the part of
          it the browser is not standing on. Without it iOS lays the page out
          inside the safe area and paints the strip above and below in a flat
@@ -20,13 +20,67 @@
          value. Without it Safari samples the page background instead, which is
          how a cream band ended up above and below a black page. -->
     <meta name="theme-color" content="#1A1A1A" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Poppins:wght@300;400;500&display=swap"
-      rel="stylesheet"
-    />
     <title>Legend Product Deck 2026</title>
+    <meta
+      name="description"
+      content="Explore the FOAMICO and VedaSleep mattress collections by Legend Polyfoams in interactive 3D, and see each mattress's layer-by-layer construction."
+    />
+    <!-- Routes are hash-based, so every page is this one document. -->
+    <link rel="canonical" href="https://myfoamico.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://myfoamico.com/" />
+    <meta property="og:site_name" content="Legend Product Deck 2026" />
+    <meta property="og:title" content="Legend Product Deck 2026" />
+    <meta
+      property="og:description"
+      content="Explore the FOAMICO and VedaSleep mattress collections by Legend Polyfoams in interactive 3D, and see each mattress's layer-by-layer construction."
+    />
+    <meta name="twitter:card" content="summary" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://myfoamico.com/#organization",
+            "name": "Legend Polyfoams",
+            "url": "https://myfoamico.com/",
+            "brand": [
+              { "@type": "Brand", "name": "FOAMICO" },
+              { "@type": "Brand", "name": "VedaSleep" }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://myfoamico.com/#website",
+            "name": "Legend Product Deck 2026",
+            "url": "https://myfoamico.com/",
+            "publisher": { "@id": "https://myfoamico.com/#organization" }
+          }
+        ]
+      }
+    </script>
+    <!-- The brand selector's two marks are the first thing painted, but they
+         are <img>s React renders, so without these the browser cannot start
+         fetching them until the script has run. Kept in step with the src and
+         srcSet in src/pages/BrandSelectPage.jsx. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/brand/foamico-logo-light.webp"
+      imagesrcset="/brand/foamico-logo-light@1x.webp 1x, /brand/foamico-logo-light.webp 2x"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/brand/vedasleep-logo.webp"
+      imagesrcset="/brand/vedasleep-logo@1x.webp 1x, /brand/vedasleep-logo.webp 2x, /brand/vedasleep-logo@3x.webp 3x"
+      fetchpriority="high"
+    />
+    <!-- The one face the selector sets text in. The rest of the fonts are
+         declared in src/fonts/fonts.css and load as they are needed. -->
+    <link rel="preload" as="font" type="font/woff2" href="/src/fonts/poppins-400-latin.woff2" crossorigin />
   </head>
   <body>
     <div id="root"></div>

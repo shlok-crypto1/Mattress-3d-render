@@ -14,6 +14,19 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-09-25 — The Mattress Guide is removed; the first paint is optimized
+
+- **Removed — the Mattress Guide chat**, at the product owner's instruction: the dock (`ChatWidget.jsx`), the served bot (`app/public/chatbot/`, root `chatbot/`), its generator (`app/scripts/build-chatbot.mjs`, and the `sync:bot`/`prebuild` scripts), and its authored source (`information bot/`). All recoverable from git history. The deploy removes `chatbot/` from the server on its next run.
+- **Added — a `<main>` landmark and a visually hidden `<h1>`** on the brand selector, a meta description, a canonical link, Open Graph/Twitter tags, and Organization + WebSite JSON-LD (Legend Polyfoams, brands FOAMICO and VedaSleep - no product, price or rating data).
+- **Changed — fonts are self-hosted**, the logos are served as WebP at the sizes they are shown at, both logos are preloaded, and every logo `<img>` states its intrinsic size. See `docs/PERFORMANCE.md` and `docs/ASSET_MANAGEMENT.md`.
+- **Added — `app/public/.htaccess`**: HTTPS redirect, a year's immutable caching for hashed build output, `no-cache` on the document, and security headers (CSP, HSTS, COOP, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy). See `docs/PROJECT_OVERVIEW.md`.
+- **Reason:** A Lighthouse 13.4.1 report of the live homepage (99 / 98 / 100 / 91). It flagged the missing landmark and description, the logo that could not be discovered until the script ran, 230 ms of render-blocking from Google Fonts, oversized logo PNGs, and 7-day caching on hashed assets.
+- **Files/areas:** `app/index.html`, `app/src/App.jsx`, `app/src/index.css`, `app/src/fonts/`, `app/src/pages/BrandSelectPage.jsx`, `app/src/pages/CatalogPage.jsx`, `app/src/pages/FoamicoCatalogPage.jsx`, `app/src/data/brandThemes.js`, `app/public/brand/*.webp`, `app/public/.htaccess`, `app/package.json`, `.github/workflows/deploy.yml`, and the docs listed above plus `README.md`, `docs/INTERACTIONS.md` and `docs/RESPONSIVE_BEHAVIOUR.md`.
+- **Impact:** No visual change except that the chat bubble is gone. Screenshot diffs of the selector and both catalogs, before and after, differ only inside the logos, and only at anti-aliased edge pixels. On a local build, Lighthouse desktop went from 99/98/100/91 to 100/100/100/100, LCP from 0.8 s to 0.4 s, and page weight from 291 to 164 KiB. Mobile performance went from 92 to 99, with LCP from 2.9 s to 1.7 s.
+- **Validation:** `npm run build` clean, and `npm run lint` shows no new warnings. The build was served locally with the same headers as `.htaccess` and driven in headless Chrome. There were no console errors, CSP violations or failed requests on the selector, both catalogs, a 3D viewer per brand, and the sofa photo page. The logo flights were checked in both directions. The 3D viewer rendered under the CSP.
+
+---
+
 ### 2026-09-08 — The page becomes the whole screen
 
 - **Changed — `viewport-fit=cover`.** The site laid itself out inside the safe area, so a phone painted the strip above and below it itself and every full-screen page arrived bracketed by two blocks that belonged to nothing on it. The document now covers the screen: the page's own ground runs behind the status bar and the browser's bottom furniture, and that furniture floats over the page instead of walling it in.

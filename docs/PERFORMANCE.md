@@ -42,5 +42,33 @@
 - Prioritize the first meaningful product render.
 - Avoid blocking the whole interface on secondary assets.
 
+## First paint of the brand selector
+Measured with Lighthouse 13 (desktop) on 2026-09-25: LCP 0.8 s → 0.4 s, page
+weight 291 → 164 KiB, all four categories at 100. What holds that in place:
+
+- **Fonts are self-hosted** (`app/src/fonts/`). Google Fonts used to put a
+  cross-origin stylesheet, and then a font on a third origin, in front of the
+  first paint. The files are Google's own, with every subset and its
+  `unicode-range` unchanged, so rendering is identical and a browser still
+  downloads only the subsets a page uses. The build hashes them, so they are
+  cached as immutable. Only Poppins 400 (latin), the one face the selector sets
+  text in, is preloaded.
+- **Both logos are preloaded from `app/index.html`.** They are `<img>`s React
+  renders, so the browser cannot discover them until the script has run; the
+  preload lets it fetch them alongside the script instead of after it. They also
+  carry `fetchpriority="high"` and never take `loading="lazy"`.
+- **Logos are WebP, sized per screen density** - see `docs/ASSET_MANAGEMENT.md`
+  for the files. The preload and the `srcset` must name the same candidates.
+- **Every `<img>` states its intrinsic `width`/`height`**, with the rendered
+  height still set in CSS. The box is reserved before the file arrives; CLS is 0.
+- **Nothing that is not visible should load a font weight.** A heading defaults
+  to bold, and even a visually hidden one makes the browser fetch a bold face -
+  which is why the selector's hidden `<h1>` is set at 400.
+
+What remains open in the audit, deliberately: about 34 KiB of the entry
+chunk is React and the router, unused on a first paint but needed by the first
+interaction; the 3.7 KiB stylesheet is render-blocking because it is the page's
+styles; unhashed images keep a 7-day cache.
+
 ## Validation
 Check performance on both a modern desktop and a representative mobile device before large rendering changes are accepted.

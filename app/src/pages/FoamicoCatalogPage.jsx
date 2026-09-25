@@ -125,8 +125,10 @@ export default function FoamicoCatalogPage() {
         >
           <img
             ref={logoRef}
-            src={publicUrl(dark ? '/brand/foamico-logo-light.png' : '/brand/foamico-logo.png')}
+            src={publicUrl(dark ? '/brand/foamico-logo-light.webp' : '/brand/foamico-logo.webp')}
             alt="Foamico - Luxury Mattress"
+            width={473}
+            height={321}
             style={{ height: 72, width: 'auto', ...enterStyle(revealed, REVEAL.mark) }}
           />
           <div
