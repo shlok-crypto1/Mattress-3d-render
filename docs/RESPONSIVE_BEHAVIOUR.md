@@ -131,9 +131,22 @@ being taken to a phone.
 
 **Everything at an edge takes them.** The viewer's back link, header and control
 row; the catalog pages' padding and their back link; the brand selector's two
-panels. The rule is that the
+panels; the guide's launcher and its full-screen frame. The rule is that the
 *surface* bleeds and its *content* insets - never the other way round, because a
 surface that stops short of the edge is the band this was meant to remove.
+
+**A framed document cannot see an edge.** Safe-area insets are measured against
+the top-level viewport, so inside the guide's iframe they are all zero whatever
+shape the screen is. The page hosting the frame is the only side that can inset
+it, which is why the guide's panel bleeds and the frame inside it is held off
+all four edges by `ChatWidget`, not by the guide's own stylesheet.
+
+**The insets go on the frame, not as padding on the panel.** The frame is
+positioned absolutely, and an absolutely positioned box is laid out against its
+container's *padding* box - padding on the panel moves it not at all. The frame
+is also sized explicitly rather than stretched between offsets: an iframe is a
+replaced element, and an auto width between a left and a right offset resolves
+to its intrinsic 300x150 with the offsets ignored.
 
 ## The viewer's button row on a phone
 Front, Side, Top, Bottom, the divider and Layers stay on one line at every phone width,
@@ -157,4 +170,6 @@ Taken from the implementation, not chosen: these are the values in the source.
 |---|---|---|
 | `max-width: 620px` | `app/src/index.css` | Phone. The viewer chrome (head, wordmark tracking, control row, layer labels) and the brand grid's card row, which becomes the swipeable lineup described above. **This is the project's phone breakpoint** - a new phone rule belongs here rather than at a fourth value. |
 | `max-height: 480px and (orientation: landscape)` | `app/src/index.css` | Landscape phone. The viewer header collapses so the stage keeps the height. |
+| `max-width: 620px` | `app/src/components/ChatWidget.jsx` | The Mattress Guide stops being a corner panel and becomes the screen, the launcher hides while it is open, and the page behind it stops scrolling. Scoped to that component's own `<style>`. Moved from 520px on 2026-09-02 to match the phone breakpoint above. |
+| `max-width: 560px` / `380px` | the guide's own document | **These measure the panel, not the display.** The frame is 400px wide on a desktop and the screen on a phone, so the guide's own queries are what shape its header in both - which is why its narrow-panel header is the one the site actually shows. |
 | `innerWidth < 760` | `MattressViewer.jsx`, `SofaViewer.jsx` | Not a layout breakpoint. Read once in JS, with `(pointer: coarse)`, to pick camera framing and interaction defaults for a small screen. |

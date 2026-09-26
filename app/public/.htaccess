@@ -53,8 +53,10 @@ Options -Indexes
   # fonts, images and textures. style-src allows inline styles because React
   # renders <style> elements and style attributes; scripts get no such
   # allowance. blob:/data: cover the images three.js creates while building
-  # textures. Nothing is framed and nothing may frame this site.
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-src 'none'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+  # textures. The one frame is the Mattress Guide, which is this origin's own
+  # chatbot/ - frame-src allows that and nothing else; chatbot/.htaccess
+  # relaxes its own headers so it can be framed here. Nothing may frame the site.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 
   # HTTPS is already enforced above. Deliberately without includeSubDomains or
   # preload: this file speaks for myfoamico.com only, and the domain's other

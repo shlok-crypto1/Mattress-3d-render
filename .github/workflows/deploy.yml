@@ -35,8 +35,8 @@ jobs:
           # record. Deleting it from the server forces a full re-upload.
           state-name: .deploy-state.json
           # Only the built site belongs on the web server: index.html and the
-          # asset directories the build emits (assets, brand, products,
-          # textures), which the repo root is kept as a mirror of.
+          # asset directories the build emits (assets, brand, chatbot,
+          # products, textures), which the repo root is kept as a mirror of.
           #
           # Everything below is repository-only. `source/` alone is 250 MB of
           # raw product imagery, which is what turned the first deployment into
@@ -51,5 +51,6 @@ jobs:
             source/**
             docs/**
             guidelines/**
+            information bot/**
             *.md
             *.code-workspace

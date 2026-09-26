@@ -14,6 +14,17 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-09-26 — The Mattress Guide is back
+
+- **Restored — the Mattress Guide chat**, exactly as it was before 2026-09-25: `ChatWidget.jsx` and its mount in `App.jsx`, `information bot/information bot.html`, `app/scripts/build-chatbot.mjs` with the `sync:bot`/`prebuild` scripts, the generated `app/public/chatbot/index.html`, the deploy's `information bot/**` exclusion, and the doc sections that described them. No change to the guide itself.
+- **Changed — the security headers make room for it.** The site's CSP now has `frame-src 'self'` instead of `'none'`, so the page can frame its own `chatbot/`. The new `app/public/chatbot/.htaccess` gives that one directory its own headers: `X-Frame-Options: SAMEORIGIN`, and a CSP that allows the guide's inline script and styles and its Google Fonts, with `frame-ancestors 'self'`. Every other page keeps the 2026-09-25 policy, and nothing outside this origin can frame either.
+- **Reason:** Requested by the product owner, 2026-09-26.
+- **Files/areas:** as above, plus `app/public/.htaccess`, `README.md`, `docs/ASSET_MANAGEMENT.md`, `docs/INTERACTIONS.md`, `docs/RESPONSIVE_BEHAVIOUR.md`.
+- **Impact:** The chat bubble returns on the brand selector and both catalogs. The Lighthouse gains from 2026-09-25 hold for the first paint, because the guide's frame is not loaded until the launcher is tapped. That was not re-measured.
+- **Validation:** `npm run build` clean; `npm run lint` shows no warnings in the restored files. The build was served locally with the headers from both `.htaccess` files and driven in headless Chrome at 1440x900 and 390x844. The launcher is on `/`, `/foamico` and `/vedasleep`, the frame loads with its fonts, and "What is the price of Ultima?" returns the Ultima table and the "Explore Ultima in 3D" button. There were no console errors or CSP violations. The only warning is Chrome's standard notice for the `allow-scripts allow-same-origin` sandbox, which the guide has always used.
+
+---
+
 ### 2026-09-25 — The Mattress Guide is removed; the first paint is optimized
 
 - **Removed — the Mattress Guide chat**, at the product owner's instruction: the dock (`ChatWidget.jsx`), the served bot (`app/public/chatbot/`, root `chatbot/`), its generator (`app/scripts/build-chatbot.mjs`, and the `sync:bot`/`prebuild` scripts), and its authored source (`information bot/`). All recoverable from git history. The deploy removes `chatbot/` from the server on its next run.
