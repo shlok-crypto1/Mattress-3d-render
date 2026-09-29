@@ -55,8 +55,18 @@ Options -Indexes
   # allowance. blob:/data: cover the images three.js creates while building
   # textures. The one frame is the Mattress Guide, which is this origin's own
   # chatbot/ - frame-src allows that and nothing else; chatbot/.htaccess
-  # relaxes its own headers so it can be framed here. Nothing may frame the site.
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+  # relaxes its own headers so it can be framed here.
+  #
+  # frame-ancestors: the site is embedded on the product pages of the Shopify
+  # store foamicomattress.com, and may be framed by that and nothing else.
+  # admin.shopify.com, *.myshopify.com and *.shopifypreview.com are Shopify's
+  # own origins for the theme editor and theme previews, which frame the
+  # storefront - and every ancestor in the chain has to be listed, not just the
+  # nearest. chatbot/.htaccess carries the same list, because the guide is
+  # framed inside the site and so inside Shopify too. There is no
+  # X-Frame-Options header: it can only say DENY or SAMEORIGIN, cannot name
+  # another origin, and would block the embed.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self' https://foamicomattress.com https://www.foamicomattress.com https://admin.shopify.com https://*.myshopify.com https://*.shopifypreview.com; upgrade-insecure-requests"
 
   # HTTPS is already enforced above. Deliberately without includeSubDomains or
   # preload: this file speaks for myfoamico.com only, and the domain's other
@@ -64,7 +74,6 @@ Options -Indexes
   Header always set Strict-Transport-Security "max-age=31536000"
 
   Header always set Cross-Origin-Opener-Policy "same-origin"
-  Header always set X-Frame-Options "DENY"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"

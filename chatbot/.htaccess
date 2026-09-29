@@ -1,6 +1,6 @@
 # The Mattress Guide's document - headers that differ from the site's.
 #
-# The site's .htaccess forbids all framing and all inline script, and that is
+# The site's .htaccess forbids inline script, and that is
 # right for every page but this one: the guide is framed by the site itself
 # (ChatWidget.jsx), and it is a single self-contained document whose script and
 # styles are inline and whose fonts come from Google. These rules are read after
@@ -8,8 +8,11 @@
 # directory only. The others (HSTS, nosniff, Referrer-Policy, ...) still apply.
 
 <IfModule mod_headers.c>
-  # Framed by this origin only; still unframeable from anywhere else.
-  Header always set X-Frame-Options "SAMEORIGIN"
+  # Framed by this origin, which is itself framed by the Shopify store - so
+  # frame-ancestors lists the same Shopify origins as the root .htaccess, since
+  # every ancestor in the chain is checked. No X-Frame-Options: SAMEORIGIN
+  # would fail on the Shopify ancestor.
+  Header always unset X-Frame-Options
 
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self' https://foamicomattress.com https://www.foamicomattress.com https://admin.shopify.com https://*.myshopify.com https://*.shopifypreview.com"
 </IfModule>

@@ -33,11 +33,22 @@ single place the server's behaviour is set:
 - **Security.**
   - Content-Security-Policy: every resource from this origin only. Scripts get no
     inline allowance. Styles do (`'unsafe-inline'`), because React renders
-    `<style>` elements and style attributes. `object-src 'none'`,
-    `frame-ancestors 'none'`.
+    `<style>` elements and style attributes. `object-src 'none'`.
+  - **Framing.** The site is embedded in an iframe on the product pages of the
+    Shopify store https://foamicomattress.com, so `frame-ancestors` allows
+    `'self'`, `foamicomattress.com` and `www.foamicomattress.com`, plus Shopify's
+    theme-editor/preview origins (`admin.shopify.com`, `*.myshopify.com`,
+    `*.shopifypreview.com`). Nothing else may frame it. `chatbot/.htaccess`
+    carries the same list, because every ancestor in a frame chain is checked
+    and the guide sits inside the site inside Shopify. There is **no
+    `X-Frame-Options`** header: it cannot name another origin, so any value
+    would block the embed. Because the store frames the live site, every deploy
+    shows on the store's product pages as soon as it lands - there is nothing
+    to update on the Shopify side. If the store ever moves to another domain,
+    add it to both files' `frame-ancestors` or the embed goes blank again.
   - HSTS for one year, without `includeSubDomains`/`preload` until the domain's
     other subdomains are known to serve HTTPS.
-  - COOP `same-origin`, `X-Frame-Options: DENY`, `nosniff`,
+  - COOP `same-origin`, `nosniff`,
     `strict-origin-when-cross-origin` and a Permissions-Policy denying camera,
     microphone, geolocation, payment and USB.
 - **Not set, deliberately: Trusted Types.** React and three.js have not been

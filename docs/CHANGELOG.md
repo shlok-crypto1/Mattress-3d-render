@@ -14,6 +14,17 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-09-29 — The site can be embedded on foamicomattress.com
+
+- **Changed — `frame-ancestors`** in `app/public/.htaccess` goes from `'none'` to `'self'`, `https://foamicomattress.com`, `https://www.foamicomattress.com`, and Shopify's theme-editor/preview origins (`https://admin.shopify.com`, `https://*.myshopify.com`, `https://*.shopifypreview.com`). `app/public/chatbot/.htaccess` gets the same list in place of `'self'`, because the guide is framed inside the site, which is framed inside Shopify, and every ancestor is checked.
+- **Removed — `X-Frame-Options`** from both files (`DENY` on the site; `SAMEORIGIN` on the guide, now explicitly unset so the site's value is not inherited). Neither value can allow a different origin, and browsers apply `frame-ancestors` in its place.
+- **Reason:** The Shopify store's product pages embed https://myfoamico.com in an iframe, and it showed "myfoamico.com refused to connect". Requested by the product owner, 2026-09-29.
+- **Files/areas:** `app/public/.htaccess`, `app/public/chatbot/.htaccess`, their published copies at the repository root, `docs/PROJECT_OVERVIEW.md`.
+- **Impact:** The store's product pages show the live site. Each deploy of this repository shows there immediately, because the store frames the live URL and `index.html` is `no-cache`. Any other site still cannot frame it.
+- **Validation:** Not yet checked against the live store. After deploy, open a foamicomattress.com product page and confirm the frame loads with no `frame-ancestors` error in the console.
+
+---
+
 ### 2026-09-26 — The Mattress Guide is back
 
 - **Restored — the Mattress Guide chat**, exactly as it was before 2026-09-25: `ChatWidget.jsx` and its mount in `App.jsx`, `information bot/information bot.html`, `app/scripts/build-chatbot.mjs` with the `sync:bot`/`prebuild` scripts, the generated `app/public/chatbot/index.html`, the deploy's `information bot/**` exclusion, and the doc sections that described them. No change to the guide itself.
