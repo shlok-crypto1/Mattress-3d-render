@@ -14,6 +14,26 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-09-30 — The launcher label on one line; the guide's tables fit the screen
+
+- **Changed — the launcher label is a single line.** On a phone it wrapped to three lines inside a 200px bubble, and stood tall enough to cover the VedaSleep panel's "View collection" cue on the brand selector. The text no longer wraps. On a phone its size follows the screen width (10.8px on a 375px phone, 10px at 360px, 13px from about 425px), with the bubble's padding and × trimmed to make room. Desktop is one line at 14px. Below 355px it may still wrap, because 10px is the smallest size worth reading.
+- **Changed — no table in the guide scrolls sideways any more.** The range table had five columns and a 340px minimum width, so on a phone its prices were off the edge of the screen. It is now three columns (#, Model, From), with the feel and "who it's for" as lines under the model name. The same applies to:
+  - "Which range suits you": Range and From.
+  - The comparison ("Sova vs Resto"): Model, Warr. and MRP, with brand and firmness under the name.
+  - The budget list: brand moved under the name.
+  - Pillows: type moved under the name.
+
+  The global `min-width: 340px` on tables is gone, and the new `table.fit` styles carry the stacked layout.
+- **Reason:** Requested by the product owner, 2026-09-30.
+- **Files/areas:** `app/src/components/ChatWidget.jsx`, `information bot/information bot.html` (and the generated `app/public/chatbot/index.html`), the published set, `docs/RESPONSIVE_BEHAVIOUR.md`.
+- **Validation:** Built and served locally, measured in headless Chrome.
+  - **Label:** one line and 38px tall at 360, 375, 390 and 414px. It wraps only at 320px, where it stays on screen.
+  - **"View collection":** clear of the label at 360x740, 390x844, 412x915 and 414x736. At 375x667 and 360x640 the page itself scrolls, and the cue clears the label once it is scrolled.
+  - **Tables:** every answer card ("see the full range", "which brand suits me", "under 20000", "resto", "riva 78x60", "sova vs resto", "warranty", "pillows", "sizes", "what's in resto premium", "duro") has zero horizontal overflow at 320, 360, 375 and 400px (400px is the desktop panel).
+  - **Behaviour:** label open and dismiss behaviour is unchanged, and there are no page errors.
+
+---
+
 ### 2026-09-30 — The Mattress Guide drops three models, and its launcher gets a label
 
 - **Removed — Sigma, Ecolite and Signature from the guide**, entirely: their price-book rows (38 → 28 variants), specs, pitch lines in all three languages, Devanagari aliases, and their places in the range table and the recommender. Vivorest held only Sigma, so it goes too, and "Which range suits you" is now two ranges, VedaSleep and Foamico. Budget questions now land on **Magic** (the cheapest bed left, ₹14,798 at 72x72) where they landed on Sigma, and "hard" on **Magic** (the firmest left) where it landed on Signature. Magic's "who it's for" line compared it with Signature; it now reads "If you like a firm bed". Also dropped, with nothing left to describe: ECOLITE's "No published construction" warning, the Vivorest reply branch, and the unused `TIERNAME` table.

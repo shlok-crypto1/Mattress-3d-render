@@ -382,7 +382,6 @@ export default function ChatWidget() {
           display: flex;
           align-items: center;
           gap: 10px;
-          max-width: 260px;
           padding: 12px 14px 12px 18px;
           border: 1px solid #2B2B2B;
           border-radius: 14px;
@@ -416,7 +415,9 @@ export default function ChatWidget() {
           border-top: 1px solid #2B2B2B;
           transform: translateY(-50%) rotate(45deg);
         }
-        .chatdock__hint-text { cursor: pointer; }
+        /* One line, always: a two-line bubble stood tall enough to cover the
+           VedaSleep panel's "View collection" on the brand selector. */
+        .chatdock__hint-text { cursor: pointer; white-space: nowrap; }
         .chatdock__hint-text em {
           font-style: normal;
           color: var(--dock-accent);
@@ -503,22 +504,33 @@ export default function ChatWidget() {
              is the one control that must never be covered. */
           .chatdock__btn[data-open='true'] { display: none; }
 
-          /* The same launcher and label, sized down for a phone. */
+          /* The same launcher and label, sized down for a phone.
+
+             The label stays on one line by sizing its text to the screen. The
+             line is ~21.9x its font size wide, and what is left for it is the
+             screen less the disc, the gaps and the bubble's own padding and x
+             (about 134px), so the text is (100vw - 132px) / 22.5: 10.8px on a
+             375px phone, 10px at 360px, the design's 13px from about 425px. */
           .chatdock__launch {
             right: calc(16px + var(--safe-right));
-            gap: 12px;
+            gap: 10px;
           }
           .chatdock__btn { width: 52px; height: 52px; }
           .chatdock__hint {
-            gap: 8px;
-            max-width: 200px;
-            padding: 10px 10px 10px 14px;
+            gap: 6px;
+            padding: 8px 8px 8px 12px;
             border-radius: 12px;
             box-shadow: 0 8px 22px rgba(26,26,26,0.22);
-            font-size: 13px;
+            font-size: clamp(10px, calc((100vw - 132px) / 22.5), 13px);
           }
           .chatdock__hint::after { right: -6px; width: 10px; height: 10px; }
-          .chatdock__hint-x { width: 24px; height: 24px; line-height: 24px; }
+          .chatdock__hint-x { width: 20px; height: 20px; font-size: 12px; line-height: 20px; }
+        }
+        /* Below 355px even 10px text will not fit on one line, and smaller
+           stops being readable: there it wraps inside the space it has. */
+        @media (max-width: 355px) {
+          .chatdock__hint { max-width: calc(100vw - 94px); }
+          .chatdock__hint-text { white-space: normal; }
         }
       `}</style>
 

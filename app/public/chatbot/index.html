@@ -144,7 +144,7 @@ body{
 .veda .pill.on{background:var(--gold-tint);color:var(--gold)}
 
 .scroll{overflow-x:auto;margin:12px -18px 0;padding:0 18px}
-table{border-collapse:collapse;width:100%;font-size:13px;min-width:340px;color:var(--text)}
+table{border-collapse:collapse;width:100%;font-size:13px;color:var(--text)}
 th{
   text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
   color:var(--faint);padding:0 12px 6px 0;border-bottom:1px solid var(--border);white-space:nowrap;
@@ -154,6 +154,14 @@ tr:last-child td{border-bottom:0}
 th.n,td.n{text-align:right;padding-right:0}
 td.n{font-variant-numeric:tabular-nums;font-weight:600}
 td.name{font-weight:600;white-space:nowrap}
+/* A table that fits the panel at any width, down to a 320px phone: three
+   columns, the middle one stacking its details as lines, so nothing has to
+   be scrolled sideways to be read. */
+table.fit{min-width:0}
+.fit .name{font-weight:600}
+.fit .line{display:block;margin-top:2px}
+.fit .who{color:var(--muted);font-size:12px}
+.fit td.n{white-space:nowrap}
 .warn{
   margin-top:12px;padding:9px 12px;border-radius:9px;background:var(--surface-2);
   border:1px solid var(--border);font-size:12.5px;color:var(--muted);
@@ -703,12 +711,13 @@ function compareCard(fams,size){
   const sz=size||DEFAULT_SIZE,dflt=!size;
   const rows=fams.flatMap(f=>Object.keys(DB.skus).filter(k=>famOf(k)===f).map(k=>{
     const s=DB.skus[k],sp=FAM[f].v[varOf(k)]||{};
-    return `<tr><td class="name">${esc(f)} ${esc(varOf(k))}</td><td>${esc(s.brand)}</td>
-      <td>${esc(sp.f||"\u2014")}</td><td class="n">${s.warranty_years}y</td><td class="n">${rupee(s.mrp[sz])}</td></tr>`;})).join("");
+    return `<tr><td><span class="name">${esc(f)} ${esc(varOf(k))}</span>
+      <span class="line who">${esc(s.brand)} \u00b7 Firmness ${esc(sp.f||"\u2014")}</span></td>
+      <td class="n">${s.warranty_years}y</td><td class="n">${rupee(s.mrp[sz])}</td></tr>`;})).join("");
   return `<div class="ans"><div class="eyebrow">Side by side</div>
     <h2 class="title">${fams.map(esc).join(" vs ")}</h2>
     <p class="sub">All variants at ${dflt?"the standard ":""}${esc(sz)} in${sizeTag(sz)} \u00B7 MRP incl. GST</p>
-    <div class="scroll"><table><thead><tr><th>Model</th><th>Brand</th><th>Firmness</th><th class="n">Warr.</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    <div class="scroll"><table class="fit"><thead><tr><th>Model</th><th class="n">Warr.</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 function budgetCard(limit,size){
   const sz=size||DEFAULT_SIZE,dflt=!size;
@@ -718,12 +727,12 @@ function budgetCard(limit,size){
     <h2 class="title">No model fits ${rupee(limit)}</h2>
     <p class="sub">At ${esc(sz)} in, the entry point is ${rupee(Math.min(...Object.keys(DB.skus).map(k=>DB.skus[k].mrp[sz])))}.</p></div>`;
   const rows=hits.slice(0,14).map(k=>{const s=DB.skus[k];
-    return `<tr><td class="name">${esc(famOf(k))} ${esc(varOf(k))}</td><td>${esc(s.brand)}</td>
+    return `<tr><td><span class="name">${esc(famOf(k))} ${esc(varOf(k))}</span><span class="line who">${esc(s.brand)}</span></td>
       <td class="n">${s.warranty_years}y</td><td class="n">${rupee(s.mrp[sz])}</td></tr>`;}).join("");
   return `<div class="ans"><div class="eyebrow">Within budget</div>
     <h2 class="title">${hits.length} option${hits.length>1?"s":""} under ${rupee(limit)}</h2>
     <p class="sub">At ${dflt?"the standard ":""}${esc(sz)} in${sizeTag(sz)} \u00B7 best value first${hits.length>14?" \u00B7 top 14 shown":""}</p>
-    <div class="scroll"><table><thead><tr><th>Model</th><th>Brand</th><th class="n">Warr.</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    <div class="scroll"><table class="fit"><thead><tr><th>Model</th><th class="n">Warr.</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 function warrantyCard(){
   const g={};Object.keys(DB.skus).forEach(k=>{const y=DB.skus[k].warranty_years;(g[y]=g[y]||new Set()).add(famOf(k)+" "+varOf(k));});
@@ -736,10 +745,10 @@ function warrantyCard(){
     <div class="warn"><b>RIVA leads at 30 years.</b> ULTIMA and RIVA Natural carry 25.</div></div>`;
 }
 function pillowCard(){
-  const rows=PILLOWS.map(([c,n,p])=>`<tr><td class="name">${esc(n)}</td><td>${esc(c)}</td><td class="n">${rupee(p)}</td></tr>`).join("");
+  const rows=PILLOWS.map(([c,n,p])=>`<tr><td><span class="name">${esc(n)}</span><span class="line who">${esc(c)}</span></td><td class="n">${rupee(p)}</td></tr>`).join("");
   return `<div class="ans"><div class="eyebrow">Accessories</div>
     <h2 class="title">Pillows &amp; protectors</h2><p class="sub">All 24 \u00D7 17 in \u00B7 MRP incl. GST</p>
-    <div class="scroll"><table><thead><tr><th>Product</th><th>Type</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    <div class="scroll"><table class="fit"><thead><tr><th>Product</th><th class="n">MRP</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 function sizeCard(){
   const rows=DB.sizes.map(s=>`<tr><td class="name">${esc(s.size_in)}</td><td class="n">${s.length_cm}</td><td class="n">${s.width_cm}</td></tr>`).join("");
@@ -852,13 +861,14 @@ function housesCard(){
     const from=fams.length?rupee(Math.min.apply(null,fams.map(function(f){
       return Math.min.apply(null,Object.keys(DB.skus).filter(function(k){return famOf(k)===f;})
         .map(function(k){return DB.skus[k].mrp[DEFAULT_SIZE];}));}))):"\u2014";
-    return '<tr><td class="name">'+esc(H.name)+(h==="FOAMICO"?' <span class="badge sm">Engineered</span>':'')+'</td>'+
-           '<td>'+esc(H.who)+'</td><td>'+H.fams.map(esc).join(" \u00B7 ")+'</td><td class="n">'+from+'</td></tr>';
+    return '<tr><td><span class="name">'+esc(H.name)+'</span>'+(h==="FOAMICO"?' <span class="badge sm">Engineered</span>':'')+
+           '<span class="line">'+esc(H.who)+'</span>'+
+           '<span class="line who">'+H.fams.map(esc).join(" \u00B7 ")+'</span></td><td class="n">'+from+'</td></tr>';
   }).join("");
   return '<div class="ans"><div class="eyebrow">Two ranges</div>'+
     '<h2 class="title">Which range suits you</h2>'+
     '<p class="sub">Prices from, at '+DEFAULT_SIZE+'.</p>'+
-    '<div class="scroll"><table><thead><tr><th>House</th><th>Who it\u2019s for</th><th>Models</th><th class="n">From</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="scroll"><table class="fit"><thead><tr><th>Range</th><th class="n">From</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     '<div class="warn upsell"><b>In short:</b> choose VedaSleep if you already know the firmness you want, and Foamico if you want a mattress engineered around how you actually sleep.</div></div>';
 }
 function ladderCard(){
@@ -867,14 +877,15 @@ function ladderCard(){
     const P=POS[f],keys=Object.keys(DB.skus).filter(function(k){return famOf(k)===f;});
     const from=keys.length?rupee(Math.min.apply(null,keys.map(function(k){return DB.skus[k].mrp[DEFAULT_SIZE];}))):"\u2014";
     return '<tr><td class="n" style="text-align:left">'+(i+1)+'</td>'+
-           '<td class="name">'+esc(f)+(P.badge?' <span class="badge sm">'+esc(P.badge)+'</span>':'')+'</td>'+
-           '<td>'+esc(P.feel)+(P.hr?" \u00B7 "+P.hr+"% Float Sense":"")+'</td>'+
-           '<td>'+esc(P.who)+'</td><td class="n">'+from+'</td></tr>';
+           '<td><span class="name">'+esc(f)+'</span>'+(P.badge?' <span class="badge sm">'+esc(P.badge)+'</span>':'')+
+           '<span class="line">'+esc(P.feel)+(P.hr?" \u00B7 "+P.hr+"% Float Sense":"")+'</span>'+
+           '<span class="line who">'+esc(P.who)+'</span></td>'+
+           '<td class="n">'+from+'</td></tr>';
   }).join("");
   return '<div class="ans"><div class="eyebrow">The range</div>'+
     '<h2 class="title">Every mattress we make</h2>'+
     '<p class="sub">The VedaSleep beds differ by firmness alone. The Foamico beds are engineered for how you sleep. Prices from, at '+DEFAULT_SIZE+'.</p>'+
-    '<div class="scroll"><table><thead><tr><th>#</th><th>Model</th><th>Feel</th><th>Who it\u2019s for</th><th class="n">From</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="scroll"><table class="fit"><thead><tr><th>#</th><th>Model</th><th class="n">From</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
     '<div class="warn upsell"><b>Our best sellers:</b> Sova in latex, Ultima Luxury in cloud foam, and the Riva \u2014 our flagship, and the founder\'s own mattress.</div></div>';
 }
 function pickModel(){
