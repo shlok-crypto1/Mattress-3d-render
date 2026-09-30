@@ -26,6 +26,18 @@ border, the page behind it locked so the thing under the thumb is the only thing
 that moves. It was a 370px column inset ten pixels from each edge, which left a
 sliver of page down both sides and a band of it underneath.
 
+**The launcher is labelled, until the label has done its job.** A bare disc in
+the corner was not being found, so a speech bubble beside it reads "For Product
+Details and Prices **Click here**" (the "Chatbot Label" design in
+`source/chatbot-label/`), with "Click here" in the route's accent. It arrives 1.5s
+after the page, nudges towards the disc three times, and the disc pulses a ring
+of the accent while the guide is closed. Clicking the bubble's words opens the
+guide, like the disc does. The words are hidden from assistive tech, because
+the disc already carries that name and one action should be one tab stop. The
+label goes once the guide has been opened, and its × removes it for the rest of
+the browsing session (`sessionStorage`, key `fmChatLabelClosed`). Under reduced
+motion it appears without the slide, nudge or pulse.
+
 **The launcher hands over its close duty on a phone.** A floating disc over a
 full-screen chat sits on top of the composer, the one control that must never be
 covered, so below 620px the launcher hides while the panel is open and the

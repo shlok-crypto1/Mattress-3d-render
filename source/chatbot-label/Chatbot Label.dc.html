@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F2F4EC;font-family:Montserrat,sans-serif}
+a{color:#3F5E12}a:hover{color:#95C12B}
+@keyframes fmPulseK{0%{box-shadow:0 0 0 0 rgba(149,193,43,.55)}70%{box-shadow:0 0 0 14px rgba(149,193,43,0)}100%{box-shadow:0 0 0 0 rgba(149,193,43,0)}}
+@keyframes fmPulseG{0%{box-shadow:0 0 0 0 rgba(199,125,17,.55)}70%{box-shadow:0 0 0 14px rgba(199,125,17,0)}100%{box-shadow:0 0 0 0 rgba(199,125,17,0)}}
+@keyframes fmNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:40px 24px;box-sizing:border-box">
+  <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:center">
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-weight:700;font-size:11px;letter-spacing:.18em;color:#3F5E12">FOAMICO · /#/</div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:14px;background:#FEFEFE;border:1px solid #DDDDDD;border-radius:14px;padding:36px 28px;min-width:380px;min-height:90px">
+        <div style="position:relative;display:flex;align-items:center;gap:10px;background:#1A1A1A;color:#FEFEFE;border:1px solid #2B2B2B;border-radius:14px;padding:12px 14px 12px 18px;box-shadow:0 10px 28px rgba(26,26,26,.22);max-width:260px;opacity:{{ op }};transform:{{ tf }};transition:opacity .45s ease, transform .45s cubic-bezier(.2,.9,.3,1.3);animation:{{ nudge }}">
+          <div style="cursor:pointer;font-weight:700;font-size:14px;line-height:1.35">For Product Details and Prices <span style="color:#95C12B;text-decoration:underline;text-underline-offset:3px">Click here</span></div>
+          <div style="flex:none;width:22px;height:22px;border-radius:50%;background:#2B2B2B;color:#FEFEFE;font-size:13px;line-height:22px;text-align:center">×</div>
+          <div style="position:absolute;right:-7px;top:50%;width:12px;height:12px;background:#1A1A1A;border-right:1px solid #2B2B2B;border-top:1px solid #2B2B2B;transform:translateY(-50%) rotate(45deg)"></div>
+        </div>
+        <div style="flex:none;width:60px;height:60px;border-radius:50%;background:#95C12B;display:flex;align-items:center;justify-content:center;animation:{{ pulseK }};font-family:monospace;font-size:10px;color:#1A1A1A">chat</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-weight:700;font-size:11px;letter-spacing:.18em;color:#C77D11">VEDASLEEP · /#/vedasleep</div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:14px;background:#FEFEFE;border:1px solid #DDDDDD;border-radius:14px;padding:36px 28px;min-width:380px;min-height:90px">
+        <div style="position:relative;display:flex;align-items:center;gap:10px;background:#1A1A1A;color:#FEFEFE;border:1px solid #2B2B2B;border-radius:14px;padding:12px 14px 12px 18px;box-shadow:0 10px 28px rgba(26,26,26,.22);max-width:260px;opacity:{{ op }};transform:{{ tf }};transition:opacity .45s ease, transform .45s cubic-bezier(.2,.9,.3,1.3);animation:{{ nudge }}">
+          <div style="cursor:pointer;font-weight:700;font-size:14px;line-height:1.35">For Product Details and Prices <span style="color:#C77D11;text-decoration:underline;text-underline-offset:3px">Click here</span></div>
+          <div style="flex:none;width:22px;height:22px;border-radius:50%;background:#2B2B2B;color:#FEFEFE;font-size:13px;line-height:22px;text-align:center">×</div>
+          <div style="position:absolute;right:-7px;top:50%;width:12px;height:12px;background:#1A1A1A;border-right:1px solid #2B2B2B;border-top:1px solid #2B2B2B;transform:translateY(-50%) rotate(45deg)"></div>
+        </div>
+        <div style="flex:none;width:60px;height:60px;border-radius:50%;background:#C77D11;display:flex;align-items:center;justify-content:center;animation:{{ pulseG }};font-family:monospace;font-size:10px;color:#FEFEFE">chat</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="font-weight:700;font-size:11px;letter-spacing:.18em;color:#6B6B6B;margin-top:12px">MOBILE · 375PX</div>
+  <div style="display:flex;flex-wrap:wrap;gap:32px;justify-content:center">
+
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+      <div style="font-weight:700;font-size:11px;letter-spacing:.18em;color:#3F5E12">FOAMICO</div>
+      <div style="position:relative;width:375px;height:420px;background:#FEFEFE;border:8px solid #1A1A1A;border-radius:36px;overflow:hidden;box-sizing:border-box">
+        <div style="position:absolute;right:16px;bottom:20px;display:flex;align-items:center;gap:12px">
+          <div style="position:relative;display:flex;align-items:center;gap:8px;background:#1A1A1A;color:#FEFEFE;border:1px solid #2B2B2B;border-radius:12px;padding:10px 10px 10px 14px;box-shadow:0 8px 22px rgba(26,26,26,.22);max-width:200px;opacity:{{ op }};transform:{{ tf }};transition:opacity .45s ease, transform .45s cubic-bezier(.2,.9,.3,1.3);animation:{{ nudge }}">
+            <div style="font-weight:700;font-size:13px;line-height:1.35">For Product Details and Prices <span style="color:#95C12B;text-decoration:underline;text-underline-offset:3px">Click here</span></div>
+            <div style="flex:none;width:24px;height:24px;border-radius:50%;background:#2B2B2B;color:#FEFEFE;font-size:13px;line-height:24px;text-align:center">×</div>
+            <div style="position:absolute;right:-6px;top:50%;width:10px;height:10px;background:#1A1A1A;border-right:1px solid #2B2B2B;border-top:1px solid #2B2B2B;transform:translateY(-50%) rotate(45deg)"></div>
+          </div>
+          <div style="flex:none;width:52px;height:52px;border-radius:50%;background:#95C12B;display:flex;align-items:center;justify-content:center;animation:{{ pulseK }};font-family:monospace;font-size:10px;color:#1A1A1A">chat</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:center">
+      <div style="font-weight:700;font-size:11px;letter-spacing:.18em;color:#C77D11">VEDASLEEP</div>
+      <div style="position:relative;width:375px;height:420px;background:#FEFEFE;border:8px solid #1A1A1A;border-radius:36px;overflow:hidden;box-sizing:border-box">
+        <div style="position:absolute;right:16px;bottom:20px;display:flex;align-items:center;gap:12px">
+          <div style="position:relative;display:flex;align-items:center;gap:8px;background:#1A1A1A;color:#FEFEFE;border:1px solid #2B2B2B;border-radius:12px;padding:10px 10px 10px 14px;box-shadow:0 8px 22px rgba(26,26,26,.22);max-width:200px;opacity:{{ op }};transform:{{ tf }};transition:opacity .45s ease, transform .45s cubic-bezier(.2,.9,.3,1.3);animation:{{ nudge }}">
+            <div style="font-weight:700;font-size:13px;line-height:1.35">For Product Details and Prices <span style="color:#C77D11;text-decoration:underline;text-underline-offset:3px">Click here</span></div>
+            <div style="flex:none;width:24px;height:24px;border-radius:50%;background:#2B2B2B;color:#FEFEFE;font-size:13px;line-height:24px;text-align:center">×</div>
+            <div style="position:absolute;right:-6px;top:50%;width:10px;height:10px;background:#1A1A1A;border-right:1px solid #2B2B2B;border-top:1px solid #2B2B2B;transform:translateY(-50%) rotate(45deg)"></div>
+          </div>
+          <div style="flex:none;width:52px;height:52px;border-radius:50%;background:#C77D11;display:flex;align-items:center;justify-content:center;animation:{{ pulseG }};font-family:monospace;font-size:10px;color:#FEFEFE">chat</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <button onClick="{{ replay }}" style="font-family:Montserrat;font-weight:700;font-size:13px;background:#1A1A1A;color:#FEFEFE;border:none;border-radius:999px;padding:10px 20px;cursor:pointer">Replay pop-up</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;delay&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:5,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;s&quot;,&quot;default&quot;:1.5,&quot;tsType&quot;:&quot;number&quot;},&quot;nudge&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;pulse&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { shown: false };
+  componentDidMount() { this.schedule(); }
+  componentWillUnmount() { clearTimeout(this.t1); }
+  schedule() {
+    clearTimeout(this.t1);
+    this.t1 = setTimeout(() => this.setState({ shown: true }), (this.props.delay ?? 1.5) * 1000);
+  }
+  renderVals() {
+    const shown = this.state.shown, pulse = this.props.pulse ?? true;
+    return {
+      op: shown ? 1 : 0,
+      tf: shown ? 'translateX(0) scale(1)' : 'translateX(16px) scale(.92)',
+      nudge: shown && (this.props.nudge ?? true) ? 'fmNudge 1.2s ease-in-out 1s 3' : 'none',
+      pulseK: pulse ? 'fmPulseK 2s ease-out infinite' : 'none',
+      pulseG: pulse ? 'fmPulseG 2s ease-out infinite' : 'none',
+      replay: () => { this.setState({ shown: false }); this.schedule(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

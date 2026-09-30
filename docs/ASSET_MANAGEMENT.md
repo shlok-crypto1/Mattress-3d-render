@@ -88,6 +88,16 @@ copied through byte for byte.
 The site loads it in an iframe from `app/src/components/ChatWidget.jsx`, which is
 also where the reasoning for the frame lives.
 
+### Chat launcher label design — `source/chatbot-label/`
+
+The product owner's "Chatbot Label" design from Claude Design, added 2026-09-30:
+`Chatbot Label.dc.html` and the `support.js` runtime it needs to render. Open the
+HTML file in a browser to see both brands at desktop and phone sizes. It is the
+reference the launcher label in `ChatWidget.jsx` was built from, and it is not
+served. The paste-in `foamico-chat-label.js` snippet that came with it was left
+out on purpose. The label is built into the site, and the snippet would add a
+second one.
+
 ### Per-grade cutaway renders — `source/Layers/`
 
 The product owner's cutaway render set, 26 files, added 2026-08-27. One render per

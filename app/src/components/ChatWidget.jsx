@@ -22,15 +22,18 @@ import { prefersReducedMotion } from '../transition/ProductTransition';
 // Product pages are deliberately absent. They are the 3D viewers, and a bubble
 // parked over a mattress someone is rotating is in the way of the one thing
 // that page exists to do.
+//
+// `pulse` is the accent at the strength the launcher's ring starts from; it
+// fades out to nothing as the ring grows.
 const DOCK_ROUTES = {
   // The brand selector is split down the middle - Key Black on one side, Paper
   // on the other - so no single page colour can be matched here. Kiwi Green is
   // the bot's own accent and it is a filled disc either way: bright on the
   // black panel, and clearly not-cream on the Paper one.
-  '/': { accent: '#95C12B', ink: '#1A1A1A', shadow: 'rgba(0,0,0,0.45)' },
-  '/foamico': { accent: '#95C12B', ink: '#1A1A1A', shadow: 'rgba(0,0,0,0.5)' },
+  '/': { accent: '#95C12B', ink: '#1A1A1A', shadow: 'rgba(0,0,0,0.45)', pulse: 'rgba(149,193,43,0.55)' },
+  '/foamico': { accent: '#95C12B', ink: '#1A1A1A', shadow: 'rgba(0,0,0,0.5)', pulse: 'rgba(149,193,43,0.55)' },
   // Veda Gold on Veda Green-Black, the pairing the grid's own badges use.
-  '/vedasleep': { accent: '#c77d11', ink: '#1F2A22', shadow: 'rgba(0,0,0,0.5)' },
+  '/vedasleep': { accent: '#c77d11', ink: '#1F2A22', shadow: 'rgba(0,0,0,0.5)', pulse: 'rgba(199,125,17,0.55)' },
 };
 
 // Under the shared-element overlay (2147483000 in ProductTransition), above
@@ -38,11 +41,34 @@ const DOCK_ROUTES = {
 // not vanish behind it.
 const Z = 2147482000;
 
-const SIZE = 56;
+// The launcher disc: 60px on a desktop, 52px on a phone (see the media query).
+const SIZE = 60;
 
 // The project's phone breakpoint, the one the viewer chrome and the lineup both
 // use. Below it the panel stops being a panel and becomes the screen.
 const PHONE = '(max-width: 620px)';
+
+/**
+ * The label beside the launcher.
+ *
+ * People were not finding the guide from a bare disc in the corner, so a
+ * speech-bubble label points at it: "For Product Details and Prices - Click
+ * here". It is the "Chatbot Label" design in source/chatbot-label/, on desktop and
+ * phone alike. It arrives a beat after the page does, nudges towards the disc
+ * a few times, and goes for good once it has done its job: when the guide is
+ * opened, or when its own x is pressed. The x is remembered for the browsing
+ * session, so a dismissed label does not come back on every page load.
+ */
+const HINT_DELAY = 1500;
+const HINT_KEY = 'fmChatLabelClosed';
+
+const readHintDismissed = () => {
+  try {
+    return sessionStorage.getItem(HINT_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
 
 /**
  * What the framed document is allowed to ask this page for.
@@ -99,11 +125,40 @@ export default function ChatWidget() {
   // What the frame says it is standing on. See GROUND_FALLBACK above for why
   // there is a starting value at all.
   const [ground, setGround] = useState(GROUND_FALLBACK);
+  // The label beside the launcher - see HINT_DELAY above. `hintDue` is whether
+  // its arrival delay has run out; `hintDismissed` whether its x was pressed.
+  const [hintDue, setHintDue] = useState(false);
+  const [hintDismissed, setHintDismissed] = useState(readHintDismissed);
   const frameRef = useRef(null);
   // The product table this page has told the frame about, and the whole of what
   // the frame is allowed to ask for. Filled when the frame loads.
   const routesRef = useRef([]);
   const reduced = prefersReducedMotion();
+  const docked = !!theme;
+  // Once the guide has been opened the label has done its job; `loaded` is
+  // exactly "has been opened at least once".
+  const showHint = docked && !loaded && !hintDismissed;
+
+  useEffect(() => {
+    if (!showHint || hintDue) return undefined;
+    const id = setTimeout(() => setHintDue(true), HINT_DELAY);
+    return () => clearTimeout(id);
+  }, [showHint, hintDue]);
+
+  const dismissHint = () => {
+    setHintDismissed(true);
+    try {
+      sessionStorage.setItem(HINT_KEY, '1');
+    } catch {
+      // Storage refused (private mode, blocked site data): it just comes back
+      // on the next load, which is harmless.
+    }
+  };
+
+  const toggle = () => {
+    setLoaded(true);
+    setOpen((v) => !v);
+  };
 
   useEffect(() => {
     const mq = window.matchMedia?.(PHONE);
@@ -252,7 +307,15 @@ export default function ChatWidget() {
     : 'Ask the Mattress Guide about prices, sizes and specifications';
 
   return createPortal(
-    <div className="chatdock" style={{ zIndex: Z }}>
+    <div
+      className="chatdock"
+      style={{
+        zIndex: Z,
+        '--dock-accent': theme?.accent ?? '#95C12B',
+        '--dock-pulse': theme?.pulse ?? 'transparent',
+        '--dock-shadow': theme?.shadow ?? 'rgba(0,0,0,0.5)',
+      }}
+    >
       <style>{`
         .chatdock { position: fixed; inset: 0; pointer-events: none; }
         .chatdock__panel {
@@ -281,10 +344,18 @@ export default function ChatWidget() {
           height: 100%;
           border: 0;
         }
-        .chatdock__btn {
+        /* The launcher and its label, in one row anchored bottom-right: the
+           label grows leftwards from the disc it points at. */
+        .chatdock__launch {
           position: absolute;
           right: calc(20px + var(--safe-right));
           bottom: calc(20px + var(--safe-bottom));
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+        .chatdock__btn {
+          flex: none;
           width: ${SIZE}px;
           height: ${SIZE}px;
           border: 0;
@@ -296,6 +367,89 @@ export default function ChatWidget() {
           pointer-events: auto;
         }
         .chatdock__btn:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+        /* A ring of the brand accent, breathing out from the disc while the
+           guide is closed. It carries the disc's own drop shadow with it,
+           because an animated box-shadow replaces the inline one outright. */
+        .chatdock__btn[data-pulse='true'] { animation: chatdock-pulse 2s ease-out infinite; }
+        @keyframes chatdock-pulse {
+          0% { box-shadow: 0 6px 20px -6px var(--dock-shadow), 0 0 0 0 var(--dock-pulse); }
+          70% { box-shadow: 0 6px 20px -6px var(--dock-shadow), 0 0 0 14px transparent; }
+          100% { box-shadow: 0 6px 20px -6px var(--dock-shadow), 0 0 0 0 transparent; }
+        }
+
+        .chatdock__hint {
+          position: relative;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          max-width: 260px;
+          padding: 12px 14px 12px 18px;
+          border: 1px solid #2B2B2B;
+          border-radius: 14px;
+          background: #1A1A1A;
+          color: #FEFEFE;
+          box-shadow: 0 10px 28px rgba(26,26,26,0.22);
+          font: 700 14px/1.35 'Montserrat', 'Poppins', sans-serif;
+          pointer-events: auto;
+          opacity: 0;
+          visibility: hidden;
+          transform: translateX(16px) scale(0.92);
+          transition: opacity 450ms ease, transform 450ms cubic-bezier(0.2, 0.9, 0.3, 1.3), visibility 0s 450ms;
+        }
+        .chatdock__hint[data-shown='true'] {
+          opacity: 1;
+          visibility: visible;
+          transform: none;
+          transition: opacity 450ms ease, transform 450ms cubic-bezier(0.2, 0.9, 0.3, 1.3);
+          animation: chatdock-nudge 1.2s ease-in-out 1s 3;
+        }
+        /* The bubble's tail, pointing at the disc. */
+        .chatdock__hint::after {
+          content: '';
+          position: absolute;
+          right: -7px;
+          top: 50%;
+          width: 12px;
+          height: 12px;
+          background: #1A1A1A;
+          border-right: 1px solid #2B2B2B;
+          border-top: 1px solid #2B2B2B;
+          transform: translateY(-50%) rotate(45deg);
+        }
+        .chatdock__hint-text { cursor: pointer; }
+        .chatdock__hint-text em {
+          font-style: normal;
+          color: var(--dock-accent);
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+        .chatdock__hint-x {
+          position: relative;
+          flex: none;
+          width: 22px;
+          height: 22px;
+          padding: 0;
+          border: 0;
+          border-radius: 50%;
+          background: #2B2B2B;
+          color: #FEFEFE;
+          font: 400 13px/22px 'Poppins', sans-serif;
+          cursor: pointer;
+        }
+        /* A 22px circle is a small thing to hit with a thumb; the hit area
+           reaches past the circle it draws. */
+        .chatdock__hint-x::before { content: ''; position: absolute; inset: -10px; }
+        .chatdock__hint-x:focus-visible { outline: 2px solid var(--dock-accent); outline-offset: 2px; }
+        @keyframes chatdock-nudge {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(-6px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .chatdock__btn[data-pulse='true'],
+          .chatdock__hint[data-shown='true'] { animation: none; }
+          .chatdock__hint,
+          .chatdock__hint[data-shown='true'] { transform: none; transition: none; }
+        }
 
         /* On a phone the panel IS the screen. It was a 370px column inset ten
            pixels from each edge with the launcher parked below it, which left a
@@ -348,6 +502,23 @@ export default function ChatWidget() {
              floating over a full-screen chat sits on top of the composer, which
              is the one control that must never be covered. */
           .chatdock__btn[data-open='true'] { display: none; }
+
+          /* The same launcher and label, sized down for a phone. */
+          .chatdock__launch {
+            right: calc(16px + var(--safe-right));
+            gap: 12px;
+          }
+          .chatdock__btn { width: 52px; height: 52px; }
+          .chatdock__hint {
+            gap: 8px;
+            max-width: 200px;
+            padding: 10px 10px 10px 14px;
+            border-radius: 12px;
+            box-shadow: 0 8px 22px rgba(26,26,26,0.22);
+            font-size: 13px;
+          }
+          .chatdock__hint::after { right: -6px; width: 10px; height: 10px; }
+          .chatdock__hint-x { width: 24px; height: 24px; line-height: 24px; }
         }
       `}</style>
 
@@ -398,39 +569,57 @@ export default function ChatWidget() {
       ) : null}
 
       {theme ? (
-        <button
-          type="button"
-          className="chatdock__btn"
-          onClick={() => {
-            setLoaded(true);
-            setOpen((v) => !v);
-          }}
-          aria-expanded={open}
-          data-open={showPanel ? 'true' : 'false'}
-          aria-label={label}
-          title={open ? 'Close' : 'Ask about prices, sizes and specs'}
-          style={{
-            background: theme.accent,
-            color: theme.ink,
-            boxShadow: `0 6px 20px -6px ${theme.shadow}`,
-            transition: reduced ? 'none' : `background ${MOTION.fast}ms ${EASE.enter}`,
-          }}
-        >
-          {open ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-            </svg>
-          ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.9 8.9 0 0 1-3.9-.9L3 21l1.9-5.2a8.2 8.2 0 0 1-1.1-4.3A8.4 8.4 0 0 1 12.3 3 8.4 8.4 0 0 1 21 11.5z"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
-        </button>
+        <div className="chatdock__launch">
+          {showHint ? (
+            <div className="chatdock__hint" data-shown={hintDue ? 'true' : 'false'}>
+              {/* Clicking the words opens the guide, like the disc does. Hidden
+                  from assistive tech because it is the disc again: the disc's
+                  own label says the same, and one control is one tab stop. */}
+              <div className="chatdock__hint-text" aria-hidden="true" onClick={toggle}>
+                For Product Details and Prices <em>Click here</em>
+              </div>
+              <button
+                type="button"
+                className="chatdock__hint-x"
+                onClick={dismissHint}
+                aria-label="Hide this hint"
+              >
+                &#215;
+              </button>
+            </div>
+          ) : null}
+          <button
+            type="button"
+            className="chatdock__btn"
+            onClick={toggle}
+            aria-expanded={open}
+            data-open={showPanel ? 'true' : 'false'}
+            data-pulse={showPanel ? 'false' : 'true'}
+            aria-label={label}
+            title={open ? 'Close' : 'Ask about prices, sizes and specs'}
+            style={{
+              background: theme.accent,
+              color: theme.ink,
+              boxShadow: `0 6px 20px -6px ${theme.shadow}`,
+              transition: reduced ? 'none' : `background ${MOTION.fast}ms ${EASE.enter}`,
+            }}
+          >
+            {open ? (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path
+                  d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.9 8.9 0 0 1-3.9-.9L3 21l1.9-5.2a8.2 8.2 0 0 1-1.1-4.3A8.4 8.4 0 0 1 12.3 3 8.4 8.4 0 0 1 21 11.5z"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
       ) : null}
     </div>,
     document.body
