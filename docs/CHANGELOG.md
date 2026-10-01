@@ -14,6 +14,31 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-10-01 — The final launcher label, and a new tab icon
+
+- **Changed — the launcher label is the "Chatbot Label - Final" design** (`source/design/`). It replaces the dark speech bubble.
+  - **Look:** a line of small uppercase Poppins, "For Product Details and Prices →", widely tracked and in a quiet grey, set the way the brand selector sets its "View collection" cues.
+  - **Desktop:** one 12px line beside a 56px disc.
+  - **Phone:** 10px, right-aligned on two lines ("For Product Details / and Prices →") in a 170px column, beside a 46px disc.
+  - **Motion:** it fades up 1.5s after the page loads.
+  - **Removed with the bubble:** the ×, its `sessionStorage` memory, the nudge and the disc's pulse. The label goes once the guide has been opened.
+- **Deviation from the design — the label's grey on dark pages.** The design's `#6B6B6B` is drawn on a light page. It is kept on the brand selector, where the launcher stands on Paper. On the Foamico and VedaSleep grids it is too dim to read, so there the label takes each grid's own muted grey (`#8f8f8f`, `#93A197`).
+- **Added — a rule for short phones.** Up to 700px tall, the brand selector hides the label. There the VedaSleep panel's "View collection" lands in the launcher's row. The catalogs keep the label.
+- **Changed — the browser tab icon is option 3c from the "Browser Tab Icon" design**: a black F on a Kiwi Green rounded tile. It replaces `vedasleep-favicon.png`, the VedaSleep logo squeezed into a 256×99 non-square icon, which is deleted. New files in `app/public/brand/`:
+  - `favicon.svg`, drawn with the design's 16px stroke.
+  - `favicon-32.png` for browsers without SVG icons.
+  - `apple-touch-icon.png` (180×180, full-bleed).
+- **Changed — the supplied designs live in `source/design/`**: the two `.dc.html` files in use and their `support.js`. `source/chatbot-label/` (the superseded bubble design) is removed. The design folders dropped at the repository root were never committed: kept files moved in, the rest discarded.
+- **Reason:** Requested by the product owner, 2026-10-01.
+- **Files/areas:** `app/src/components/ChatWidget.jsx`, `app/index.html`, `app/public/brand/`, `source/design/`, the published set, `docs/ASSET_MANAGEMENT.md`, `docs/INTERACTIONS.md`, `docs/RESPONSIVE_BEHAVIOUR.md`.
+- **Validation:** Built and served locally, checked in headless Chrome.
+  - **Desktop (1280x760):** one line beside the disc on `/`, `/foamico` and `/vedasleep`.
+  - **Phone (375x667):** two lines, 170x32px, beside a 46px disc.
+  - **"View collection":** on the brand selector at 360x740, 390x844 and 414x736 the label is 16-43px clear of it. At 375x667 and 360x640 the label is hidden.
+  - **Tab icon:** rendered at 256px and 32px and compared against the design.
+
+---
+
 ### 2026-09-30 — The launcher label on one line; the guide's tables fit the screen
 
 - **Changed — the launcher label is a single line.** On a phone it wrapped to three lines inside a 200px bubble, and stood tall enough to cover the VedaSleep panel's "View collection" cue on the brand selector. The text no longer wraps. On a phone its size follows the screen width (10.8px on a 375px phone, 10px at 360px, 13px from about 425px), with the bubble's padding and × trimmed to make room. Desktop is one line at 14px. Below 355px it may still wrap, because 10px is the smallest size worth reading.

@@ -88,15 +88,22 @@ copied through byte for byte.
 The site loads it in an iframe from `app/src/components/ChatWidget.jsx`, which is
 also where the reasoning for the frame lives.
 
-### Chat launcher label design — `source/chatbot-label/`
+### Supplied designs — `source/design/`
 
-The product owner's "Chatbot Label" design from Claude Design, added 2026-09-30:
-`Chatbot Label.dc.html` and the `support.js` runtime it needs to render. Open the
-HTML file in a browser to see both brands at desktop and phone sizes. It is the
-reference the launcher label in `ChatWidget.jsx` was built from, and it is not
-served. The paste-in `foamico-chat-label.js` snippet that came with it was left
-out on purpose. The label is built into the site, and the snippet would add a
-second one.
+The product owner's Claude Design files that parts of the site were built from,
+with the `support.js` runtime they need to render. Open an `.dc.html` file in a
+browser to see it. Not served.
+
+- **`Chatbot Label - Final.dc.html`** (2026-10-01): the label beside the chat
+  launcher, in `ChatWidget.jsx`. The first artboard is the desktop design, and
+  the two-line one is the phone design.
+- **`Browser Tab Icon.dc.html`** (2026-10-01): four tab-icon options. **3c**,
+  the FOAMICO F, is the one in use. See the tab icon table below.
+
+Left out on purpose: the earlier bubble label design (superseded, still in git
+history), the unused "Subtle" label alternative, and the paste-in
+`foamico-chat-label.js` snippet. The label is built into the site, so the
+snippet would only add a second one.
 
 ### Per-grade cutaway renders — `source/Layers/`
 
@@ -186,7 +193,9 @@ copies from it; never edit a copy.
 | `vedasleep-logo@1x.webp` | `vedasleep-logo.png` | 253×98 | Brand selector on 1x screens |
 | `vedasleep-logo@3x.webp` | `vedasleep-logo.png` | 757×294 | Brand selector on 3x phones |
 | `vedasleep-logo-light.webp` | `vedasleep-logo-light.png` | 505×196 | VedaSleep catalog and viewers, the flight into them |
-| `vedasleep-favicon.png` | `vedasleep-logo.png` | 256×99 | The browser tab icon |
+| `favicon.svg` | `source/design/Browser Tab Icon.dc.html`, option 3c | 32×32 viewBox | The browser tab icon: a black F on a Kiwi Green tile, drawn with the design's 16px stroke (4.5) |
+| `favicon-32.png` | `favicon.svg` | 32×32 | The tab icon for browsers that take no SVG icon |
+| `apple-touch-icon.png` | option 3c, square, with the design's large stroke (4) | 180×180 | iOS home-screen icon. Full-bleed, because iOS rounds the corners itself |
 
 The `@1x`/`@3x` files are density candidates in the brand selector's `srcset`, and
 `app/index.html` preloads the same candidates; the two lists must match, or the

@@ -27,16 +27,23 @@ that moves. It was a 370px column inset ten pixels from each edge, which left a
 sliver of page down both sides and a band of it underneath.
 
 **The launcher is labelled, until the label has done its job.** A bare disc in
-the corner was not being found, so a speech bubble beside it reads "For Product
-Details and Prices **Click here**" (the "Chatbot Label" design in
-`source/chatbot-label/`), with "Click here" in the route's accent. It arrives 1.5s
-after the page, nudges towards the disc three times, and the disc pulses a ring
-of the accent while the guide is closed. Clicking the bubble's words opens the
-guide, like the disc does. The words are hidden from assistive tech, because
-the disc already carries that name and one action should be one tab stop. The
-label goes once the guide has been opened, and its × removes it for the rest of
-the browsing session (`sessionStorage`, key `fmChatLabelClosed`). Under reduced
-motion it appears without the slide, nudge or pulse.
+the corner was not being found, so a line of text beside it reads "For Product
+Details and Prices →". This is the "Chatbot Label - Final" design in
+`source/design/`. It is set like the brand selector's "View collection" cues:
+small uppercase Poppins, widely tracked, in a quiet grey. That grey is the
+design's `#6B6B6B` where the dock stands on Paper; on the dark Foamico and
+VedaSleep grids it is each grid's own muted grey instead, because `#6B6B6B` is
+too dim to read there.
+
+The label fades up 1.5s after the page loads. Clicking it opens the guide, like
+the disc does. The words are hidden from assistive tech, because the disc
+already carries that name and one action should be one tab stop. The label
+goes once the guide has been opened. Under reduced motion it appears without
+the rise.
+
+On a short phone (up to 700px tall), the brand selector does not show the
+label. There the page is taller than the screen, and the VedaSleep panel's
+"View collection" lands in the launcher's row.
 
 **The launcher hands over its close duty on a phone.** A floating disc over a
 full-screen chat sits on top of the composer, the one control that must never be

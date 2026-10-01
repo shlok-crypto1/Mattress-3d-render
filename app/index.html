@@ -2,7 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/brand/vedasleep-favicon.png" />
+    <!-- The tab icon: a black F on a Kiwi Green tile, the same pairing as the
+         chat launcher ("Browser Tab Icon" 3c in source/design/). The SVG is
+         drawn with the design's 16px stroke, the size a tab shows it at; the
+         PNG is for browsers that take no SVG icon, and the touch icon is
+         full-bleed because iOS rounds its corners itself. -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
+    <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
     <!-- viewport-fit=cover: the document is the whole screen, not the part of
          it the browser is not standing on. Without it iOS lays the page out
          inside the safe area and paints the strip above and below in a flat
