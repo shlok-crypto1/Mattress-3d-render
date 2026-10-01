@@ -14,6 +14,19 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-10-01 — The launcher label shows on phones' brand selector
+
+- **Fixed — the label was missing on the brand selector on most phones.** A rule from earlier today hid it there on screens up to 700px tall, to keep it off the VedaSleep panel's "View collection". A phone's visible screen is usually shorter than that once the browser's own bars are counted (about 664px in iOS Safari), so on most phones the label never showed on the front page.
+- **Changed — the stacked brand selector makes room for it.** On a screen up to 720px tall, the two panels' vertical padding drops from 72px to 28px, and the lower panel takes 16px above and 84px below its content. The pair now fits one screen from about 634px tall instead of scrolling at 722px, and the lower "View collection" sits above the launcher's row. Taller screens and the side-by-side desktop layout are unchanged.
+- **Changed — the hide rule** moves from 700px to 613px. Below that the panels no longer fit and the two would meet. In practice that is an iPhone SE-size screen with the browser's bars showing. The catalogs keep the label at any height.
+- **Files/areas:** `app/src/pages/BrandSelectPage.jsx`, `app/src/components/ChatWidget.jsx`, the published set, `docs/INTERACTIONS.md`, `docs/RESPONSIVE_BEHAVIOUR.md`.
+- **Validation:** Built and served locally, measured in headless Chrome on `/`.
+  - **Label visible and clear of "View collection":** by 8px at 360x614, 11px at 360x620, 19px at 360x640, 25px at 390x664, 26px at 375x667, 34px at 412x700, 39px at 393x720, 10px at 360x740, 20px at 412x780, 36px at 390x844 and 54px at 412x915.
+  - **Label hidden:** at 360x600, 360x560, 375x553 and 320x568.
+  - **Catalogs:** `/foamico` and `/vedasleep` show the label at 375x553.
+
+---
+
 ### 2026-10-01 — The launcher label gets a thin outline
 
 - **Changed — the label sits in a white pill with a 1px outline in the chat disc's colour.** This is the "thin green outline" from option 2c of the Subtle label designs, at the product owner's request.

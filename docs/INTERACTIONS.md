@@ -43,9 +43,12 @@ already carries that name and one action should be one tab stop. The label
 goes once the guide has been opened. Under reduced motion it appears without
 the rise.
 
-On a short phone (up to 700px tall), the brand selector does not show the
-label. There the page is taller than the screen, and the VedaSleep panel's
-"View collection" lands in the launcher's row.
+On a phone the brand selector makes room for the label. Its two stacked panels
+tighten their padding on a screen up to 720px tall, so both fit the one screen
+and the lower panel keeps the launcher's row clear (see
+`docs/RESPONSIVE_BEHAVIOUR.md`). Only on a very short screen, under 614px
+tall, does the brand selector drop the label, because there the VedaSleep
+panel's "View collection" would sit under it.
 
 **The launcher hands over its close duty on a phone.** A floating disc over a
 full-screen chat sits on top of the composer, the one control that must never be

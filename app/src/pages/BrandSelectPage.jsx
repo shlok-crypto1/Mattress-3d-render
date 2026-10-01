@@ -27,9 +27,12 @@ const panelStyle = (background) => ({
   gap: 14,
   // Each panel is the ground here, so it runs under the status bar and the
   // home indicator and its centred column is held off them instead.
+  //
+  // The vertical padding is 72px unless the stylesheet below says otherwise:
+  // --bp-top and --bp-bottom are how a short, stacked screen tightens it.
   padding:
-    'calc(72px + var(--safe-top)) calc(32px + var(--safe-right))'
-    + ' calc(72px + var(--safe-bottom)) calc(32px + var(--safe-left))',
+    'calc(var(--bp-top, 72px) + var(--safe-top)) calc(32px + var(--safe-right))'
+    + ' calc(var(--bp-bottom, 72px) + var(--safe-bottom)) calc(32px + var(--safe-left))',
   minHeight: 'min(50dvh, 340px)',
   background,
   textDecoration: 'none',
@@ -136,6 +139,21 @@ export default function BrandSelectPage() {
         }
         @media (min-width: 760px) {
           .brand-select { grid-template-columns: 1fr 1fr; }
+        }
+        /* Stacked, on a screen too short for two 72px-padded panels.
+
+           At full padding the pair is 722px tall. A phone's visible screen is
+           usually less (about 664px in iOS Safari), so the page scrolled, and
+           the lower panel's "View collection" came to rest in the bottom row,
+           under the chat launcher and its label. Tightened, the two panels fit
+           the one screen, and the lower one keeps that row clear: its 84px of
+           bottom padding is the launcher's 20px offset, its 46px height and
+           some air. The pair fits a screen from about 634px tall. A little
+           under that the page scrolls by a few pixels and the row is still
+           clear; under 614px it is not, and ChatWidget drops the label. */
+        @media (max-width: 759px) and (max-height: 720px) {
+          .brand-panel { --bp-top: 28px; --bp-bottom: 28px; }
+          .brand-panel:last-of-type { --bp-top: 16px; --bp-bottom: 84px; }
         }
         .brand-panel__cue { opacity: 0.75; transition: opacity 0.25s ease, transform 0.25s ease; }
         .brand-panel:hover .brand-panel__cue,

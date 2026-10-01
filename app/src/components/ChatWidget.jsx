@@ -452,12 +452,14 @@ export default function ChatWidget() {
           /* Broken where the phrase breaks, not where the column runs out. */
           .chatdock__hint span { display: block; }
         }
-        /* On a short phone the brand selector is taller than the screen, and
-           the VedaSleep panel's own "View collection" lands in the launcher's
-           row - under the label. Up to about 690px tall there is no room for
-           both, so there the brand selector keeps the disc alone. The two
-           catalogs have nothing in that corner and keep the label. */
-        @media (max-width: 620px) and (max-height: 700px) {
+        /* The brand selector keeps the launcher's row clear on a phone (see
+           the short-screen rule in BrandSelectPage), down to a screen about
+           614px tall. Shorter than that its two panels no longer fit, the page
+           scrolls, and the VedaSleep panel's "View collection" can come to
+           rest under the label. There the brand selector keeps the disc
+           alone. The two catalogs have nothing in that corner and keep the
+           label at any height. */
+        @media (max-width: 620px) and (max-height: 613px) {
           .chatdock[data-route='/'] .chatdock__hint { display: none; }
         }
       `}</style>
