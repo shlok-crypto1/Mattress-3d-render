@@ -14,6 +14,16 @@ Record meaningful changes to the Mattress 3D Render project.
 
 ---
 
+### 2026-10-01 — The launcher label gets a thin outline
+
+- **Changed — the label sits in a white pill with a 1px outline in the chat disc's colour.** This is the "thin green outline" from option 2c of the Subtle label designs, at the product owner's request.
+  - **Shape:** fully rounded on a desktop, with 14px corners around the two lines on a phone.
+  - **Colour:** the outline is Kiwi Green on the brand selector and Foamico, and Veda Gold on VedaSleep, matching each disc and keeping to the brand-mixing rule.
+  - **Text:** with a white pill behind it, the text is the design's `#6B6B6B` everywhere. The per-grid muted greys added earlier today for the dark pages are gone.
+- **Validation:** Built and served locally, checked in headless Chrome at 1280x760 and 390x844 on `/`, `/foamico` and `/vedasleep`. On the brand selector the pill is 9-36px clear of the VedaSleep "View collection" at 360x740, 390x844 and 414x736, and still hidden on short phones.
+
+---
+
 ### 2026-10-01 — The final launcher label, and a new tab icon
 
 - **Changed — the launcher label is the "Chatbot Label - Final" design** (`source/design/`). It replaces the dark speech bubble.

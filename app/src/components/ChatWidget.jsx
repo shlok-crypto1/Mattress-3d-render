@@ -23,20 +23,18 @@ import { prefersReducedMotion } from '../transition/ProductTransition';
 // parked over a mattress someone is rotating is in the way of the one thing
 // that page exists to do.
 //
-// `label` is the colour of the words beside the launcher (see HINT_DELAY
-// below). The design sets them in #6B6B6B on a light page. That is right where
-// the dock stands on Paper, and too dim to read on the two dark grids, so
-// there it takes the muted grey each grid already uses for its own quiet text.
+// The label beside the launcher (see HINT_DELAY below) is outlined in
+// `accent`, the disc's own colour, so it reads as part of the button.
 const DOCK_ROUTES = {
   // The brand selector is split down the middle - Key Black on one side, Paper
   // on the other - so no single page colour can be matched here. Kiwi Green is
   // the bot's own accent and it is a filled disc either way: bright on the
   // black panel, and clearly not-cream on the Paper one. The launcher's corner
   // is on the Paper side, beside a desktop and under a phone's stacked panels.
-  '/': { accent: '#95C12B', ink: '#1A1A1A', shadow: 'rgba(0,0,0,0.45)', label: '#6B6B6B' },
-  '/foamico': { accent: '#95C12B', ink: '#1A1A1A', shadow: 'rgba(0,0,0,0.5)', label: '#8f8f8f' },
+  '/': { accent: '#95C12B', ink: '#1A1A1A', shadow: 'rgba(0,0,0,0.45)' },
+  '/foamico': { accent: '#95C12B', ink: '#1A1A1A', shadow: 'rgba(0,0,0,0.5)' },
   // Veda Gold on Veda Green-Black, the pairing the grid's own badges use.
-  '/vedasleep': { accent: '#c77d11', ink: '#1F2A22', shadow: 'rgba(0,0,0,0.5)', label: '#93A197' },
+  '/vedasleep': { accent: '#c77d11', ink: '#1F2A22', shadow: 'rgba(0,0,0,0.5)' },
 };
 
 // Under the shared-element overlay (2147483000 in ProductTransition), above
@@ -295,7 +293,7 @@ export default function ChatWidget() {
       data-route={pathname}
       style={{
         zIndex: Z,
-        '--dock-label': theme?.label ?? '#6B6B6B',
+        '--dock-accent': theme?.accent ?? '#95C12B',
       }}
     >
       <style>{`
@@ -350,15 +348,22 @@ export default function ChatWidget() {
         }
         .chatdock__btn:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
         /* Set like the brand selector's "View collection" cues: small,
-           uppercase, widely tracked, in a quiet grey. It fades up rather than
-           arriving with any motion of its own, and it is a click target for
-           the guide like the disc beside it. */
+           uppercase, widely tracked, in a quiet grey. It sits in a white pill
+           with a hairline of the disc's colour round it (the "thin green
+           outline" of the Subtle label designs), so it reads as part of the
+           button on any ground, the two dark grids included. It fades up rather
+           than arriving with any motion of its own, and it is a click target
+           for the guide like the disc beside it. */
         .chatdock__hint {
+          padding: 8px 16px;
+          border: 1px solid var(--dock-accent);
+          border-radius: 999px;
+          background: #FEFEFE;
           font: 400 12px/1.6 'Poppins', sans-serif;
           letter-spacing: 0.14em;
           text-transform: uppercase;
           white-space: nowrap;
-          color: var(--dock-label);
+          color: #6B6B6B;
           cursor: pointer;
           pointer-events: auto;
           opacity: 0;
@@ -438,10 +443,11 @@ export default function ChatWidget() {
           .chatdock__btn { width: 46px; height: 46px; }
           .chatdock__hint {
             width: 170px;
+            padding: 6px 12px;
+            border-radius: 14px;
             font-size: 10px;
             letter-spacing: 0.12em;
             white-space: normal;
-            text-align: right;
           }
           /* Broken where the phrase breaks, not where the column runs out. */
           .chatdock__hint span { display: block; }

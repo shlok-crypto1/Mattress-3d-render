@@ -30,10 +30,12 @@ sliver of page down both sides and a band of it underneath.
 the corner was not being found, so a line of text beside it reads "For Product
 Details and Prices →". This is the "Chatbot Label - Final" design in
 `source/design/`. It is set like the brand selector's "View collection" cues:
-small uppercase Poppins, widely tracked, in a quiet grey. That grey is the
-design's `#6B6B6B` where the dock stands on Paper; on the dark Foamico and
-VedaSleep grids it is each grid's own muted grey instead, because `#6B6B6B` is
-too dim to read there.
+small uppercase Poppins, widely tracked, in the design's `#6B6B6B` grey. It
+sits in a white pill with a 1px outline in the disc's own colour (the "thin
+green outline", option 2c of the Subtle label designs, added 2026-10-01).
+That outline is Kiwi Green beside a green disc and Veda Gold beside the
+VedaSleep one, so the label reads as part of the button and shows on the dark
+grids as clearly as on Paper.
 
 The label fades up 1.5s after the page loads. Clicking it opens the guide, like
 the disc does. The words are hidden from assistive tech, because the disc
