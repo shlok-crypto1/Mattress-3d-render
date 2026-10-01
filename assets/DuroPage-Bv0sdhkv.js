@@ -1,1 +1,0 @@
-import{l as e}from"./index-BgvRls-I.js";import{getProductBySlug as t}from"./products-Bl3vFc2-.js";import{t as n}from"./ProductPage-BucCCEwy.js";var r=e();function i(){return(0,r.jsx)(n,{product:t(`duro`),backTo:`/vedasleep`,transitionId:`product-vedasleep-duro`})}export{i as default};
