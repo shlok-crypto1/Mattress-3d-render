@@ -1,0 +1,1 @@
+import{l as e}from"./index-EOeLB2yt.js";import{getFoamicoProductBySlug as t}from"./foamicoProducts-Cb37ANDl.js";import{t as n}from"./ProductPage-xt2wpE_Q.js";var r=e();function i(){return(0,r.jsx)(n,{product:t(`luma`),backTo:`/foamico`,brand:`foamico`,transitionId:`product-foamico-luma`})}export{i as default};
